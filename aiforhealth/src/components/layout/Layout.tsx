@@ -1,7 +1,7 @@
 import { Outlet } from 'react-router-dom';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
-import { useAuth } from '@/features/auth/hooks/useAuth';
+import { useAuth } from '@/hooks/useAuth';
 
 export function Layout() {
   const { user } = useAuth();

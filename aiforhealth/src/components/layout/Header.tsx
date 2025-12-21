@@ -1,5 +1,5 @@
 import { Bell, User, LogOut } from 'lucide-react';
-import { useAuth } from '@/features/auth/hooks/useAuth';
+import { useAuth } from '@/hooks/useAuth';
 
 export function Header() {
   const { user, logout } = useAuth();

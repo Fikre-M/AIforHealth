@@ -4,7 +4,7 @@ import { LoginForm } from '@/features/auth/components/LoginForm';
 import { PatientDashboard } from '@/features/dashboard/components/PatientDashboard';
 import { DoctorDashboard } from '@/features/dashboard/components/DoctorDashboard';
 import { AIChat } from '@/features/chat/components/AIChat';
-import { AuthProvider, useAuth } from '@/features/auth/hooks/useAuth';
+import { useAuth } from '@/hooks/useAuth';
 
 function Dashboard() {
   const { user } = useAuth();
@@ -21,7 +21,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return user ? <>{children}</> : <Navigate to="/login" replace />;
 }
 
-function AppRoutes() {
+function App() {
   return (
     <Router>
       <Routes>
@@ -57,14 +57,6 @@ function AppRoutes() {
         </Route>
       </Routes>
     </Router>
-  );
-}
-
-function App() {
-  return (
-    <AuthProvider>
-      <AppRoutes />
-    </AuthProvider>
   );
 }
 

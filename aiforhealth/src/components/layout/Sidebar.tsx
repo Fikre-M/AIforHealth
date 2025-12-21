@@ -8,7 +8,7 @@ import {
   Activity,
   Stethoscope 
 } from 'lucide-react';
-import { useAuth } from '@/features/auth/hooks/useAuth';
+import { useAuth } from '@/hooks/useAuth';
 import { clsx } from 'clsx';
 
 const patientNavItems = [
