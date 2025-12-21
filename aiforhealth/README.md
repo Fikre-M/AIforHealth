@@ -1,73 +1,96 @@
-# React + TypeScript + Vite
+# AIforHealth - Next-Generation Healthcare Platform
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern, AI-powered healthcare and medical appointment system built with Vite + React + TypeScript.
 
-Currently, two official plugins are available:
+## 🚀 Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Role-based Dashboards** - Patient, Doctor, and Admin interfaces
+- **AI Health Assistant** - Symptom checker and health guidance (frontend only)
+- **Smart Appointment Booking** - Streamlined scheduling system
+- **Mobile-first Design** - Responsive healthcare UI
+- **PWA Ready** - Progressive Web App capabilities
+- **Accessibility Compliant** - WCAG guidelines followed
 
-## React Compiler
+## 🏗️ Architecture
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```
+src/
+├── components/          # Shared UI components
+│   └── layout/         # Layout components (Header, Sidebar)
+├── features/           # Feature-based modules
+│   ├── auth/          # Authentication
+│   ├── dashboard/     # Role-based dashboards
+│   └── chat/          # AI assistant chat
+├── services/          # API service layer (mock data)
+├── types/             # TypeScript type definitions
+└── config/            # Environment configuration
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 🛠️ Tech Stack
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- **Frontend**: Vite + React 19 + TypeScript
+- **Styling**: Tailwind CSS
+- **Routing**: React Router v6
+- **Icons**: Lucide React
+- **State**: React Context API
+- **Build**: Vite with TypeScript
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## 📦 Installation
+
+1. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+2. **Set up environment**
+   ```bash
+   cp .env.example .env
+   ```
+
+3. **Start development server**
+   ```bash
+   npm run dev
+   ```
+
+## 🔐 Demo Accounts
+
+Use these credentials to test different user roles:
+
+- **Patient**: `patient@example.com` / `password`
+- **Doctor**: `doctor@example.com` / `password`
+- **Admin**: `admin@example.com` / `password`
+
+## 🎯 Key Pages
+
+- **Landing Page** - Healthcare platform introduction
+- **Login/Register** - Authentication with role selection
+- **Patient Dashboard** - Appointment booking, health overview
+- **Doctor Dashboard** - Patient management, schedule
+- **AI Chat** - Health assistant with medical disclaimer
+- **Profile & Settings** - User management
+
+## ⚠️ Medical Disclaimer
+
+This application is for demonstration purposes only. The AI assistant provides general health information and is not a substitute for professional medical advice, diagnosis, or treatment. Always consult qualified healthcare providers for medical concerns.
+
+## 🚀 Deployment
+
+```bash
+npm run build
+npm run preview
 ```
+
+## 📱 PWA Features
+
+- Offline capability
+- App-like experience
+- Push notifications (ready for backend integration)
+- Responsive design
+
+## 🔮 Future Backend Integration
+
+The app is designed with a clean API service layer (`src/services/api.ts`) that currently uses mock data. Replace with real API calls when backend is ready.
+
+## 📄 License
+
+MIT License - Built for healthcare innovation.

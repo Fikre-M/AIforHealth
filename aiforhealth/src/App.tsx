@@ -1,35 +1,71 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Layout } from '@/components/layout/Layout';
+import { LoginForm } from '@/features/auth/components/LoginForm';
+import { PatientDashboard } from '@/features/dashboard/components/PatientDashboard';
+import { DoctorDashboard } from '@/features/dashboard/components/DoctorDashboard';
+import { AIChat } from '@/features/chat/components/AIChat';
+import { AuthProvider, useAuth } from '@/features/auth/hooks/useAuth';
 
-function App() {
-  const [count, setCount] = useState(0)
-
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+function Dashboard() {
+  const { user } = useAuth();
+  
+  if (user?.role === 'doctor') {
+    return <DoctorDashboard />;
+  }
+  
+  return <PatientDashboard />;
 }
 
-export default App
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+  return user ? <>{children}</> : <Navigate to="/login" replace />;
+}
+
+function AppRoutes() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<Layout />}>
+          <Route index element={<Navigate to="/dashboard" replace />} />
+          <Route path="login" element={<LoginForm />} />
+          <Route path="dashboard" element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="ai-chat" element={
+            <ProtectedRoute>
+              <AIChat />
+            </ProtectedRoute>
+          } />
+          <Route path="appointments" element={
+            <ProtectedRoute>
+              <div className="text-center py-12">
+                <h2 className="text-2xl font-bold text-gray-900">Appointments</h2>
+                <p className="text-gray-600 mt-2">Coming soon...</p>
+              </div>
+            </ProtectedRoute>
+          } />
+          <Route path="profile" element={
+            <ProtectedRoute>
+              <div className="text-center py-12">
+                <h2 className="text-2xl font-bold text-gray-900">Profile</h2>
+                <p className="text-gray-600 mt-2">Coming soon...</p>
+              </div>
+            </ProtectedRoute>
+          } />
+        </Route>
+      </Routes>
+    </Router>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppRoutes />
+    </AuthProvider>
+  );
+}
+
+export default App;
