@@ -9,6 +9,7 @@ import { AIChat } from '@/features/chat/components/AIChat';
 import { AISymptomChecker } from '@/features/symptomChecker/components/AISymptomChecker';
 import { AppointmentBooking } from '@/features/booking/components/AppointmentBooking';
 import { NotificationsPage } from '@/features/notifications/components/NotificationsPage';
+import { ProfilePage, SettingsPage } from '@/features/profile';
 import { useAuth } from '@/hooks/useAuth';
 
 function Dashboard() {
@@ -70,10 +71,12 @@ function App() {
           } />
           <Route path="profile" element={
             <ProtectedRoute>
-              <div className="text-center py-12">
-                <h2 className="text-2xl font-bold text-gray-900">Profile</h2>
-                <p className="text-gray-600 mt-2">Coming soon...</p>
-              </div>
+              <ProfilePage />
+            </ProtectedRoute>
+          } />
+          <Route path="settings" element={
+            <ProtectedRoute>
+              <SettingsPage />
             </ProtectedRoute>
           } />
         </Route>

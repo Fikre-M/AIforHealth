@@ -6,7 +6,8 @@ import {
   Users, 
   Settings, 
   Activity,
-  Stethoscope 
+  Stethoscope,
+  User
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { clsx } from 'clsx';
@@ -16,7 +17,8 @@ const patientNavItems = [
   { to: '/app/appointments', icon: Calendar, label: 'Appointments' },
   { to: '/app/ai-chat', icon: MessageCircle, label: 'AI Assistant' },
   { to: '/app/symptom-checker', icon: Activity, label: 'Symptom Checker' },
-  { to: '/app/profile', icon: Settings, label: 'Profile' },
+  { to: '/app/profile', icon: User, label: 'Profile' },
+  { to: '/app/settings', icon: Settings, label: 'Settings' },
 ];
 
 const doctorNavItems = [
@@ -25,7 +27,8 @@ const doctorNavItems = [
   { to: '/app/patients', icon: Users, label: 'Patients' },
   { to: '/app/ai-chat', icon: MessageCircle, label: 'AI Assistant' },
   { to: '/app/symptom-checker', icon: Activity, label: 'Symptom Checker' },
-  { to: '/app/profile', icon: Settings, label: 'Profile' },
+  { to: '/app/profile', icon: User, label: 'Profile' },
+  { to: '/app/settings', icon: Settings, label: 'Settings' },
 ];
 
 const adminNavItems = [
@@ -33,6 +36,7 @@ const adminNavItems = [
   { to: '/app/users', icon: Users, label: 'Users' },
   { to: '/app/doctors', icon: Stethoscope, label: 'Doctors' },
   { to: '/app/analytics', icon: Activity, label: 'Analytics' },
+  { to: '/app/profile', icon: User, label: 'Profile' },
   { to: '/app/settings', icon: Settings, label: 'Settings' },
 ];
 

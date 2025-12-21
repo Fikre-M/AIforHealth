@@ -47,3 +47,14 @@ export interface Notification {
   read: boolean;
   timestamp: string;
 }
+
+// Re-export profile types
+export type {
+  UserProfile,
+  UserSettings,
+  ProfileUpdateData,
+  SettingsUpdateData,
+  NotificationPreferences,
+  AppointmentReminderSettings,
+  AccessibilitySettings
+} from './profile';

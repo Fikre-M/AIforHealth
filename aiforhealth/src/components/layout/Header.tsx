@@ -1,13 +1,11 @@
 import { useState, useEffect } from 'react';
-import { User, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { NotificationBadge } from '@/components/notifications/NotificationBadge';
 import { NotificationDropdown } from '@/components/notifications/NotificationDropdown';
+import { ProfileDropdown } from '@/components/profile/ProfileDropdown';
 import { notificationService } from '@/services/notificationService';
-import { useAuth } from '@/hooks/useAuth';
 
 export function Header() {
-  const { user, logout } = useAuth();
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
   const navigate = useNavigate();
@@ -57,22 +55,8 @@ export function Header() {
             />
           </div>
           
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-medical-100 rounded-full flex items-center justify-center">
-              <User size={16} className="text-medical-600" />
-            </div>
-            <div className="hidden md:block">
-              <p className="text-sm font-medium text-gray-900">{user?.name}</p>
-              <p className="text-xs text-gray-500 capitalize">{user?.role}</p>
-            </div>
-            <button
-              onClick={logout}
-              className="p-2 text-gray-600 hover:text-gray-900"
-              title="Logout"
-            >
-              <LogOut size={16} />
-            </button>
-          </div>
+          {/* Profile Dropdown */}
+          <ProfileDropdown />
         </div>
       </div>
     </header>
