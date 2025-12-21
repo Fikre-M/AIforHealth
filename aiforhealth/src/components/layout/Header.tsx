@@ -1,8 +1,40 @@
-import { Bell, User, LogOut } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { User, LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { NotificationBadge } from '@/components/notifications/NotificationBadge';
+import { NotificationDropdown } from '@/components/notifications/NotificationDropdown';
+import { notificationService } from '@/services/notificationService';
 import { useAuth } from '@/hooks/useAuth';
 
 export function Header() {
   const { user, logout } = useAuth();
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    loadUnreadCount();
+    // Poll for new notifications every 30 seconds
+    const interval = setInterval(loadUnreadCount, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const loadUnreadCount = async () => {
+    try {
+      const unreadNotifications = await notificationService.getUnreadNotifications();
+      setUnreadCount(unreadNotifications.length);
+    } catch (error) {
+      console.error('Error loading unread count:', error);
+    }
+  };
+
+  const handleNotificationClick = () => {
+    setShowNotifications(!showNotifications);
+  };
+
+  const handleNavigate = (url: string) => {
+    navigate(url);
+  };
 
   return (
     <header className="bg-white border-b border-gray-200 px-6 py-4">
@@ -12,12 +44,18 @@ export function Header() {
         </div>
         
         <div className="flex items-center space-x-4">
-          <button className="p-2 text-gray-600 hover:text-gray-900 relative">
-            <Bell size={20} />
-            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-              3
-            </span>
-          </button>
+          {/* Notification System */}
+          <div className="relative">
+            <NotificationBadge
+              count={unreadCount}
+              onClick={handleNotificationClick}
+            />
+            <NotificationDropdown
+              isOpen={showNotifications}
+              onClose={() => setShowNotifications(false)}
+              onNavigate={handleNavigate}
+            />
+          </div>
           
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-medical-100 rounded-full flex items-center justify-center">
