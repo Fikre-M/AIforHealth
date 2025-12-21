@@ -6,6 +6,7 @@ import { RegisterForm } from '@/features/auth/components/RegisterForm';
 import { PatientDashboard } from '@/features/dashboard/components/PatientDashboard';
 import { DoctorDashboard } from '@/features/dashboard/components/DoctorDashboard';
 import { AIChat } from '@/features/chat/components/AIChat';
+import { AppointmentBooking } from '@/features/booking/components/AppointmentBooking';
 import { useAuth } from '@/hooks/useAuth';
 
 function Dashboard() {
@@ -48,6 +49,11 @@ function App() {
                 <h2 className="text-2xl font-bold text-gray-900">Appointments</h2>
                 <p className="text-gray-600 mt-2">Coming soon...</p>
               </div>
+            </ProtectedRoute>
+          } />
+          <Route path="appointments/book" element={
+            <ProtectedRoute>
+              <AppointmentBooking />
             </ProtectedRoute>
           } />
           <Route path="profile" element={
