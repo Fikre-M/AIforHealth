@@ -358,8 +358,14 @@ export function PatientDashboard() {
             icon={<TrendingUp className="h-5 w-5" />}
           >
             <div className="space-y-3">
-              <Link to="/app/ai-chat" className="block">
+              <Link to="/app/symptom-checker" className="block">
                 <Button variant="primary" className="w-full justify-start">
+                  <Activity className="mr-3 h-4 w-4" />
+                  Symptom Checker
+                </Button>
+              </Link>
+              <Link to="/app/ai-chat" className="block">
+                <Button variant="outline" className="w-full justify-start">
                   <MessageCircle className="mr-3 h-4 w-4" />
                   Ask AI Assistant
                 </Button>

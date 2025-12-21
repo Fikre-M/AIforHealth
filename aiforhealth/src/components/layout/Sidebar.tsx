@@ -15,6 +15,7 @@ const patientNavItems = [
   { to: '/app/dashboard', icon: Home, label: 'Dashboard' },
   { to: '/app/appointments', icon: Calendar, label: 'Appointments' },
   { to: '/app/ai-chat', icon: MessageCircle, label: 'AI Assistant' },
+  { to: '/app/symptom-checker', icon: Activity, label: 'Symptom Checker' },
   { to: '/app/profile', icon: Settings, label: 'Profile' },
 ];
 
@@ -23,6 +24,7 @@ const doctorNavItems = [
   { to: '/app/appointments', icon: Calendar, label: 'Appointments' },
   { to: '/app/patients', icon: Users, label: 'Patients' },
   { to: '/app/ai-chat', icon: MessageCircle, label: 'AI Assistant' },
+  { to: '/app/symptom-checker', icon: Activity, label: 'Symptom Checker' },
   { to: '/app/profile', icon: Settings, label: 'Profile' },
 ];
 

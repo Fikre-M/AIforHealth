@@ -6,6 +6,7 @@ import { RegisterForm } from '@/features/auth/components/RegisterForm';
 import { PatientDashboard } from '@/features/dashboard/components/PatientDashboard';
 import { DoctorDashboard } from '@/features/dashboard/components/DoctorDashboard';
 import { AIChat } from '@/features/chat/components/AIChat';
+import { AISymptomChecker } from '@/features/symptomChecker/components/AISymptomChecker';
 import { AppointmentBooking } from '@/features/booking/components/AppointmentBooking';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -41,6 +42,11 @@ function App() {
           <Route path="ai-chat" element={
             <ProtectedRoute>
               <AIChat />
+            </ProtectedRoute>
+          } />
+          <Route path="symptom-checker" element={
+            <ProtectedRoute>
+              <AISymptomChecker />
             </ProtectedRoute>
           } />
           <Route path="appointments" element={
