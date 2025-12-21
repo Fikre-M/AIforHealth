@@ -4,6 +4,11 @@ export interface User {
   name: string;
   role: 'patient' | 'doctor' | 'admin';
   avatar?: string;
+  phone?: string;
+  specialization?: string; // For doctors
+  licenseNumber?: string; // For doctors
+  verified: boolean;
+  createdAt: string;
 }
 
 export interface Appointment {

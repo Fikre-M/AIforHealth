@@ -1,15 +1,22 @@
 import { useState, useEffect } from 'react';
-import type { User } from '@/types';
-import { api } from '@/services/api';
+import type { User, LoginCredentials, RegisterData, AuthState } from '@/types/auth';
+import { authService } from '@/services/authService';
 
-interface AuthState {
-  user: User | null;
-  isLoading: boolean;
+interface AuthActions {
+  login: (credentials: LoginCredentials) => Promise<void>;
+  register: (data: RegisterData) => Promise<void>;
+  logout: () => Promise<void>;
+  refreshToken: () => Promise<void>;
 }
+
+type AuthHook = AuthState & AuthActions;
 
 let authState: AuthState = {
   user: null,
+  token: null,
+  refreshToken: null,
   isLoading: false,
+  isAuthenticated: false,
 };
 
 const listeners: Array<(state: AuthState) => void> = [];
@@ -20,16 +27,62 @@ function notifyListeners() {
 
 function updateAuthState(newState: Partial<AuthState>) {
   authState = { ...authState, ...newState };
+  
+  // Persist to localStorage
+  if (authState.user && authState.token) {
+    localStorage.setItem('auth-user', JSON.stringify(authState.user));
+    localStorage.setItem('auth-token', authState.token);
+    localStorage.setItem('auth-refresh-token', authState.refreshToken || '');
+  } else {
+    localStorage.removeItem('auth-user');
+    localStorage.removeItem('auth-token');
+    localStorage.removeItem('auth-refresh-token');
+  }
+  
   notifyListeners();
 }
 
 // Initialize from localStorage
-const stored = localStorage.getItem('auth-user');
-if (stored) {
-  authState.user = JSON.parse(stored);
+function initializeAuth() {
+  try {
+    const storedUser = localStorage.getItem('auth-user');
+    const storedToken = localStorage.getItem('auth-token');
+    const storedRefreshToken = localStorage.getItem('auth-refresh-token');
+
+    if (storedUser && storedToken) {
+      const user = JSON.parse(storedUser);
+      authState = {
+        user,
+        token: storedToken,
+        refreshToken: storedRefreshToken,
+        isLoading: false,
+        isAuthenticated: true,
+      };
+
+      // Verify token is still valid
+      authService.verifyToken(storedToken).catch(() => {
+        // Token invalid, clear auth state
+        updateAuthState({
+          user: null,
+          token: null,
+          refreshToken: null,
+          isAuthenticated: false,
+        });
+      });
+    }
+  } catch (error) {
+    console.error('Error initializing auth:', error);
+    // Clear invalid data
+    localStorage.removeItem('auth-user');
+    localStorage.removeItem('auth-token');
+    localStorage.removeItem('auth-refresh-token');
+  }
 }
 
-export function useAuth() {
+// Initialize on module load
+initializeAuth();
+
+export function useAuth(): AuthHook {
   const [state, setState] = useState(authState);
 
   useEffect(() => {
@@ -42,45 +95,86 @@ export function useAuth() {
     };
   }, []);
 
-  useEffect(() => {
-    if (state.user) {
-      localStorage.setItem('auth-user', JSON.stringify(state.user));
-    } else {
-      localStorage.removeItem('auth-user');
-    }
-  }, [state.user]);
-
-  const login = async (email: string, password: string) => {
+  const login = async (credentials: LoginCredentials) => {
     updateAuthState({ isLoading: true });
     try {
-      const userData = await api.login(email, password);
-      updateAuthState({ user: userData, isLoading: false });
+      const response = await authService.login(credentials);
+      updateAuthState({
+        user: response.user,
+        token: response.token,
+        refreshToken: response.refreshToken,
+        isLoading: false,
+        isAuthenticated: true,
+      });
     } catch (error) {
       updateAuthState({ isLoading: false });
       throw error;
     }
   };
 
-  const register = async (userData: Omit<User, 'id'>) => {
+  const register = async (data: RegisterData) => {
     updateAuthState({ isLoading: true });
     try {
-      const newUser = await api.register(userData);
-      updateAuthState({ user: newUser, isLoading: false });
+      const response = await authService.register(data);
+      updateAuthState({
+        user: response.user,
+        token: response.token,
+        refreshToken: response.refreshToken,
+        isLoading: false,
+        isAuthenticated: true,
+      });
     } catch (error) {
       updateAuthState({ isLoading: false });
       throw error;
     }
   };
 
-  const logout = () => {
-    updateAuthState({ user: null });
+  const logout = async () => {
+    updateAuthState({ isLoading: true });
+    try {
+      await authService.logout();
+      updateAuthState({
+        user: null,
+        token: null,
+        refreshToken: null,
+        isLoading: false,
+        isAuthenticated: false,
+      });
+    } catch (error) {
+      // Even if logout fails, clear local state
+      updateAuthState({
+        user: null,
+        token: null,
+        refreshToken: null,
+        isLoading: false,
+        isAuthenticated: false,
+      });
+    }
+  };
+
+  const refreshToken = async () => {
+    if (!authState.refreshToken) {
+      throw new Error('No refresh token available');
+    }
+
+    try {
+      const response = await authService.refreshToken(authState.refreshToken);
+      updateAuthState({
+        token: response.token,
+        refreshToken: response.refreshToken,
+      });
+    } catch (error) {
+      // Refresh failed, logout user
+      await logout();
+      throw error;
+    }
   };
 
   return {
-    user: state.user,
-    isLoading: state.isLoading,
+    ...state,
     login,
     register,
     logout,
+    refreshToken,
   };
 }
