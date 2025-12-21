@@ -11,7 +11,7 @@ export function PatientDashboard() {
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Link to="/appointments/book" className="card hover:shadow-md transition-shadow">
+        <Link to="/app/appointments/book" className="card hover:shadow-md transition-shadow">
           <div className="flex items-center space-x-4">
             <div className="p-3 bg-medical-100 rounded-lg">
               <Calendar className="h-6 w-6 text-medical-600" />
@@ -23,7 +23,7 @@ export function PatientDashboard() {
           </div>
         </Link>
 
-        <Link to="/ai-chat" className="card hover:shadow-md transition-shadow">
+        <Link to="/app/ai-chat" className="card hover:shadow-md transition-shadow">
           <div className="flex items-center space-x-4">
             <div className="p-3 bg-blue-100 rounded-lg">
               <MessageCircle className="h-6 w-6 text-blue-600" />
@@ -52,7 +52,7 @@ export function PatientDashboard() {
       <div className="card">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-gray-900">Upcoming Appointments</h2>
-          <Link to="/appointments" className="text-medical-600 hover:text-medical-700 text-sm font-medium">
+          <Link to="/app/appointments" className="text-medical-600 hover:text-medical-700 text-sm font-medium">
             View all
           </Link>
         </div>

@@ -18,7 +18,7 @@ export function LoginForm() {
     
     try {
       await login(email, password);
-      navigate('/dashboard');
+      navigate('/app/dashboard');
     } catch (err) {
       setError('Invalid email or password');
     }

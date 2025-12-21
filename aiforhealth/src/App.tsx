@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
+import { LandingPage } from '@/features/landing/components/LandingPage';
 import { LoginForm } from '@/features/auth/components/LoginForm';
 import { PatientDashboard } from '@/features/dashboard/components/PatientDashboard';
 import { DoctorDashboard } from '@/features/dashboard/components/DoctorDashboard';
@@ -25,8 +26,9 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Layout />}>
-          <Route index element={<Navigate to="/dashboard" replace />} />
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/app" element={<Layout />}>
+          <Route index element={<Navigate to="/app/dashboard" replace />} />
           <Route path="login" element={<LoginForm />} />
           <Route path="dashboard" element={
             <ProtectedRoute>
@@ -55,6 +57,7 @@ function App() {
             </ProtectedRoute>
           } />
         </Route>
+        <Route path="/login" element={<LoginForm />} />
       </Routes>
     </Router>
   );

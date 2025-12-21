@@ -12,26 +12,26 @@ import { useAuth } from '@/hooks/useAuth';
 import { clsx } from 'clsx';
 
 const patientNavItems = [
-  { to: '/dashboard', icon: Home, label: 'Dashboard' },
-  { to: '/appointments', icon: Calendar, label: 'Appointments' },
-  { to: '/ai-chat', icon: MessageCircle, label: 'AI Assistant' },
-  { to: '/profile', icon: Settings, label: 'Profile' },
+  { to: '/app/dashboard', icon: Home, label: 'Dashboard' },
+  { to: '/app/appointments', icon: Calendar, label: 'Appointments' },
+  { to: '/app/ai-chat', icon: MessageCircle, label: 'AI Assistant' },
+  { to: '/app/profile', icon: Settings, label: 'Profile' },
 ];
 
 const doctorNavItems = [
-  { to: '/dashboard', icon: Home, label: 'Dashboard' },
-  { to: '/appointments', icon: Calendar, label: 'Appointments' },
-  { to: '/patients', icon: Users, label: 'Patients' },
-  { to: '/ai-chat', icon: MessageCircle, label: 'AI Assistant' },
-  { to: '/profile', icon: Settings, label: 'Profile' },
+  { to: '/app/dashboard', icon: Home, label: 'Dashboard' },
+  { to: '/app/appointments', icon: Calendar, label: 'Appointments' },
+  { to: '/app/patients', icon: Users, label: 'Patients' },
+  { to: '/app/ai-chat', icon: MessageCircle, label: 'AI Assistant' },
+  { to: '/app/profile', icon: Settings, label: 'Profile' },
 ];
 
 const adminNavItems = [
-  { to: '/dashboard', icon: Home, label: 'Dashboard' },
-  { to: '/users', icon: Users, label: 'Users' },
-  { to: '/doctors', icon: Stethoscope, label: 'Doctors' },
-  { to: '/analytics', icon: Activity, label: 'Analytics' },
-  { to: '/settings', icon: Settings, label: 'Settings' },
+  { to: '/app/dashboard', icon: Home, label: 'Dashboard' },
+  { to: '/app/users', icon: Users, label: 'Users' },
+  { to: '/app/doctors', icon: Stethoscope, label: 'Doctors' },
+  { to: '/app/analytics', icon: Activity, label: 'Analytics' },
+  { to: '/app/settings', icon: Settings, label: 'Settings' },
 ];
 
 export function Sidebar() {
