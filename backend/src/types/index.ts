@@ -21,6 +21,27 @@ export enum UserRole {
   ADMIN = 'admin',
 }
 
+// Appointment status enum
+export enum AppointmentStatus {
+  SCHEDULED = 'scheduled',
+  CONFIRMED = 'confirmed',
+  IN_PROGRESS = 'in_progress',
+  COMPLETED = 'completed',
+  MISSED = 'missed',
+  CANCELLED = 'cancelled',
+  RESCHEDULED = 'rescheduled'
+}
+
+// Appointment type enum
+export enum AppointmentType {
+  CONSULTATION = 'consultation',
+  FOLLOW_UP = 'follow_up',
+  EMERGENCY = 'emergency',
+  ROUTINE_CHECKUP = 'routine_checkup',
+  SPECIALIST = 'specialist',
+  TELEMEDICINE = 'telemedicine'
+}
+
 // Common query parameters
 export interface QueryParams {
   page?: number;

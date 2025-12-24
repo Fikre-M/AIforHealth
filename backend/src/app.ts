@@ -7,6 +7,7 @@ import {
   rateLimiter,
   security,
   logger,
+  authErrorHandler,
 } from '@/middleware';
 import routes from '@/routes';
 
@@ -65,6 +66,9 @@ class App {
   }
 
   private initializeErrorHandling(): void {
+    // Auth-specific error handler (before general error handler)
+    this.app.use(authErrorHandler);
+
     // 404 handler
     this.app.use(notFound);
 

@@ -1,7 +1,5 @@
 // Authentication feature module
-// This will contain auth routes, controllers, services, and models
+// This contains auth routes, controllers, services, and middleware
 
 export * from './routes';
-// export * from './controllers';
-// export * from './services';
-// export * from './models';
+export { default as authRoutes } from './routes';
