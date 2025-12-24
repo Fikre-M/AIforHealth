@@ -21,7 +21,12 @@ class Server {
       });
 
       // Graceful shutdown
-      this.setupGracefulShutdown();
+      // this.setupGracefulShutdown();
+      process.on("SIGINT", async () => {
+        await mongoose.connection.close();
+        process.exit(0);
+      });
+
 
     } catch (error) {
       console.error('❌ Failed to start server:', error);
