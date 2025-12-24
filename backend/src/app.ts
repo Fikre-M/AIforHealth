@@ -39,7 +39,9 @@ class App {
       const start = Date.now();
       res.on('finish', () => {
         const duration = Date.now() - start;
-        res.setHeader('X-Response-Time', duration);
+        if (!res.headersSent) {
+          res.setHeader('X-Response-Time', duration);
+        }
       });
       next();
     });

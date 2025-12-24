@@ -39,8 +39,6 @@ class Database {
       serverSelectionTimeoutMS: env.MONGODB_SERVER_SELECTION_TIMEOUT_MS,
       socketTimeoutMS: 45000, // 45 seconds
       connectTimeoutMS: 10000, // 10 seconds
-      bufferCommands: false,
-      bufferMaxEntries: 0,
       maxIdleTimeMS: env.MONGODB_MAX_IDLE_TIME_MS,
       heartbeatFrequencyMS: 10000, // Check server status every 10 seconds
     };
