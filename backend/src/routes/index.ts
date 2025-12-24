@@ -1,8 +1,12 @@
 import { Router } from 'express';
 import { ResponseUtil } from '@/utils/response';
 import { database, checkDatabaseHealth, getDatabaseStats } from '@/config/database';
+import userRoutes from '@/features/users/routes';
 
 const router = Router();
+
+// Feature routes
+router.use('/users', userRoutes);
 
 // Health check endpoint
 router.get('/health', async (req, res) => {

@@ -1,11 +1,19 @@
 import { Router } from 'express';
+import { UserController } from '@/controllers';
+import { ValidationUtil } from '@/utils';
 
 const router = Router();
 
-// Placeholder routes - will be implemented in future features
-// GET /users
-// GET /users/:id
-// PUT /users/:id
-// DELETE /users/:id
+// User CRUD routes
+router.post('/', ValidationUtil.validateUserRegistration(), UserController.createUser);
+router.get('/', UserController.getUsers);
+router.get('/stats', UserController.getUserStats);
+router.get('/:id', UserController.getUserById);
+router.put('/:id', ValidationUtil.validateUserProfileUpdate(), UserController.updateUser);
+router.delete('/:id', UserController.deleteUser);
+
+// User-specific actions
+router.put('/:id/password', ValidationUtil.validatePasswordUpdate(), UserController.updatePassword);
+router.put('/:id/verify-email', UserController.verifyEmail);
 
 export default router;

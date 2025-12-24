@@ -93,9 +93,24 @@ MONGODB_WRITE_CONCERN=majority
 
 ## API Endpoints
 
+### Core Endpoints
 - `GET /` - API information
 - `GET /api/v1/health` - Health check
-- Feature endpoints will be added as modules are implemented
+
+### User Management
+- `POST /api/v1/users` - Create new user
+- `GET /api/v1/users` - Get all users (with pagination and filtering)
+- `GET /api/v1/users/stats` - Get user statistics
+- `GET /api/v1/users/:id` - Get user by ID
+- `PUT /api/v1/users/:id` - Update user profile
+- `DELETE /api/v1/users/:id` - Delete user (soft delete)
+- `PUT /api/v1/users/:id/password` - Update user password
+- `PUT /api/v1/users/:id/verify-email` - Verify user email
+
+### Future Endpoints
+- ⏳ Authentication endpoints
+- ⏳ Doctor management endpoints
+- ⏳ Appointment booking endpoints
 
 ## Features Ready for Implementation
 
@@ -103,7 +118,18 @@ MONGODB_WRITE_CONCERN=majority
 - ✅ Database connection setup
 - ✅ Security middleware
 - ✅ Error handling and logging
-- ⏳ Authentication system
-- ⏳ User management
-- ⏳ Doctor profiles
-- ⏳ Appointment booking
+- ✅ User schema and management system
+- ⏳ Authentication system (JWT)
+- ⏳ Doctor profiles and specializations
+- ⏳ Appointment booking system
+
+## User Schema
+
+The User model includes:
+- **Basic Info**: name, email, password (hashed)
+- **Role-based Access**: patient, doctor, admin roles
+- **Security Features**: account locking, login attempts tracking
+- **Email Verification**: verification tokens and status
+- **Password Reset**: secure token-based password reset
+- **Audit Fields**: timestamps, last login tracking
+- **Soft Delete**: isActive flag for data retention

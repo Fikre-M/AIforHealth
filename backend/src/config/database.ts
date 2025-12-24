@@ -48,7 +48,7 @@ class Database {
       return {
         ...baseOptions,
         retryWrites: env.MONGODB_RETRY_WRITES,
-        w: env.MONGODB_WRITE_CONCERN, // Write concern for data safety
+        w: env.MONGODB_WRITE_CONCERN as any, // Write concern for data safety
         readPreference: 'primaryPreferred',
         compressors: ['zlib'], // Enable compression
       };
@@ -207,8 +207,6 @@ class Database {
     }
   }
 }
-
-export const database = Database.getInstance();
 
 export const database = Database.getInstance();
 

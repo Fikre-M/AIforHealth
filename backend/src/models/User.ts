@@ -1,0 +1,230 @@
+import mongoose, { Document, Schema } from 'mongoose';
+import bcrypt from 'bcryptjs';
+import { UserRole } from '@/types';
+
+export interface IUser extends Document {
+  name: string;
+  email: string;
+  password: string;
+  role: UserRole;
+  isActive: boolean;
+  isEmailVerified: boolean;
+  emailVerificationToken?: string;
+  passwordResetToken?: string;
+  passwordResetExpires?: Date;
+  lastLogin?: Date;
+  loginAttempts: number;
+  lockUntil?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+  
+  // Instance methods
+  comparePassword(candidatePassword: string): Promise<boolean>;
+  generatePasswordResetToken(): string;
+  generateEmailVerificationToken(): string;
+  isLocked(): boolean;
+  incrementLoginAttempts(): Promise<void>;
+}
+
+const userSchema = new Schema<IUser>(
+  {
+    name: {
+      type: String,
+      required: [true, 'Name is required'],
+      trim: true,
+      minlength: [2, 'Name must be at least 2 characters long'],
+      maxlength: [50, 'Name cannot exceed 50 characters'],
+    },
+    email: {
+      type: String,
+      required: [true, 'Email is required'],
+      unique: true,
+      lowercase: true,
+      trim: true,
+      match: [
+        /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+        'Please provide a valid email address',
+      ],
+    },
+    password: {
+      type: String,
+      required: [true, 'Password is required'],
+      minlength: [8, 'Password must be at least 8 characters long'],
+      select: false, // Don't include password in queries by default
+    },
+    role: {
+      type: String,
+      enum: {
+        values: Object.values(UserRole),
+        message: 'Role must be either patient, doctor, or admin',
+      },
+      default: UserRole.PATIENT,
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+    isEmailVerified: {
+      type: Boolean,
+      default: false,
+    },
+    emailVerificationToken: {
+      type: String,
+      select: false,
+    },
+    passwordResetToken: {
+      type: String,
+      select: false,
+    },
+    passwordResetExpires: {
+      type: Date,
+      select: false,
+    },
+    lastLogin: {
+      type: Date,
+    },
+    loginAttempts: {
+      type: Number,
+      default: 0,
+    },
+    lockUntil: {
+      type: Date,
+    },
+  },
+  {
+    timestamps: true,
+    toJSON: {
+      transform: function (doc, ret) {
+        const { password, passwordResetToken, passwordResetExpires, emailVerificationToken, __v, ...userObject } = ret;
+        return userObject;
+      },
+    },
+    toObject: {
+      transform: function (doc, ret) {
+        const { password, passwordResetToken, passwordResetExpires, emailVerificationToken, __v, ...userObject } = ret;
+        return userObject;
+      },
+    },
+  }
+);
+
+// Indexes for performance (email index is already created by unique: true)
+userSchema.index({ role: 1 });
+userSchema.index({ isActive: 1 });
+userSchema.index({ createdAt: -1 });
+
+// Constants for account locking
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOCK_TIME = 2 * 60 * 60 * 1000; // 2 hours
+
+// Virtual for account lock status
+userSchema.virtual('accountLocked').get(function (this: IUser) {
+  return !!(this.lockUntil && this.lockUntil > new Date());
+});
+
+// Pre-save middleware to hash password
+userSchema.pre('save', async function (next) {
+  // Only hash the password if it has been modified (or is new)
+  if (!this.isModified('password')) return next();
+
+  try {
+    // Hash password with cost of 12
+    const salt = await bcrypt.genSalt(12);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (error) {
+    next(error as Error);
+  }
+});
+
+// Pre-save middleware to handle login attempts
+userSchema.pre('save', function (next) {
+  // If we have a previous value and we're not modifying loginAttempts
+  if (!this.isNew && !this.isModified('loginAttempts')) {
+    return next();
+  }
+
+  // If we have too many attempts and no lock expiration, set lock
+  if (this.loginAttempts >= MAX_LOGIN_ATTEMPTS && !this.lockUntil) {
+    this.lockUntil = new Date(Date.now() + LOCK_TIME);
+  }
+
+  next();
+});
+
+// Instance method to compare password
+userSchema.methods.comparePassword = async function (
+  candidatePassword: string
+): Promise<boolean> {
+  try {
+    return await bcrypt.compare(candidatePassword, this.password);
+  } catch (error) {
+    throw new Error('Password comparison failed');
+  }
+};
+
+// Instance method to generate password reset token
+userSchema.methods.generatePasswordResetToken = function (): string {
+  const resetToken = Math.random().toString(36).substring(2, 15) + 
+                    Math.random().toString(36).substring(2, 15);
+  
+  this.passwordResetToken = resetToken;
+  this.passwordResetExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+  
+  return resetToken;
+};
+
+// Instance method to generate email verification token
+userSchema.methods.generateEmailVerificationToken = function (): string {
+  const verificationToken = Math.random().toString(36).substring(2, 15) + 
+                           Math.random().toString(36).substring(2, 15);
+  
+  this.emailVerificationToken = verificationToken;
+  
+  return verificationToken;
+};
+
+// Instance method to check if account is locked
+userSchema.methods.isLocked = function (): boolean {
+  return !!(this.lockUntil && this.lockUntil > new Date());
+};
+
+// Instance method to increment login attempts
+userSchema.methods.incrementLoginAttempts = async function (): Promise<void> {
+  // If we have a previous lock that has expired, restart at 1
+  if (this.lockUntil && this.lockUntil < new Date()) {
+    return this.updateOne({
+      $unset: { lockUntil: 1 },
+      $set: { loginAttempts: 1 },
+    });
+  }
+  
+  const updates: any = { $inc: { loginAttempts: 1 } };
+  
+  // If we have hit max attempts and it's not locked yet, add the lock
+  if (this.loginAttempts + 1 >= MAX_LOGIN_ATTEMPTS && !this.isLocked()) {
+    updates.$set = { lockUntil: Date.now() + LOCK_TIME };
+  }
+  
+  return this.updateOne(updates);
+};
+
+// Static method to find user by email with password
+userSchema.statics.findByEmailWithPassword = function (email: string) {
+  return this.findOne({ email }).select('+password');
+};
+
+// Static method to unlock account
+userSchema.statics.unlockAccount = function (userId: string) {
+  return this.updateOne(
+    { _id: userId },
+    {
+      $unset: { lockUntil: 1 },
+      $set: { loginAttempts: 0 },
+    }
+  );
+};
+
+const User = mongoose.model<IUser>('User', userSchema);
+
+export default User;

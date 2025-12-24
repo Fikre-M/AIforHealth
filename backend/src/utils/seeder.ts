@@ -1,5 +1,7 @@
 import { database } from '@/config/database';
 import { isDevelopment } from '@/config/env';
+import { User } from '@/models';
+import { UserRole } from '@/types';
 
 /**
  * Database seeder for development and testing
@@ -33,16 +35,54 @@ export class DatabaseSeeder {
         await database.connect();
       }
 
-      // TODO: Add seeding logic for different models
-      // await this.seedUsers();
-      // await this.seedDoctors();
-      // await this.seedAppointments();
+      // Seed users
+      await this.seedUsers();
 
       console.log('✅ Database seeding completed successfully');
     } catch (error) {
       console.error('❌ Database seeding failed:', error);
       throw error;
     }
+  }
+
+  /**
+   * Seed users
+   */
+  private async seedUsers(): Promise<void> {
+    console.log('👥 Seeding users...');
+
+    const existingUsers = await User.countDocuments();
+    if (existingUsers > 0) {
+      console.log('👥 Users already exist, skipping user seeding');
+      return;
+    }
+
+    const users = [
+      {
+        name: 'Admin User',
+        email: 'admin@aiforhealth.com',
+        password: 'Admin123!@#',
+        role: UserRole.ADMIN,
+        isEmailVerified: true,
+      },
+      {
+        name: 'Dr. John Smith',
+        email: 'doctor@aiforhealth.com',
+        password: 'Doctor123!@#',
+        role: UserRole.DOCTOR,
+        isEmailVerified: true,
+      },
+      {
+        name: 'Jane Doe',
+        email: 'patient@aiforhealth.com',
+        password: 'Patient123!@#',
+        role: UserRole.PATIENT,
+        isEmailVerified: true,
+      },
+    ];
+
+    await User.insertMany(users);
+    console.log(`✅ Created ${users.length} users`);
   }
 
   /**
@@ -57,13 +97,9 @@ export class DatabaseSeeder {
     try {
       console.log('🧹 Clearing database...');
       
-      // Get all collections
-      const collections = await database.getStats();
-      
-      // TODO: Drop collections when models are created
-      // await User.deleteMany({});
-      // await Doctor.deleteMany({});
-      // await Appointment.deleteMany({});
+      // Clear users
+      await User.deleteMany({});
+      console.log('✅ Cleared users');
 
       console.log('✅ Database cleared successfully');
     } catch (error) {
