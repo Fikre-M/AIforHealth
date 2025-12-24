@@ -9,6 +9,12 @@ interface EnvConfig {
   API_VERSION: string;
   MONGODB_URI: string;
   MONGODB_TEST_URI: string;
+  MONGODB_MAX_POOL_SIZE: number;
+  MONGODB_MIN_POOL_SIZE: number;
+  MONGODB_MAX_IDLE_TIME_MS: number;
+  MONGODB_SERVER_SELECTION_TIMEOUT_MS: number;
+  MONGODB_RETRY_WRITES: boolean;
+  MONGODB_WRITE_CONCERN: string;
   JWT_SECRET: string;
   JWT_EXPIRES_IN: string;
   JWT_REFRESH_SECRET: string;
@@ -36,12 +42,27 @@ const getEnvNumber = (key: string, defaultValue?: number): number => {
   return value ? parseInt(value, 10) : defaultValue!;
 };
 
+const getEnvBoolean = (key: string, defaultValue?: boolean): boolean => {
+  const value = process.env[key];
+  if (!value && defaultValue === undefined) {
+    throw new Error(`Environment variable ${key} is required`);
+  }
+  if (!value) return defaultValue!;
+  return value.toLowerCase() === 'true';
+};
+
 export const env: EnvConfig = {
   NODE_ENV: getEnvVar('NODE_ENV', 'development'),
   PORT: getEnvNumber('PORT', 5000),
   API_VERSION: getEnvVar('API_VERSION', 'v1'),
   MONGODB_URI: getEnvVar('MONGODB_URI'),
   MONGODB_TEST_URI: getEnvVar('MONGODB_TEST_URI'),
+  MONGODB_MAX_POOL_SIZE: getEnvNumber('MONGODB_MAX_POOL_SIZE', 20),
+  MONGODB_MIN_POOL_SIZE: getEnvNumber('MONGODB_MIN_POOL_SIZE', 5),
+  MONGODB_MAX_IDLE_TIME_MS: getEnvNumber('MONGODB_MAX_IDLE_TIME_MS', 30000),
+  MONGODB_SERVER_SELECTION_TIMEOUT_MS: getEnvNumber('MONGODB_SERVER_SELECTION_TIMEOUT_MS', 10000),
+  MONGODB_RETRY_WRITES: getEnvBoolean('MONGODB_RETRY_WRITES', true),
+  MONGODB_WRITE_CONCERN: getEnvVar('MONGODB_WRITE_CONCERN', 'majority'),
   JWT_SECRET: getEnvVar('JWT_SECRET'),
   JWT_EXPIRES_IN: getEnvVar('JWT_EXPIRES_IN', '7d'),
   JWT_REFRESH_SECRET: getEnvVar('JWT_REFRESH_SECRET'),

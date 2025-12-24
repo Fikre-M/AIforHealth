@@ -8,7 +8,11 @@
     "start": "node dist/server.js",
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "clean": "rimraf dist",
-    "prebuild": "npm run clean"
+    "prebuild": "npm run clean",
+    "db:seed": "ts-node -r tsconfig-paths/register src/scripts/database.ts seed",
+    "db:clear": "ts-node -r tsconfig-paths/register src/scripts/database.ts clear",
+    "db:reset": "ts-node -r tsconfig-paths/register src/scripts/database.ts reset",
+    "db:status": "ts-node -r tsconfig-paths/register src/scripts/database.ts status"
   },
   "keywords": ["healthcare", "ai", "medical", "appointments", "api"],
   "author": "",
@@ -35,7 +39,9 @@
     "@types/jsonwebtoken": "^9.0.5",
     "@types/bcryptjs": "^2.4.6",
     "typescript": "^5.3.3",
+    "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
+    "tsconfig-paths": "^4.2.0",
     "rimraf": "^5.0.5"
   },
   "engines": {
