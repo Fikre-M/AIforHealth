@@ -117,6 +117,19 @@ MONGODB_WRITE_CONCERN=majority
 - `PUT /api/v1/users/:id/password` - Update user password (owner or admin)
 - `PUT /api/v1/users/:id/verify-email` - Verify user email (owner or admin)
 
+### Appointment Management (Protected)
+- `POST /api/v1/appointments` - Create new appointment
+- `GET /api/v1/appointments` - Get appointments (with filtering and pagination)
+- `GET /api/v1/appointments/stats` - Get appointment statistics (doctors/admins only)
+- `GET /api/v1/appointments/availability` - Check doctor availability
+- `GET /api/v1/appointments/user/:userId` - Get user's appointments
+- `GET /api/v1/appointments/:id` - Get appointment by ID
+- `PUT /api/v1/appointments/:id` - Update appointment
+- `PATCH /api/v1/appointments/:id/status` - Update appointment status
+- `POST /api/v1/appointments/:id/cancel` - Cancel appointment
+- `POST /api/v1/appointments/:id/reschedule` - Reschedule appointment
+- `POST /api/v1/appointments/:id/complete` - Complete appointment (doctors only)
+
 ### Protected Route Examples
 - `GET /api/v1/protected/public` - Public endpoint (no auth required)
 - `GET /api/v1/protected/optional-auth` - Optional authentication
@@ -142,8 +155,12 @@ MONGODB_WRITE_CONCERN=majority
 - ✅ Error handling and logging
 - ✅ User schema and management system
 - ✅ JWT Authentication system
+- ✅ Comprehensive authorization middleware
+- ✅ Appointment schema and management system
+- ✅ Complete appointment APIs
 - ⏳ Doctor profiles and specializations
-- ⏳ Appointment booking system
+- ⏳ Real-time notifications
+- ⏳ Payment integration
 
 ## Authentication & Authorization Middleware
 
