@@ -1,16 +1,13 @@
-import express, { Express } from "express";
+import express, { Express, Request, Response, NextFunction, ErrorRequestHandler } from "express";
 import { env } from "@/config/env";
 import { database } from "@/config/database";
 import aiAssistantRoutes from "./routes/aiAssistantRoutes";
 import patientRoutes from "./routes/patientRoutes";
-import {
-  errorHandler,
-  notFound,
-  handleUnhandledRejection,
-  handleUncaughtException,
-} from "./middleware/errorHandler";
+import authRoutes from "./routes/authRoutes";
+import { errorHandler, notFound } from "./middleware/errorHandler";
 import swaggerUi from "swagger-ui-express";
 import { specs } from "./config/swagger";
+import { HttpError } from 'http-errors';
 
 class App {
   public app: Express;
@@ -28,35 +25,44 @@ class App {
     this.app.use(express.urlencoded({ extended: true }));
 
     // Swagger UI
-    this.app.use(
-      "/api-docs",
-      swaggerUi.serve,
-      swaggerUi.setup(specs, {
-        explorer: true,
-        customCss: ".swagger-ui .topbar { display: none }",
-        customSiteTitle: "AI for Health API",
-      })
-    );
+    const swaggerOptions = {
+      explorer: true,
+      customCss: ".swagger-ui .topbar { display: none }",
+      customSiteTitle: "AI for Health API",
+    };
+    
+    const swaggerUiHandler = swaggerUi.setup(specs, swaggerOptions);
+    this.app.use("/api-docs", swaggerUi.serve, swaggerUiHandler);
   }
 
   private initializeRoutes(): void {
     // API routes
+    this.app.use("/api/v1/auth", authRoutes);
     this.app.use("/api/v1/ai-assistant", aiAssistantRoutes);
     this.app.use("/api/v1/patients", patientRoutes);
 
     // 404 handler
-    this.app.use(notFound);
+    this.app.use((req: Request, res: Response, next: NextFunction) => {
+      notFound(req, res, next);
+    });
   }
 
   private initializeErrorHandling(): void {
     // Error handling
-    this.app.use(errorHandler);
+    this.app.use(errorHandler as ErrorRequestHandler);
 
     // Handle unhandled promise rejections
-    process.on("unhandledRejection", handleUnhandledRejection);
+    process.on("unhandledRejection", (reason: unknown, promise: Promise<unknown>) => {
+      console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+      // Consider logging the error or sending it to an error tracking service
+    });
 
     // Handle uncaught exceptions
-    process.on("uncaughtException", handleUncaughtException);
+    process.on("uncaughtException", (error: Error) => {
+      console.error('Uncaught Exception:', error);
+      // Consider logging the error or sending it to an error tracking service
+      process.exit(1);
+    });
   }
 
   public async connectDatabase(): Promise<void> {
