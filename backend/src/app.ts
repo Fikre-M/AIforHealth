@@ -1,4 +1,3 @@
-// src/app.ts
 import express, { Express } from "express";
 import { env } from "@/config/env";
 import { database } from "@/config/database";
