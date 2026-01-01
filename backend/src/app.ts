@@ -3,6 +3,21 @@ import { env } from '@/config/env';
 import { database } from '@/config/database';
 import aiAssistantRoutes from "./routes/aiAssistantRoutes";
 import patientRoutes from './routes/patientRoutes';
+import { errorHandler, notFound, handleUnhandledRejection, handleUncaughtException } from './middleware/errorHandler';
+
+
+
+
+// Add this before other route handlers
+app.use(express.json());
+
+// Add this after all other route handlers
+app.use(notFound);
+app.use(errorHandler);
+
+// Add error handling for unhandled rejections and exceptions
+process.on('unhandledRejection', handleUnhandledRejection);
+process.on('uncaughtException', handleUncaughtException);
 
 
 
