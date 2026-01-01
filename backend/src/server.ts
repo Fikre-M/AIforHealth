@@ -1,58 +1,29 @@
-import App from './app';
-import { env } from '@/config/env';
+// src/server.ts
+import App from "./app";
 
-class Server {
-  private app: App;
+const app = new App();
 
-  constructor() {
-    this.app = new App();
+// Connect to database and start the server
+const startServer = async () => {
+  try {
+    await app.connectDatabase();
+    app.start();
+  } catch (error) {
+    console.error("Failed to start server:", error);
+    await app.disconnectDatabase();
+    process.exit(1);
   }
+};
 
-  public async start(): Promise<void> {
-    try {
-      // Connect to database
-      await this.app.connectDatabase();
+// Handle graceful shutdown
+const shutdown = async () => {
+  console.log("Shutting down server...");
+  await app.disconnectDatabase();
+  process.exit(0);
+};
 
-      // Start server
-      this.app.app.listen(env.PORT, () => {
-        console.log(`🚀 Server running on port ${env.PORT}`);
-        console.log(`📍 Environment: ${env.NODE_ENV}`);
-        console.log(`🔗 API Base URL: http://localhost:${env.PORT}/api/${env.API_VERSION}`);
-      });
+process.on("SIGTERM", shutdown);
+process.on("SIGINT", shutdown);
 
-      // Graceful shutdown
-      // this.setupGracefulShutdown();
-      process.on("SIGINT", async () => {
-        await mongoose.connection.close();
-        process.exit(0);
-      });
-
-
-    } catch (error) {
-      console.error('❌ Failed to start server:', error);
-      process.exit(1);
-    }
-  }
-
-  private setupGracefulShutdown(): void {
-    const gracefulShutdown = async (signal: string) => {
-      console.log(`\n⚠️ Received ${signal}. Starting graceful shutdown...`);
-      
-      try {
-        await this.app.disconnectDatabase();
-        console.log('✅ Graceful shutdown completed');
-        process.exit(0);
-      } catch (error) {
-        console.error('❌ Error during shutdown:', error);
-        process.exit(1);
-      }
-    };
-
-    process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-    process.on('SIGINT', () => gracefulShutdown('SIGINT'));
-  }
-}
-
-// Start server
-const server = new Server();
-server.start();
+// Start the server
+startServer();
