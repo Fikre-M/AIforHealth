@@ -99,10 +99,11 @@ export function useAuth(): AuthHook {
     updateAuthState({ isLoading: true });
     try {
       const response = await authService.login(credentials);
+      // Handle the nested tokens structure from the backend
       updateAuthState({
         user: response.user,
-        token: response.token,
-        refreshToken: response.refreshToken,
+        token: response.tokens.access.token,
+        refreshToken: response.tokens.refresh.token,
         isLoading: false,
         isAuthenticated: true,
       });

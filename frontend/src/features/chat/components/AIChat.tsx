@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Send, Bot, User, AlertTriangle } from 'lucide-react';
-import { api } from '@/services/api';
+import api from '@/services/api';
 import type { ChatMessage } from '@/types';
 
 export function AIChat() {
