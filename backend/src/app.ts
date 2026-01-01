@@ -3,6 +3,9 @@ import { env } from '@/config/env';
 import { database } from '@/config/database';
 import aiAssistantRoutes from "./routes/aiAssistantRoutes";
 
+
+app.use('/api/doctors', doctorRoutes);
+
 // ... other middleware
 app.use("/api/ai", aiAssistantRoutes);
 import {
