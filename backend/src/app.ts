@@ -4,6 +4,21 @@ import { database } from '@/config/database';
 import aiAssistantRoutes from "./routes/aiAssistantRoutes";
 import patientRoutes from './routes/patientRoutes';
 import { errorHandler, notFound, handleUnhandledRejection, handleUncaughtException } from './middleware/errorHandler';
+import swaggerUi from 'swagger-ui-express';
+import { specs } from './config/swagger';
+
+
+
+
+// Add this after other middleware but before routes
+app.use('/api-docs', 
+  swaggerUi.serve, 
+  swaggerUi.setup(specs, {
+    explorer: true,
+    customCss: '.swagger-ui .topbar { display: none }',
+    customSiteTitle: 'AI for Health API'
+  })
+);
 
 
 

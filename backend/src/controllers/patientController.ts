@@ -18,6 +18,63 @@ declare module "express" {
   }
 }
 
+// Example for patientController.ts
+/**
+ * @swagger
+ * tags:
+ *   name: Patients
+ *   description: Patient management
+ */
+
+/**
+ * @swagger
+ * /patients/appointments/upcoming:
+ *   get:
+ *     summary: Get patient's upcoming appointments
+ *     tags: [Appointments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Number of items per page
+ *     responses:
+ *       200:
+ *         description: List of upcoming appointments
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 count:
+ *                   type: integer
+ *                 total:
+ *                   type: integer
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Appointment'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       403:
+ *         description: Access denied. Patient role required.
+ */
+export const getUpcomingAppointments = asyncHandler(async (req: Request, res: Response) => {
+  // ... existing implementation ...
+});
+
+
 /**
  * @route   GET /api/patients/appointments/upcoming
  * @desc    Get patient's upcoming appointments
