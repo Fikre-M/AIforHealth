@@ -2,6 +2,12 @@ import express, { Express } from 'express';
 import { env } from '@/config/env';
 import { database } from '@/config/database';
 import aiAssistantRoutes from "./routes/aiAssistantRoutes";
+import patientRoutes from './routes/patientRoutes';
+
+
+
+
+app.use('/api/patients', patientRoutes);
 
 
 app.use('/api/doctors', doctorRoutes);
