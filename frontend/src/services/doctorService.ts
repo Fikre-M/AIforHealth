@@ -1,18 +1,20 @@
-import type { 
-  Patient, 
-  DoctorAppointment, 
-  AppointmentRequest, 
+import { AppointmentStatus } from "@/types";
+import type {
+  Patient,
+  DoctorAppointment,
+  AppointmentRequest,
   PatientSummary,
-  AppointmentStatus
-} from '@/types/doctor';
-import api from './api';
+  AppointmentStatus,
+} from "@/types/doctor";
+import api from "./api";
 
 interface ApiResponse<T> {
   data: T;
   message?: string;
 }
 
-interface PaginatedResponse<T> extends ApiResponse<{ items: T[]; total: number }> {}
+interface PaginatedResponse<T>
+  extends ApiResponse<{ items: T[]; total: number }> {}
 
 export const doctorService = {
   /**
@@ -20,17 +22,33 @@ export const doctorService = {
    */
   async getTodayAppointments(): Promise<DoctorAppointment[]> {
     try {
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date().toISOString().split("T")[0];
       const response = await api.get<PaginatedResponse<DoctorAppointment>>(
-        '/doctor/appointments/daily',
+        "/doctor/appointments/daily",
         { params: { date: today } }
       );
       return response.data.data.items;
     } catch (error) {
-      console.error('Failed to fetch today\'s appointments:', error);
+      console.error("Failed to fetch today's appointments:", error);
       throw error;
     }
   },
+
+  async updateAppointmentStatus(
+  appointmentId: string, 
+  status: AppointmentStatus
+): Promise<DoctorAppointment> {
+  try {
+    const response = await api.patch<ApiResponse<{ appointment: DoctorAppointment }>>(
+      `/doctor/appointments/${appointmentId}/status`,
+      { status }
+    );
+    return response.data.data.appointment;
+  } catch (error) {
+    console.error('Failed to update appointment status:', error);
+    throw error;
+  }
+}
 
   /**
    * Get all patients
@@ -41,15 +59,18 @@ export const doctorService = {
     search?: string;
   }): Promise<{ patients: Patient[]; total: number }> {
     try {
-      const response = await api.get<PaginatedResponse<Patient>>('/doctor/patients', {
-        params
-      });
+      const response = await api.get<PaginatedResponse<Patient>>(
+        "/doctor/patients",
+        {
+          params,
+        }
+      );
       return {
         patients: response.data.data.items,
-        total: response.data.data.total
+        total: response.data.data.total,
       };
     } catch (error) {
-      console.error('Failed to fetch patients:', error);
+      console.error("Failed to fetch patients:", error);
       throw error;
     }
   },
@@ -76,21 +97,21 @@ export const doctorService = {
    * Get appointment requests
    */
   async getAppointmentRequests(params?: {
-    status?: 'pending' | 'approved' | 'rejected';
+    status?: "pending" | "approved" | "rejected";
     page?: number;
     limit?: number;
   }): Promise<{ requests: AppointmentRequest[]; total: number }> {
     try {
       const response = await api.get<PaginatedResponse<AppointmentRequest>>(
-        '/appointment-requests',
+        "/appointment-requests",
         { params }
       );
       return {
         requests: response.data.data.items,
-        total: response.data.data.total
+        total: response.data.data.total,
       };
     } catch (error) {
-      console.error('Failed to fetch appointment requests:', error);
+      console.error("Failed to fetch appointment requests:", error);
       throw error;
     }
   },
@@ -104,15 +125,15 @@ export const doctorService = {
   }): Promise<{ summaries: PatientSummary[]; total: number }> {
     try {
       const response = await api.get<PaginatedResponse<PatientSummary>>(
-        '/doctor/patients/summaries',
+        "/doctor/patients/summaries",
         { params }
       );
       return {
         summaries: response.data.data.items,
-        total: response.data.data.total
+        total: response.data.data.total,
       };
     } catch (error) {
-      console.error('Failed to fetch patient summaries:', error);
+      console.error("Failed to fetch patient summaries:", error);
       throw error;
     }
   },
@@ -121,17 +142,16 @@ export const doctorService = {
    * Update appointment status
    */
   async updateAppointmentStatus(
-    appointmentId: string, 
+    appointmentId: string,
     status: AppointmentStatus
   ): Promise<DoctorAppointment> {
     try {
-      const response = await api.patch<ApiResponse<{ appointment: DoctorAppointment }>>(
-        `/doctor/appointments/${appointmentId}/status`,
-        { status }
-      );
+      const response = await api.patch<
+        ApiResponse<{ appointment: DoctorAppointment }>
+      >(`/doctor/appointments/${appointmentId}/status`, { status });
       return response.data.data.appointment;
     } catch (error) {
-      console.error('Failed to update appointment status:', error);
+      console.error("Failed to update appointment status:", error);
       throw error;
     }
   },
@@ -140,17 +160,16 @@ export const doctorService = {
    * Approve an appointment request
    */
   async approveAppointmentRequest(
-    requestId: string, 
+    requestId: string,
     data: { date: string; time: string; notes?: string }
   ): Promise<AppointmentRequest> {
     try {
-      const response = await api.post<ApiResponse<{ request: AppointmentRequest }>>(
-        `/appointment-requests/${requestId}/approve`,
-        data
-      );
+      const response = await api.post<
+        ApiResponse<{ request: AppointmentRequest }>
+      >(`/appointment-requests/${requestId}/approve`, data);
       return response.data.data.request;
     } catch (error) {
-      console.error('Failed to approve appointment request:', error);
+      console.error("Failed to approve appointment request:", error);
       throw error;
     }
   },
@@ -159,18 +178,17 @@ export const doctorService = {
    * Reject an appointment request
    */
   async rejectAppointmentRequest(
-    requestId: string, 
+    requestId: string,
     reason: string
   ): Promise<AppointmentRequest> {
     try {
-      const response = await api.post<ApiResponse<{ request: AppointmentRequest }>>(
-        `/appointment-requests/${requestId}/reject`,
-        { reason }
-      );
+      const response = await api.post<
+        ApiResponse<{ request: AppointmentRequest }>
+      >(`/appointment-requests/${requestId}/reject`, { reason });
       return response.data.data.request;
     } catch (error) {
-      console.error('Failed to reject appointment request:', error);
+      console.error("Failed to reject appointment request:", error);
       throw error;
     }
-  }
+  },
 };
