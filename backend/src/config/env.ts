@@ -104,16 +104,22 @@ export const validateRequiredServices = () => {
   if (isProduction()) {
     // Required in production
     if (!env.SENTRY_DSN) errors.push('SENTRY_DSN is required in production');
-    if (!env.SENDGRID_API_KEY) warnings.push('SENDGRID_API_KEY not set - email features will be disabled');
-    if (!env.OPENAI_API_KEY) warnings.push('OPENAI_API_KEY not set - AI features will be disabled');
-    if (!env.STRIPE_SECRET_KEY) warnings.push('STRIPE_SECRET_KEY not set - payment features will be disabled');
+  } else {
+    // Development warnings (non-blocking)
+    if (!env.SENTRY_DSN) warnings.push('SENTRY_DSN not set - error monitoring disabled');
+    if (!env.SENDGRID_API_KEY) warnings.push('SENDGRID_API_KEY not set - email features disabled');
+    if (!env.OPENAI_API_KEY) warnings.push('OPENAI_API_KEY not set - AI features disabled');
+    if (!env.STRIPE_SECRET_KEY) warnings.push('STRIPE_SECRET_KEY not set - payment features disabled');
     if (!env.AWS_ACCESS_KEY_ID || !env.AWS_SECRET_ACCESS_KEY) {
-      warnings.push('AWS credentials not set - file upload will be disabled');
+      warnings.push('AWS credentials not set - file upload disabled');
+    }
+    if (!env.TWILIO_ACCOUNT_SID || !env.TWILIO_AUTH_TOKEN) {
+      warnings.push('Twilio credentials not set - SMS features disabled');
     }
   }
 
   if (warnings.length > 0) {
-    console.warn('⚠️  Configuration warnings:');
+    console.warn('⚠️  Configuration warnings (non-blocking):');
     warnings.forEach(warning => console.warn(`   ${warning}`));
   }
 
@@ -125,6 +131,8 @@ export const validateRequiredServices = () => {
 
   if (warnings.length === 0 && errors.length === 0) {
     console.log('✅ Environment configuration validated successfully');
+  } else if (errors.length === 0) {
+    console.log('✅ Environment configuration validated (with warnings)');
   }
 };
 

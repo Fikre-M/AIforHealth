@@ -1,6 +1,7 @@
 import express, { Express, Request, Response, NextFunction, RequestHandler } from 'express';
 import { env, validateRequiredServices } from '@/config/env';
 import { database } from '@/config/database';
+import { initializeSentry } from '@/config/sentry';
 import aiAssistantRoutes from './routes/aiAssistantRoutes';
 import patientRoutes from './routes/patientRoutes';
 import authRoutes from './routes/authRoutes';
@@ -22,7 +23,11 @@ class App {
 
   constructor() {
     this.app = express();
+    
+    // Initialize services
     validateRequiredServices();
+    initializeSentry();
+    
     this.initializeMiddleware();
     this.initializeRoutes();
     this.initializeErrorHandling();

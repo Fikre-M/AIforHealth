@@ -1,12 +1,28 @@
-import * as Sentry from '@sentry/node';
-import { nodeProfilingIntegration } from '@sentry/profiling-node';
 import { env } from './env';
 import { logger } from '@/utils/logger';
+
+// Optional Sentry imports - only import if packages are available
+let Sentry: any = null;
+let nodeProfilingIntegration: any = null;
+
+try {
+  Sentry = require('@sentry/node');
+  const profilingModule = require('@sentry/profiling-node');
+  nodeProfilingIntegration = profilingModule.nodeProfilingIntegration;
+} catch (error) {
+  // Sentry packages not installed - this is fine for development
+  console.log('ℹ️  Sentry packages not installed - error monitoring disabled');
+}
 
 /**
  * Initialize Sentry for error monitoring and performance tracking
  */
 export const initializeSentry = (): void => {
+  if (!Sentry) {
+    logger.info('ℹ️  Sentry not available - packages not installed');
+    return;
+  }
+
   if (!env.SENTRY_DSN) {
     if (env.NODE_ENV === 'production') {
       logger.warn('⚠️  Sentry DSN not configured in production environment');
@@ -17,6 +33,19 @@ export const initializeSentry = (): void => {
   }
 
   try {
+    const integrations = [
+      // HTTP integration for tracing
+      new Sentry.Integrations.Http({ tracing: true }),
+      
+      // Express integration
+      new Sentry.Integrations.Express({ app: undefined }),
+    ];
+
+    // Add profiling integration if available
+    if (nodeProfilingIntegration) {
+      integrations.push(nodeProfilingIntegration());
+    }
+
     Sentry.init({
       dsn: env.SENTRY_DSN,
       environment: env.SENTRY_ENVIRONMENT,
@@ -27,22 +56,13 @@ export const initializeSentry = (): void => {
       // Profiling
       profilesSampleRate: env.NODE_ENV === 'production' ? 0.1 : 1.0,
       
-      integrations: [
-        // Add profiling integration
-        nodeProfilingIntegration(),
-        
-        // HTTP integration for tracing
-        new Sentry.Integrations.Http({ tracing: true }),
-        
-        // Express integration
-        new Sentry.Integrations.Express({ app: undefined }),
-      ],
+      integrations,
 
       // Release tracking
       release: process.env.npm_package_version || '1.0.0',
 
       // Error filtering
-      beforeSend(event, hint) {
+      beforeSend(event: any, hint: any) {
         // Filter out certain errors in development
         if (env.NODE_ENV === 'development') {
           // Don't send validation errors to Sentry in development
@@ -61,7 +81,7 @@ export const initializeSentry = (): void => {
       },
 
       // Performance filtering
-      beforeSendTransaction(event) {
+      beforeSendTransaction(event: any) {
         // Don't send health check transactions
         if (event.transaction?.includes('/health')) {
           return null;
@@ -80,102 +100,143 @@ export const initializeSentry = (): void => {
 };
 
 /**
- * Sentry middleware for Express
+ * Sentry middleware for Express (safe wrappers)
  */
-export const sentryRequestHandler = () => Sentry.Handlers.requestHandler();
-export const sentryTracingHandler = () => Sentry.Handlers.tracingHandler();
-export const sentryErrorHandler = () => Sentry.Handlers.errorHandler();
+export const sentryRequestHandler = () => {
+  if (Sentry && Sentry.Handlers) {
+    return Sentry.Handlers.requestHandler();
+  }
+  return (req: any, res: any, next: any) => next(); // No-op middleware
+};
 
-/**
- * Capture exception with additional context
- */
-export const captureException = (error: Error, context?: any): string => {
-  return Sentry.captureException(error, {
-    tags: {
-      component: 'backend',
-      environment: env.NODE_ENV,
-    },
-    extra: context,
-  });
+export const sentryTracingHandler = () => {
+  if (Sentry && Sentry.Handlers) {
+    return Sentry.Handlers.tracingHandler();
+  }
+  return (req: any, res: any, next: any) => next(); // No-op middleware
+};
+
+export const sentryErrorHandler = () => {
+  if (Sentry && Sentry.Handlers) {
+    return Sentry.Handlers.errorHandler();
+  }
+  return (err: any, req: any, res: any, next: any) => next(err); // Pass through
 };
 
 /**
- * Capture message with level
+ * Capture exception with additional context (safe wrapper)
+ */
+export const captureException = (error: Error, context?: any): string => {
+  if (Sentry) {
+    return Sentry.captureException(error, {
+      tags: {
+        component: 'backend',
+        environment: env.NODE_ENV,
+      },
+      extra: context,
+    });
+  } else {
+    // Fallback to console logging
+    logger.error('Exception captured (Sentry not available)', error, context);
+    return 'no-sentry';
+  }
+};
+
+/**
+ * Capture message with level (safe wrapper)
  */
 export const captureMessage = (
   message: string, 
-  level: Sentry.SeverityLevel = 'info',
+  level: string = 'info',
   context?: any
 ): string => {
-  return Sentry.captureMessage(message, {
-    level,
-    tags: {
-      component: 'backend',
-      environment: env.NODE_ENV,
-    },
-    extra: context,
-  });
+  if (Sentry) {
+    return Sentry.captureMessage(message, {
+      level,
+      tags: {
+        component: 'backend',
+        environment: env.NODE_ENV,
+      },
+      extra: context,
+    });
+  } else {
+    // Fallback to console logging
+    logger.info(`Message captured (Sentry not available) [${level}]:`, message, context);
+    return 'no-sentry';
+  }
 };
 
 /**
- * Add user context to Sentry scope
+ * Add user context to Sentry scope (safe wrapper)
  */
 export const setUserContext = (user: {
   id: string;
   email?: string;
   role?: string;
 }): void => {
-  Sentry.setUser({
-    id: user.id,
-    email: user.email,
-    role: user.role,
-  });
+  if (Sentry) {
+    Sentry.setUser({
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    });
+  }
 };
 
 /**
- * Add custom tags to Sentry scope
+ * Add custom tags to Sentry scope (safe wrapper)
  */
 export const setTags = (tags: Record<string, string>): void => {
-  Sentry.setTags(tags);
+  if (Sentry) {
+    Sentry.setTags(tags);
+  }
 };
 
 /**
- * Add breadcrumb for debugging
+ * Add breadcrumb for debugging (safe wrapper)
  */
 export const addBreadcrumb = (
   message: string,
   category: string,
-  level: Sentry.SeverityLevel = 'info',
+  level: string = 'info',
   data?: any
 ): void => {
-  Sentry.addBreadcrumb({
-    message,
-    category,
-    level,
-    data,
-    timestamp: Date.now() / 1000,
-  });
+  if (Sentry) {
+    Sentry.addBreadcrumb({
+      message,
+      category,
+      level,
+      data,
+      timestamp: Date.now() / 1000,
+    });
+  }
 };
 
 /**
- * Start a new transaction for performance monitoring
+ * Start a new transaction for performance monitoring (safe wrapper)
  */
 export const startTransaction = (name: string, op: string) => {
-  return Sentry.startTransaction({ name, op });
+  if (Sentry) {
+    return Sentry.startTransaction({ name, op });
+  }
+  return null;
 };
 
 /**
- * Flush Sentry events (useful for graceful shutdown)
+ * Flush Sentry events (safe wrapper)
  */
 export const flush = async (timeout = 2000): Promise<boolean> => {
-  try {
-    const result = await Sentry.flush(timeout);
-    logger.info('✅ Sentry events flushed successfully');
-    return result;
-  } catch (error) {
-    logger.error('❌ Failed to flush Sentry events', error as Error);
-    return false;
+  if (Sentry) {
+    try {
+      const result = await Sentry.flush(timeout);
+      logger.info('✅ Sentry events flushed successfully');
+      return result;
+    } catch (error) {
+      logger.error('❌ Failed to flush Sentry events', error as Error);
+      return false;
+    }
   }
+  return true; // No-op success
 };
 
 export default Sentry;
