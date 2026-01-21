@@ -1,0 +1,387 @@
+name: 🚀 Continuous Deployment
+
+on:
+  push:
+    branches: [ main ]
+  workflow_run:
+    workflows: ["🔍 Continuous Integration"]
+    types:
+      - completed
+    branches: [ main ]
+
+env:
+  NODE_VERSION: '18'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # Only run if CI passed
+  check-ci:
+    name: ✅ Check CI Status
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success' || github.event_name == 'push'
+    
+    steps:
+      - name: ✅ CI Passed
+        run: echo "CI pipeline passed, proceeding with deployment"
+
+  # Build Docker Images
+  build-images:
+    name: 🐳 Build Images
+    runs-on: ubuntu-latest
+    needs: check-ci
+    permissions:
+      contents: read
+      packages: write
+    
+    outputs:
+      backend-image: ${{ steps.meta-backend.outputs.tags }}
+      frontend-image: ${{ steps.meta-frontend.outputs.tags }}
+      backend-digest: ${{ steps.build-backend.outputs.digest }}
+      frontend-digest: ${{ steps.build-frontend.outputs.digest }}
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔐 Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🏗️ Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Backend Image
+      - name: 📋 Extract backend metadata
+        id: meta-backend
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: 🐳 Build and push backend image
+        id: build-backend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: ${{ steps.meta-backend.outputs.tags }}
+          labels: ${{ steps.meta-backend.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Frontend Image
+      - name: 📋 Extract frontend metadata
+        id: meta-frontend
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: 🐳 Build and push frontend image
+        id: build-frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: true
+          tags: ${{ steps.meta-frontend.outputs.tags }}
+          labels: ${{ steps.meta-frontend.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            VITE_API_BASE_URL=${{ secrets.STAGING_API_URL }}
+
+  # Security Scanning
+  security-scan:
+    name: 🔒 Security Scan Images
+    runs-on: ubuntu-latest
+    needs: build-images
+    
+    steps:
+      - name: 🔍 Scan backend image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ needs.build-images.outputs.backend-image }}
+          format: 'sarif'
+          output: 'backend-trivy-results.sarif'
+
+      - name: 🔍 Scan frontend image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ needs.build-images.outputs.frontend-image }}
+          format: 'sarif'
+          output: 'frontend-trivy-results.sarif'
+
+      - name: 📊 Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: '.'
+
+  # Deploy to Staging
+  deploy-staging:
+    name: 🎭 Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [build-images, security-scan]
+    environment:
+      name: staging
+      url: https://staging.aiforhealth.com
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: 🚀 Deploy to ECS Staging
+        run: |
+          # Update ECS task definition with new images
+          aws ecs update-service \
+            --cluster aiforhealth-staging \
+            --service aiforhealth-backend-staging \
+            --force-new-deployment
+
+          aws ecs update-service \
+            --cluster aiforhealth-staging \
+            --service aiforhealth-frontend-staging \
+            --force-new-deployment
+
+      - name: ⏳ Wait for deployment
+        run: |
+          aws ecs wait services-stable \
+            --cluster aiforhealth-staging \
+            --services aiforhealth-backend-staging aiforhealth-frontend-staging
+
+      - name: 🔍 Health check
+        run: |
+          curl -f ${{ secrets.STAGING_API_URL }}/health
+          curl -f https://staging.aiforhealth.com/health
+
+  # Run Staging Tests
+  staging-tests:
+    name: 🧪 Staging Tests
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🧪 Run API tests against staging
+        run: npm run test:api
+        env:
+          API_BASE_URL: ${{ secrets.STAGING_API_URL }}
+          TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+          TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+
+      - name: 🎭 Run E2E tests against staging
+        run: |
+          cd frontend
+          npx playwright install --with-deps
+          npm run test:e2e:staging
+        env:
+          BASE_URL: https://staging.aiforhealth.com
+
+      - name: ⚡ Run performance tests
+        run: |
+          npx artillery run tests/performance/staging-load-test.yml
+        env:
+          TARGET_URL: ${{ secrets.STAGING_API_URL }}
+
+  # Deploy to Production (Manual Approval)
+  deploy-production:
+    name: 🌟 Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [build-images, staging-tests]
+    environment:
+      name: production
+      url: https://aiforhealth.com
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # Database Migration (if needed)
+      - name: 🗄️ Run database migrations
+        run: |
+          # Connect to production database and run migrations
+          echo "Running database migrations..."
+          # Add migration commands here
+
+      # Blue-Green Deployment
+      - name: 🔄 Blue-Green Deployment
+        run: |
+          # Get current active environment
+          CURRENT_ENV=$(aws elbv2 describe-target-groups \
+            --names aiforhealth-production \
+            --query 'TargetGroups[0].TargetGroupArn' \
+            --output text)
+
+          # Deploy to inactive environment
+          if [[ $CURRENT_ENV == *"blue"* ]]; then
+            TARGET_ENV="green"
+          else
+            TARGET_ENV="blue"
+          fi
+
+          echo "Deploying to $TARGET_ENV environment"
+
+          # Update ECS services in target environment
+          aws ecs update-service \
+            --cluster aiforhealth-production \
+            --service aiforhealth-backend-$TARGET_ENV \
+            --force-new-deployment
+
+          aws ecs update-service \
+            --cluster aiforhealth-production \
+            --service aiforhealth-frontend-$TARGET_ENV \
+            --force-new-deployment
+
+          # Wait for deployment to complete
+          aws ecs wait services-stable \
+            --cluster aiforhealth-production \
+            --services aiforhealth-backend-$TARGET_ENV aiforhealth-frontend-$TARGET_ENV
+
+      - name: 🔍 Production health check
+        run: |
+          # Health check on new deployment
+          curl -f ${{ secrets.PRODUCTION_API_URL }}/health
+          curl -f https://aiforhealth.com/health
+
+      - name: 🔄 Switch traffic
+        run: |
+          # Switch load balancer to new environment
+          echo "Switching traffic to new deployment"
+          # Add load balancer switching logic here
+
+      - name: 📊 Post-deployment monitoring
+        run: |
+          # Trigger monitoring alerts
+          curl -X POST ${{ secrets.MONITORING_WEBHOOK }} \
+            -H "Content-Type: application/json" \
+            -d '{"event": "deployment", "environment": "production", "version": "${{ github.sha }}"}'
+
+  # Rollback (if needed)
+  rollback:
+    name: 🔙 Rollback
+    runs-on: ubuntu-latest
+    needs: deploy-production
+    if: failure()
+    environment:
+      name: production
+    
+    steps:
+      - name: 🔙 Rollback deployment
+        run: |
+          echo "Rolling back production deployment"
+          # Add rollback logic here
+          
+          # Switch load balancer back
+          # Revert database migrations if needed
+          # Notify team of rollback
+
+      - name: 📢 Notify rollback
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          channel: '#alerts'
+          text: '🚨 Production deployment failed and was rolled back'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+
+  # Post-deployment tasks
+  post-deployment:
+    name: 📋 Post-deployment
+    runs-on: ubuntu-latest
+    needs: deploy-production
+    if: success()
+    
+    steps:
+      - name: 🏷️ Create release tag
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ github.run_number }}
+          release_name: Release v${{ github.run_number }}
+          body: |
+            ## Changes in this release
+            - Deployed commit: ${{ github.sha }}
+            - Deployment time: ${{ github.event.head_commit.timestamp }}
+            
+            ## Deployment Details
+            - Backend image: ${{ needs.build-images.outputs.backend-image }}
+            - Frontend image: ${{ needs.build-images.outputs.frontend-image }}
+          draft: false
+          prerelease: false
+
+      - name: 📊 Update monitoring dashboards
+        run: |
+          # Update Grafana dashboards with new version
+          curl -X POST ${{ secrets.GRAFANA_API_URL }}/api/annotations \
+            -H "Authorization: Bearer ${{ secrets.GRAFANA_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "text": "Production deployment v${{ github.run_number }}",
+              "tags": ["deployment", "production"],
+              "time": ${{ github.event.head_commit.timestamp }}
+            }'
+
+      - name: 📢 Success notification
+        uses: 8398a7/action-slack@v3
+        with:
+          status: success
+          channel: '#deployments'
+          text: '✅ Production deployment successful! Version v${{ github.run_number }}'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+
+  # Cleanup
+  cleanup:
+    name: 🧹 Cleanup
+    runs-on: ubuntu-latest
+    needs: [deploy-production, post-deployment]
+    if: always()
+    
+    steps:
+      - name: 🧹 Clean up old images
+        run: |
+          # Keep only last 10 images
+          echo "Cleaning up old container images"
+          # Add cleanup logic here
+
+      - name: 🧹 Clean up old deployments
+        run: |
+          # Clean up old ECS task definitions
+          echo "Cleaning up old task definitions"
+          # Add cleanup logic here

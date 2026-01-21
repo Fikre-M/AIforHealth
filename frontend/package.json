@@ -7,7 +7,18 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "lint:fix": "eslint . --fix",
+    "type-check": "tsc --noEmit",
+    "format": "prettier --write src/**/*.{ts,tsx}",
+    "format:check": "prettier --check src/**/*.{ts,tsx}",
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:unit": "vitest run --reporter=verbose",
+    "test:component": "vitest run --reporter=verbose src/**/*.test.tsx",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:staging": "playwright test --config=playwright.staging.config.ts"
   },
   "dependencies": {
     "axios": "^1.13.2",
@@ -16,7 +27,9 @@
     "lucide-react": "^0.294.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^6.20.1"
+    "react-router-dom": "^6.20.1",
+    "@sentry/react": "^7.99.0",
+    "@sentry/tracing": "^7.99.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

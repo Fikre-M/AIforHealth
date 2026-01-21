@@ -1,79 +1,131 @@
 import dotenv from 'dotenv';
+import { z } from 'zod';
 
 // Load environment variables
 dotenv.config();
 
-interface EnvConfig {
-  NODE_ENV: string;
-  PORT: number;
-  API_VERSION: string;
-  MONGODB_URI: string;
-  MONGODB_TEST_URI: string;
-  MONGODB_MAX_POOL_SIZE: number;
-  MONGODB_MIN_POOL_SIZE: number;
-  MONGODB_MAX_IDLE_TIME_MS: number;
-  MONGODB_SERVER_SELECTION_TIMEOUT_MS: number;
-  MONGODB_RETRY_WRITES: boolean;
-  MONGODB_WRITE_CONCERN: string;
-  JWT_SECRET: string;
-  JWT_EXPIRES_IN: string;
-  JWT_REFRESH_SECRET: string;
-  JWT_REFRESH_EXPIRES_IN: string;
-  BCRYPT_SALT_ROUNDS: number;
-  RATE_LIMIT_WINDOW_MS: number;
-  RATE_LIMIT_MAX_REQUESTS: number;
-  CORS_ORIGIN: string;
-  LOG_LEVEL: string;
-}
+// Environment validation schema
+const envSchema = z.object({
+  // Server Configuration
+  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+  PORT: z.string().transform(Number).default(5000),
+  API_VERSION: z.string().default('v1'),
 
-const getEnvVar = (key: string, defaultValue?: string): string => {
-  const value = process.env[key] || defaultValue;
-  if (!value) {
-    throw new Error(`Environment variable ${key} is required`);
+  // Database Configuration
+  MONGODB_URI: z.string().min(1, 'MongoDB URI is required'),
+  MONGODB_TEST_URI: z.string().optional(),
+  MONGODB_MAX_POOL_SIZE: z.string().transform(Number).default(20),
+  MONGODB_MIN_POOL_SIZE: z.string().transform(Number).default(5),
+  MONGODB_MAX_IDLE_TIME_MS: z.string().transform(Number).default(30000),
+  MONGODB_SERVER_SELECTION_TIMEOUT_MS: z.string().transform(Number).default(10000),
+  MONGODB_RETRY_WRITES: z.string().transform(val => val === 'true').default(true),
+  MONGODB_WRITE_CONCERN: z.string().default('majority'),
+
+  // JWT Configuration
+  JWT_SECRET: z.string().min(32, 'JWT secret must be at least 32 characters'),
+  JWT_EXPIRES_IN: z.string().default('7d'),
+  JWT_REFRESH_SECRET: z.string().min(32, 'JWT refresh secret must be at least 32 characters'),
+  JWT_REFRESH_EXPIRES_IN: z.string().default('30d'),
+
+  // Security
+  BCRYPT_SALT_ROUNDS: z.string().transform(Number).default(12),
+  RATE_LIMIT_WINDOW_MS: z.string().transform(Number).default(900000),
+  RATE_LIMIT_MAX_REQUESTS: z.string().transform(Number).default(100),
+
+  // CORS Configuration
+  CORS_ORIGIN: z.string().default('http://localhost:5173'),
+
+  // Logging
+  LOG_LEVEL: z.enum(['error', 'warn', 'info', 'debug']).default('info'),
+
+  // Error Monitoring
+  SENTRY_DSN: z.string().optional(),
+  SENTRY_ENVIRONMENT: z.string().default('development'),
+
+  // Email Service
+  SENDGRID_API_KEY: z.string().optional(),
+  FROM_EMAIL: z.string().email().optional(),
+  FROM_NAME: z.string().optional(),
+
+  // SMS Service
+  TWILIO_ACCOUNT_SID: z.string().optional(),
+  TWILIO_AUTH_TOKEN: z.string().optional(),
+  TWILIO_PHONE_NUMBER: z.string().optional(),
+
+  // AI Services
+  OPENAI_API_KEY: z.string().optional(),
+  OPENAI_MODEL: z.string().default('gpt-4'),
+  OPENAI_MAX_TOKENS: z.string().transform(Number).default(1000),
+
+  // File Storage
+  AWS_ACCESS_KEY_ID: z.string().optional(),
+  AWS_SECRET_ACCESS_KEY: z.string().optional(),
+  AWS_REGION: z.string().default('us-east-1'),
+  AWS_S3_BUCKET: z.string().optional(),
+
+  // Payment Processing
+  STRIPE_SECRET_KEY: z.string().optional(),
+  STRIPE_WEBHOOK_SECRET: z.string().optional(),
+
+  // Redis
+  REDIS_URL: z.string().optional(),
+});
+
+// Validate and parse environment variables
+const parseEnv = () => {
+  try {
+    return envSchema.parse(process.env);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      const errorMessages = error.errors.map(err => 
+        `${err.path.join('.')}: ${err.message}`
+      ).join('\n');
+      
+      console.error('❌ Environment validation failed:');
+      console.error(errorMessages);
+      process.exit(1);
+    }
+    throw error;
   }
-  return value;
 };
 
-const getEnvNumber = (key: string, defaultValue?: number): number => {
-  const value = process.env[key];
-  if (!value && defaultValue === undefined) {
-    throw new Error(`Environment variable ${key} is required`);
+export const env = parseEnv();
+
+// Environment helper functions
+export const isDevelopment = () => env.NODE_ENV === 'development';
+export const isProduction = () => env.NODE_ENV === 'production';
+export const isTest = () => env.NODE_ENV === 'test';
+
+// Validate required services based on environment
+export const validateRequiredServices = () => {
+  const warnings: string[] = [];
+  const errors: string[] = [];
+
+  if (isProduction()) {
+    // Required in production
+    if (!env.SENTRY_DSN) errors.push('SENTRY_DSN is required in production');
+    if (!env.SENDGRID_API_KEY) warnings.push('SENDGRID_API_KEY not set - email features will be disabled');
+    if (!env.OPENAI_API_KEY) warnings.push('OPENAI_API_KEY not set - AI features will be disabled');
+    if (!env.STRIPE_SECRET_KEY) warnings.push('STRIPE_SECRET_KEY not set - payment features will be disabled');
+    if (!env.AWS_ACCESS_KEY_ID || !env.AWS_SECRET_ACCESS_KEY) {
+      warnings.push('AWS credentials not set - file upload will be disabled');
+    }
   }
-  return value ? parseInt(value, 10) : defaultValue!;
-};
 
-const getEnvBoolean = (key: string, defaultValue?: boolean): boolean => {
-  const value = process.env[key];
-  if (!value && defaultValue === undefined) {
-    throw new Error(`Environment variable ${key} is required`);
+  if (warnings.length > 0) {
+    console.warn('⚠️  Configuration warnings:');
+    warnings.forEach(warning => console.warn(`   ${warning}`));
   }
-  if (!value) return defaultValue!;
-  return value.toLowerCase() === 'true';
+
+  if (errors.length > 0) {
+    console.error('❌ Configuration errors:');
+    errors.forEach(error => console.error(`   ${error}`));
+    process.exit(1);
+  }
+
+  if (warnings.length === 0 && errors.length === 0) {
+    console.log('✅ Environment configuration validated successfully');
+  }
 };
 
-export const env: EnvConfig = {
-  NODE_ENV: getEnvVar('NODE_ENV', 'development'),
-  PORT: getEnvNumber('PORT', 5000),
-  API_VERSION: getEnvVar('API_VERSION', 'v1'),
-  MONGODB_URI: getEnvVar('MONGODB_URI'),
-  MONGODB_TEST_URI: getEnvVar('MONGODB_TEST_URI'),
-  MONGODB_MAX_POOL_SIZE: getEnvNumber('MONGODB_MAX_POOL_SIZE', 20),
-  MONGODB_MIN_POOL_SIZE: getEnvNumber('MONGODB_MIN_POOL_SIZE', 5),
-  MONGODB_MAX_IDLE_TIME_MS: getEnvNumber('MONGODB_MAX_IDLE_TIME_MS', 30000),
-  MONGODB_SERVER_SELECTION_TIMEOUT_MS: getEnvNumber('MONGODB_SERVER_SELECTION_TIMEOUT_MS', 10000),
-  MONGODB_RETRY_WRITES: getEnvBoolean('MONGODB_RETRY_WRITES', true),
-  MONGODB_WRITE_CONCERN: getEnvVar('MONGODB_WRITE_CONCERN', 'majority'),
-  JWT_SECRET: getEnvVar('JWT_SECRET'),
-  JWT_EXPIRES_IN: getEnvVar('JWT_EXPIRES_IN', '7d'),
-  JWT_REFRESH_SECRET: getEnvVar('JWT_REFRESH_SECRET'),
-  JWT_REFRESH_EXPIRES_IN: getEnvVar('JWT_REFRESH_EXPIRES_IN', '30d'),
-  BCRYPT_SALT_ROUNDS: getEnvNumber('BCRYPT_SALT_ROUNDS', 12),
-  RATE_LIMIT_WINDOW_MS: getEnvNumber('RATE_LIMIT_WINDOW_MS', 900000),
-  RATE_LIMIT_MAX_REQUESTS: getEnvNumber('RATE_LIMIT_MAX_REQUESTS', 100),
-  CORS_ORIGIN: getEnvVar('CORS_ORIGIN', 'http://localhost:3000'),
-  LOG_LEVEL: getEnvVar('LOG_LEVEL', 'info'),
-};
-
-export const isProduction = env.NODE_ENV === 'production';
-export const isDevelopment = env.NODE_ENV === 'development';
-export const isTest = env.NODE_ENV === 'test';
+export default env;

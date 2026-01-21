@@ -1,5 +1,5 @@
 import express, { Express, Request, Response, NextFunction, RequestHandler } from 'express';
-import { env } from '@/config/env';
+import { env, validateRequiredServices } from '@/config/env';
 import { database } from '@/config/database';
 import aiAssistantRoutes from './routes/aiAssistantRoutes';
 import patientRoutes from './routes/patientRoutes';
@@ -11,6 +11,7 @@ import swaggerUi from 'swagger-ui-express';
 import { specs } from './config/swagger';
 import { HttpError } from 'http-errors';
 import cors, { CorsOptions, CorsRequest } from 'cors';
+import { logApp, logError, logInfo } from './utils/logger';
 
 type CustomRequest = Request & {
   user?: any; // You might want to replace 'any' with your User type
@@ -21,6 +22,7 @@ class App {
 
   constructor() {
     this.app = express();
+    validateRequiredServices();
     this.initializeMiddleware();
     this.initializeRoutes();
     this.initializeErrorHandling();
@@ -105,14 +107,12 @@ class App {
 
     // Handle unhandled promise rejections
     process.on("unhandledRejection", (reason: unknown, promise: Promise<unknown>) => {
-      console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-      // Consider logging the error or sending it to an error tracking service
+      logError('Unhandled Rejection', new Error(String(reason)), { promise });
     });
 
     // Handle uncaught exceptions
     process.on("uncaughtException", (error: Error) => {
-      console.error('Uncaught Exception:', error);
-      // Consider logging the error or sending it to an error tracking service
+      logError('Uncaught Exception', error);
       process.exit(1);
     });
   }
@@ -120,9 +120,9 @@ class App {
   public async connectDatabase(): Promise<void> {
     try {
       await database.connect();
-      console.log("Database connected successfully");
+      logInfo("Database connected successfully");
     } catch (error) {
-      console.error("Database connection error:", error);
+      logError("Database connection error", error as Error);
       process.exit(1);
     }
   }
@@ -130,20 +130,20 @@ class App {
   public async disconnectDatabase(): Promise<void> {
     try {
       await database.disconnect();
-      console.log("Database disconnected successfully");
+      logInfo("Database disconnected successfully");
     } catch (error) {
-      console.error("Error disconnecting database:", error);
+      logError("Error disconnecting database", error as Error);
       process.exit(1);
     }
   }
 
   public start(): void {
     const port = env.PORT || 5000;
+    logApp.starting(port, env.NODE_ENV);
+    
     this.app.listen(port, () => {
-      console.log(`Server is running on port ${port}`);
-      console.log(
-        `API Documentation available at http://localhost:${port}/api-docs`
-      );
+      logApp.started(port);
+      logInfo(`API Documentation available at http://localhost:${port}/api-docs`);
     });
   }
 }

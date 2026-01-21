@@ -1,0 +1,417 @@
+name: 🔍 Continuous Integration
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  NODE_VERSION: '18'
+  MONGODB_VERSION: '5.0'
+
+jobs:
+  # Code Quality Checks
+  code-quality:
+    name: 🧹 Code Quality
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      # Backend Code Quality
+      - name: 📦 Install backend dependencies
+        run: |
+          cd backend
+          npm ci
+
+      - name: 🔍 Backend ESLint
+        run: |
+          cd backend
+          npm run lint
+
+      - name: 🏗️ Backend TypeScript check
+        run: |
+          cd backend
+          npm run type-check
+
+      # Frontend Code Quality
+      - name: 📦 Install frontend dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: 🔍 Frontend ESLint
+        run: |
+          cd frontend
+          npm run lint
+
+      - name: 🏗️ Frontend TypeScript check
+        run: |
+          cd frontend
+          npm run type-check
+
+      - name: 🎨 Prettier check
+        run: |
+          cd frontend
+          npm run format:check
+
+  # Security Scanning
+  security:
+    name: 🔒 Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      # Dependency vulnerability scanning
+      - name: 🔍 Backend security audit
+        run: |
+          cd backend
+          npm audit --audit-level=high
+
+      - name: 🔍 Frontend security audit
+        run: |
+          cd frontend
+          npm audit --audit-level=high
+
+      # SAST with CodeQL
+      - name: 🔍 Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript, typescript
+
+      - name: 🔍 Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+
+      # Dependency scanning with Snyk
+      - name: 🔍 Run Snyk to check for vulnerabilities
+        uses: snyk/actions/node@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high
+
+  # Backend Tests
+  backend-tests:
+    name: 🧪 Backend Tests
+    runs-on: ubuntu-latest
+    
+    services:
+      mongodb:
+        image: mongo:${{ env.MONGODB_VERSION }}
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.adminCommand(\"ping\")'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: |
+          cd backend
+          npm ci
+
+      - name: 🏗️ Build backend
+        run: |
+          cd backend
+          npm run build
+
+      - name: 🧪 Run unit tests
+        run: |
+          cd backend
+          npm run test:unit
+        env:
+          NODE_ENV: test
+          MONGODB_URI: mongodb://localhost:27017/aiforhealth-test
+          JWT_SECRET: test-jwt-secret-for-ci-pipeline-only
+          JWT_REFRESH_SECRET: test-refresh-secret-for-ci-pipeline-only
+
+      - name: 🧪 Run integration tests
+        run: |
+          cd backend
+          npm run test:integration
+        env:
+          NODE_ENV: test
+          MONGODB_URI: mongodb://localhost:27017/aiforhealth-test
+          JWT_SECRET: test-jwt-secret-for-ci-pipeline-only
+          JWT_REFRESH_SECRET: test-refresh-secret-for-ci-pipeline-only
+
+      - name: 📊 Upload backend coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./backend/coverage/lcov.info
+          flags: backend
+          name: backend-coverage
+
+  # Frontend Tests
+  frontend-tests:
+    name: 🧪 Frontend Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📦 Install dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: 🏗️ Build frontend
+        run: |
+          cd frontend
+          npm run build
+        env:
+          VITE_API_BASE_URL: http://localhost:5000/api/v1
+
+      - name: 🧪 Run unit tests
+        run: |
+          cd frontend
+          npm run test:unit
+
+      - name: 🧪 Run component tests
+        run: |
+          cd frontend
+          npm run test:component
+
+      - name: 📊 Upload frontend coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./frontend/coverage/lcov.info
+          flags: frontend
+          name: frontend-coverage
+
+  # End-to-End Tests
+  e2e-tests:
+    name: 🎭 E2E Tests
+    runs-on: ubuntu-latest
+    needs: [backend-tests, frontend-tests]
+    
+    services:
+      mongodb:
+        image: mongo:${{ env.MONGODB_VERSION }}
+        ports:
+          - 27017:27017
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      # Setup backend
+      - name: 📦 Install backend dependencies
+        run: |
+          cd backend
+          npm ci
+
+      - name: 🏗️ Build and start backend
+        run: |
+          cd backend
+          npm run build
+          npm start &
+        env:
+          NODE_ENV: test
+          PORT: 5000
+          MONGODB_URI: mongodb://localhost:27017/aiforhealth-e2e
+          JWT_SECRET: test-jwt-secret-for-e2e-tests-only
+          JWT_REFRESH_SECRET: test-refresh-secret-for-e2e-tests-only
+
+      # Setup frontend
+      - name: 📦 Install frontend dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: 🏗️ Build and start frontend
+        run: |
+          cd frontend
+          npm run build
+          npm run preview &
+        env:
+          VITE_API_BASE_URL: http://localhost:5000/api/v1
+
+      # Wait for services to be ready
+      - name: ⏳ Wait for services
+        run: |
+          npx wait-on http://localhost:5000/api/v1/health
+          npx wait-on http://localhost:4173
+
+      # Install Playwright
+      - name: 🎭 Install Playwright
+        run: |
+          cd frontend
+          npx playwright install --with-deps
+
+      # Run E2E tests
+      - name: 🧪 Run E2E tests
+        run: |
+          cd frontend
+          npm run test:e2e
+
+      - name: 📊 Upload E2E test results
+        uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          retention-days: 30
+
+  # Build Check
+  build:
+    name: 🏗️ Build Check
+    runs-on: ubuntu-latest
+    needs: [code-quality, security]
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      # Build backend
+      - name: 🏗️ Build backend
+        run: |
+          cd backend
+          npm ci
+          npm run build
+
+      # Build frontend
+      - name: 🏗️ Build frontend
+        run: |
+          cd frontend
+          npm ci
+          npm run build
+        env:
+          VITE_API_BASE_URL: https://api.example.com/api/v1
+
+      # Upload build artifacts
+      - name: 📦 Upload backend build
+        uses: actions/upload-artifact@v3
+        with:
+          name: backend-build
+          path: backend/dist/
+
+      - name: 📦 Upload frontend build
+        uses: actions/upload-artifact@v3
+        with:
+          name: frontend-build
+          path: frontend/dist/
+
+  # Performance Tests
+  performance:
+    name: ⚡ Performance Tests
+    runs-on: ubuntu-latest
+    needs: [build]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    services:
+      mongodb:
+        image: mongo:${{ env.MONGODB_VERSION }}
+        ports:
+          - 27017:27017
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 📥 Download backend build
+        uses: actions/download-artifact@v3
+        with:
+          name: backend-build
+          path: backend/dist/
+
+      - name: 📦 Install backend dependencies
+        run: |
+          cd backend
+          npm ci --only=production
+
+      - name: 🚀 Start backend
+        run: |
+          cd backend
+          npm start &
+        env:
+          NODE_ENV: production
+          PORT: 5000
+          MONGODB_URI: mongodb://localhost:27017/aiforhealth-perf
+          JWT_SECRET: test-jwt-secret-for-performance-tests
+          JWT_REFRESH_SECRET: test-refresh-secret-for-performance-tests
+
+      - name: ⏳ Wait for backend
+        run: npx wait-on http://localhost:5000/api/v1/health
+
+      - name: ⚡ Run performance tests
+        run: |
+          npx artillery run tests/performance/api-load-test.yml
+          npx lighthouse-ci autorun
+
+      - name: 📊 Upload performance results
+        uses: actions/upload-artifact@v3
+        with:
+          name: performance-results
+          path: |
+            artillery-report.html
+            .lighthouseci/
+
+  # Notification
+  notify:
+    name: 📢 Notify
+    runs-on: ubuntu-latest
+    needs: [backend-tests, frontend-tests, e2e-tests, build]
+    if: always()
+    
+    steps:
+      - name: 📢 Slack Notification
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          channel: '#ci-cd'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+        if: always()
