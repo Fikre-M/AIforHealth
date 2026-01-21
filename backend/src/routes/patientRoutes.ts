@@ -12,10 +12,6 @@ router.use(authenticate);
 // Restrict to patient role
 router.use(authorize(UserRole.PATIENT));
 
-// Patient appointment endpoints
-router.get("/appointments/upcoming", patientController.getUpcomingAppointments);
-router.get("/appointments/history", patientController.getAppointmentHistory);
-
 // Patient notification endpoints
 router.get("/notifications", patientController.getPatientNotifications);
 router.patch(

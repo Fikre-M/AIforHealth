@@ -243,7 +243,12 @@ export const dashboardService = {
     try {
       const response = await api.get<
         ApiResponse<{ appointments: Appointment[] }>
-      >("/api/appointments/upcoming");
+      >("/appointments", { 
+        params: { 
+          status: 'scheduled,confirmed',
+          startDate: new Date().toISOString().split('T')[0]
+        } 
+      });
       return response.data.data.appointments;
     } catch (error) {
       console.error("Failed to fetch upcoming appointments:", error);
@@ -263,13 +268,18 @@ export const dashboardService = {
       const response = await api.get<
         ApiResponse<{
           appointments: Appointment[];
-          total: number;
+          pagination: { total: number };
         }>
-      >("/api/appointments/history", { params });
+      >("/appointments", { 
+        params: {
+          ...params,
+          status: params?.status || 'completed,cancelled,missed'
+        }
+      });
 
       return {
         appointments: response.data.data.appointments,
-        total: response.data.data.total,
+        total: response.data.data.pagination.total,
       };
     } catch (error) {
       console.error("Failed to fetch appointment history:", error);
@@ -284,7 +294,7 @@ export const dashboardService = {
     try {
       const response = await api.get<
         ApiResponse<{ medications: Medication[] }>
-      >("/api/medications");
+      >("/health/medications");
       return response.data.data.medications;
     } catch (error) {
       console.error("Failed to fetch medications:", error);
@@ -302,7 +312,7 @@ export const dashboardService = {
     try {
       const response = await api.get<
         ApiResponse<{ reminders: HealthReminder[] }>
-      >("/api/health/reminders", { params });
+      >("/health/reminders", { params });
       return response.data.data.reminders;
     } catch (error) {
       console.error("Failed to fetch health reminders:", error);
@@ -320,7 +330,7 @@ export const dashboardService = {
   }): Promise<HealthMetric[]> {
     try {
       const response = await api.get<ApiResponse<{ metrics: HealthMetric[] }>>(
-        "/api/health/metrics",
+        "/health/metrics",
         { params }
       );
       return response.data.data.metrics;
@@ -335,7 +345,7 @@ export const dashboardService = {
    */
   async markReminderComplete(reminderId: string): Promise<void> {
     try {
-      await api.patch(`/api/health/reminders/${reminderId}/complete`);
+      await api.patch(`/health/reminders/${reminderId}/complete`);
     } catch (error) {
       console.error("Failed to mark reminder as complete:", error);
       throw error;
@@ -351,9 +361,11 @@ export const dashboardService = {
     newTime: string
   ): Promise<Appointment> {
     try {
-      const response = await api.patch<
+      const response = await api.post<
         ApiResponse<{ appointment: Appointment }>
-      >(`/api/appointments/${appointmentId}/reschedule`, { newDate, newTime });
+      >(`/appointments/${appointmentId}/reschedule`, { 
+        newDate: `${newDate}T${newTime}:00.000Z`
+      });
       return response.data.data.appointment;
     } catch (error) {
       console.error("Failed to reschedule appointment:", error);

@@ -149,13 +149,7 @@ export class ValidationUtil {
    */
   static validateAppointmentCreation(): ValidationChain[] {
     return [
-      body('patientId')
-        .notEmpty()
-        .withMessage('Patient ID is required')
-        .isMongoId()
-        .withMessage('Invalid patient ID format'),
-
-      body('doctorId')
+      body('doctor')
         .notEmpty()
         .withMessage('Doctor ID is required')
         .isMongoId()

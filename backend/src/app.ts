@@ -4,6 +4,8 @@ import { database } from '@/config/database';
 import aiAssistantRoutes from './routes/aiAssistantRoutes';
 import patientRoutes from './routes/patientRoutes';
 import authRoutes from './routes/authRoutes';
+import appointmentRoutes from './routes/appointmentRoutes';
+import healthRoutes from './routes/healthRoutes';
 import { errorHandler, notFound } from './middleware/errorHandler';
 import swaggerUi from 'swagger-ui-express';
 import { specs } from './config/swagger';
@@ -88,6 +90,8 @@ class App {
     this.app.use("/api/v1/auth", authRoutes);
     this.app.use("/api/v1/ai-assistant", aiAssistantRoutes);
     this.app.use("/api/v1/patients", patientRoutes);
+    this.app.use("/api/v1/appointments", appointmentRoutes);
+    this.app.use("/api/v1/health", healthRoutes);
 
     // 404 handler
     this.app.use((req: Request, res: Response, next: NextFunction) => {

@@ -12,8 +12,6 @@ const api = axios.create({
   withCredentials: true, // Important for cookies/sessions
 });
 
-// Rest of your interceptors...
-
 // Add request interceptor to include auth token
 api.interceptors.request.use(
   (config) => {
@@ -46,12 +44,12 @@ api.interceptors.response.use(
           { refreshToken }
         );
 
-        const { access, refresh } = response.data.tokens;
+        const { tokens } = response.data.data; // Backend returns data.data
 
-        localStorage.setItem("accessToken", access.token);
-        localStorage.setItem("refreshToken", refresh.token);
+        localStorage.setItem("accessToken", tokens.accessToken);
+        localStorage.setItem("refreshToken", tokens.refreshToken);
 
-        originalRequest.headers.Authorization = `Bearer ${access.token}`;
+        originalRequest.headers.Authorization = `Bearer ${tokens.accessToken}`;
         return api(originalRequest);
       } catch (error) {
         localStorage.removeItem("accessToken");
