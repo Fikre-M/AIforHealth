@@ -44,7 +44,7 @@ const envSchema = z.object({
 
   // Email Service
   SENDGRID_API_KEY: z.string().optional(),
-  FROM_EMAIL: z.string().email().optional(),
+  FROM_EMAIL: z.string().email('Invalid email format').optional(),
   FROM_NAME: z.string().optional(),
 
   // SMS Service
@@ -77,7 +77,7 @@ const parseEnv = () => {
     return envSchema.parse(process.env);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const errorMessages = error.errors.map(err => 
+      const errorMessages = error.issues.map((err: any) => 
         `${err.path.join('.')}: ${err.message}`
       ).join('\n');
       

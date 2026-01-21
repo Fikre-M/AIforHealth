@@ -44,7 +44,7 @@ class Database {
     };
 
     // Production-specific optimizations
-    if (isProduction) {
+    if (isProduction()) {
       return {
         ...baseOptions,
         retryWrites: env.MONGODB_RETRY_WRITES,
@@ -64,7 +64,7 @@ class Database {
       this.connectionRetries = 0;
       this.stats.connectionCount++;
       this.stats.lastConnected = new Date();
-      console.log(`✅ MongoDB connected successfully to ${isTest ? 'test' : 'main'} database`);
+      console.log(`✅ MongoDB connected successfully to ${isTest() ? 'test' : 'main'} database`);
     });
 
     // Connection error
@@ -129,10 +129,10 @@ class Database {
     }
 
     try {
-      const uri = isTest ? env.MONGODB_TEST_URI : env.MONGODB_URI;
+      const uri = isTest() ? env.MONGODB_TEST_URI || env.MONGODB_URI : env.MONGODB_URI;
       const options = this.getConnectionOptions();
       
-      console.log(`🔌 Connecting to MongoDB ${isTest ? 'test' : 'main'} database...`);
+      console.log(`🔌 Connecting to MongoDB ${isTest() ? 'test' : 'main'} database...`);
       
       await mongoose.connect(uri, options);
       

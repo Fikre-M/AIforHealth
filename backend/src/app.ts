@@ -88,6 +88,17 @@ class App {
   }
 
   private initializeRoutes(): void {
+    // Health check endpoint (no auth required)
+    this.app.get('/health', (req: Request, res: Response) => {
+      res.json({
+        status: 'OK',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        environment: env.NODE_ENV,
+        version: '1.0.0'
+      });
+    });
+
     // API routes
     this.app.use("/api/v1/auth", authRoutes);
     this.app.use("/api/v1/ai-assistant", aiAssistantRoutes);
