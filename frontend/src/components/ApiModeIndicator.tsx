@@ -1,4 +1,3 @@
-// Component to show which API mode is active
 import { config } from '@/config/env';
 
 export const ApiModeIndicator = () => {

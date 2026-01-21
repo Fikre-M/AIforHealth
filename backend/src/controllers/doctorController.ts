@@ -1,4 +1,3 @@
-// backend/src/controllers/doctorController.ts
 import { Request, Response } from "express";
 import { Types } from "mongoose";
 import asyncHandler from "../middleware/asyncHandler";
