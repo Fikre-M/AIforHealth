@@ -133,7 +133,7 @@ export const errorHandler = (
   const errorResponse: ErrorResponse = {
     status: error.status || 'error',
     error: {
-      type: err.name || 'INTERNAL_SERVER_ERROR',
+      type: error.name || err.name || 'INTERNAL_SERVER_ERROR',
       message,
     },
   };
