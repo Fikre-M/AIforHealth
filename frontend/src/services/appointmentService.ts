@@ -1,5 +1,6 @@
 import type { Appointment } from '@/types';
 import { addDays } from 'date-fns';
+import apiAdapter from './apiAdapter';
 
 // Enhanced appointment types
 export interface AppointmentSlot {
@@ -158,42 +159,13 @@ export const appointmentService = {
    * Get appointments with optional filtering
    */
   async getAppointments(filter?: AppointmentFilter): Promise<Appointment[]> {
-    await delay(500);
-    simulateNetworkError();
-    
-    let appointments = [...mockAppointments];
-    
-    if (filter) {
-      if (filter.status) {
-        appointments = appointments.filter(apt => filter.status!.includes(apt.status));
-      }
-      
-      if (filter.type) {
-        appointments = appointments.filter(apt => filter.type!.includes(apt.type));
-      }
-      
-      if (filter.doctorId) {
-        appointments = appointments.filter(apt => apt.doctorId === filter.doctorId);
-      }
-      
-      if (filter.patientId) {
-        appointments = appointments.filter(apt => apt.patientId === filter.patientId);
-      }
-      
-      if (filter.dateFrom) {
-        appointments = appointments.filter(apt => apt.date >= filter.dateFrom!);
-      }
-      
-      if (filter.dateTo) {
-        appointments = appointments.filter(apt => apt.date <= filter.dateTo!);
-      }
+    try {
+      const response = await apiAdapter.appointments.getAppointments(filter);
+      return response.appointments || response;
+    } catch (error) {
+      console.error('Failed to fetch appointments:', error);
+      throw error;
     }
-    
-    return appointments.sort((a, b) => {
-      const dateA = new Date(`${a.date}T${a.time}`);
-      const dateB = new Date(`${b.date}T${b.time}`);
-      return dateB.getTime() - dateA.getTime();
-    });
   },
 
   /**
@@ -255,40 +227,13 @@ export const appointmentService = {
    * Create a new appointment
    */
   async createAppointment(request: AppointmentRequest): Promise<Appointment> {
-    await delay(1000);
-    simulateNetworkError();
-    
-    // Validate appointment slot availability
-    const existingAppointment = mockAppointments.find(apt => 
-      apt.doctorId === request.doctorId && 
-      apt.date === request.date && 
-      apt.time === request.time &&
-      apt.status !== 'cancelled'
-    );
-    
-    if (existingAppointment) {
-      throw new Error('This time slot is no longer available');
+    try {
+      const response = await apiAdapter.appointments.createAppointment(request);
+      return response.appointment || response;
+    } catch (error) {
+      console.error('Failed to create appointment:', error);
+      throw error;
     }
-    
-    // Validate appointment is in the future
-    const appointmentDateTime = new Date(`${request.date}T${request.time}`);
-    if (appointmentDateTime <= new Date()) {
-      throw new Error('Cannot schedule appointments in the past');
-    }
-    
-    const newAppointment: Appointment = {
-      id: `apt-${Date.now()}`,
-      patientId: request.patientId,
-      doctorId: request.doctorId,
-      date: request.date,
-      time: request.time,
-      status: 'scheduled',
-      type: request.type,
-      notes: request.notes || request.reason
-    };
-    
-    mockAppointments.push(newAppointment);
-    return newAppointment;
   },
 
   /**

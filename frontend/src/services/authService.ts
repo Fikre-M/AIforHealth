@@ -5,23 +5,27 @@ import type {
   AuthResponse,
   User,
 } from "@/types/auth";
-import api from "./api";
+import apiAdapter from "./apiAdapter";
 
 export const authService = {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
-      const response = await api.post("/auth/login", credentials);
-      const { user, tokens } = response.data.data; // Note: backend returns data.data
+      const response = await apiAdapter.auth.login(credentials);
+      
+      // Handle both mock and real API response formats
+      const { user, tokens, token, refreshToken } = response;
+      const accessToken = tokens?.accessToken || token;
+      const refresh = tokens?.refreshToken || refreshToken;
 
       // Store tokens
-      localStorage.setItem("accessToken", tokens.accessToken);
-      localStorage.setItem("refreshToken", tokens.refreshToken);
+      localStorage.setItem("accessToken", accessToken);
+      localStorage.setItem("refreshToken", refresh);
       localStorage.setItem("user", JSON.stringify(user));
 
       return {
         user,
-        token: tokens.accessToken,
-        refreshToken: tokens.refreshToken,
+        token: accessToken,
+        refreshToken: refresh,
       };
     } catch (error: any) {
       console.error("Login failed:", error);
@@ -43,31 +47,34 @@ export const authService = {
       } else if (error.request) {
         throw new Error("No response from server. Please try again.");
       } else {
-        throw new Error("Request failed. Please check your connection.");
+        throw new Error(error.message || "Request failed. Please check your connection.");
       }
     }
   },
 
   async register(userData: RegisterData): Promise<AuthResponse> {
     try {
-      const response = await api.post('/auth/register', {
+      const response = await apiAdapter.auth.register({
         name: userData.name,
         email: userData.email,
         password: userData.password,
         role: userData.role || 'patient',
       });
 
-      const { user, tokens } = response.data.data;
+      // Handle both mock and real API response formats
+      const { user, tokens, token, refreshToken } = response;
+      const accessToken = tokens?.accessToken || token;
+      const refresh = tokens?.refreshToken || refreshToken;
       
       // Store tokens
-      localStorage.setItem('accessToken', tokens.accessToken);
-      localStorage.setItem('refreshToken', tokens.refreshToken);
+      localStorage.setItem('accessToken', accessToken);
+      localStorage.setItem('refreshToken', refresh);
       localStorage.setItem('user', JSON.stringify(user));
 
       return {
         user,
-        token: tokens.accessToken,
-        refreshToken: tokens.refreshToken,
+        token: accessToken,
+        refreshToken: refresh,
       };
     } catch (error: any) {
       if (error.response) {
@@ -89,13 +96,13 @@ export const authService = {
         }
       }
       
-      throw new Error('Network error. Please check your connection.');
+      throw new Error(error.message || 'Network error. Please check your connection.');
     }
   },
 
   async logout(): Promise<void> {
     try {
-      await api.post("/auth/logout");
+      await apiAdapter.auth.logout();
     } catch (error) {
       console.error("Logout failed:", error);
     } finally {
@@ -108,7 +115,7 @@ export const authService = {
 
   async requestPasswordReset(email: string): Promise<void> {
     try {
-      await api.post("/auth/request-password-reset", { email });
+      await apiAdapter.post("/auth/request-password-reset", { email });
     } catch (error: any) {
       if (error.response?.status === 404) {
         // Don't reveal if email exists for security
@@ -120,7 +127,7 @@ export const authService = {
 
   async resetPassword(token: string, newPassword: string): Promise<void> {
     try {
-      await api.post("/auth/reset-password", { token, password: newPassword });
+      await apiAdapter.post("/auth/reset-password", { token, password: newPassword });
     } catch (error: any) {
       if (error.response?.status === 400) {
         throw new Error('Invalid or expired reset token');
@@ -134,7 +141,7 @@ export const authService = {
     newPassword: string
   ): Promise<void> {
     try {
-      await api.put("/auth/change-password", { currentPassword, newPassword });
+      await apiAdapter.put("/auth/change-password", { currentPassword, newPassword });
     } catch (error: any) {
       if (error.response?.status === 400) {
         throw new Error('Current password is incorrect');
@@ -145,8 +152,7 @@ export const authService = {
 
   async getProfile(): Promise<User> {
     try {
-      const response = await api.get("/auth/profile");
-      return response.data.data; // Backend returns data.data
+      return await apiAdapter.auth.getProfile();
     } catch (error) {
       throw error;
     }
@@ -154,8 +160,7 @@ export const authService = {
 
   async updateProfile(updates: Partial<User>): Promise<User> {
     try {
-      const response = await api.put("/auth/profile", updates);
-      return response.data.data;
+      return await apiAdapter.auth.updateProfile(updates);
     } catch (error) {
       throw error;
     }
@@ -163,8 +168,8 @@ export const authService = {
 
   async refreshToken(refreshToken: string) {
     try {
-      const response = await api.post('/auth/refresh-token', { refreshToken });
-      const { tokens } = response.data.data;
+      const response = await apiAdapter.auth.refreshToken(refreshToken);
+      const tokens = response.tokens || response;
       
       // Update stored tokens
       localStorage.setItem('accessToken', tokens.accessToken);

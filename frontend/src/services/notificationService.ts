@@ -4,7 +4,7 @@ import type {
   NotificationPreferences, 
   NotificationStats 
 } from '@/types/notification';
-import api from './api';
+import apiAdapter from './apiAdapter';
 
 interface ApiResponse<T> {
   data: T;
@@ -17,8 +17,8 @@ export const notificationService = {
    */
   async getNotifications(): Promise<Notification[]> {
     try {
-      const response = await api.get<ApiResponse<{ notifications: Notification[] }>>('/notifications');
-      return response.data.data.notifications.sort((a, b) => 
+      const response = await apiAdapter.notifications.getNotifications();
+      return response.notifications.sort((a, b) => 
         new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
       );
     } catch (error) {
