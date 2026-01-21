@@ -65,6 +65,3 @@ api.interceptors.response.use(
 );
 
 export default api;
-
-// Export the api instance as default
-export default api;

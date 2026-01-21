@@ -35,6 +35,16 @@ let mockUsers: User[] = [
     phone: '+1 (555) 987-6543',
     specialization: 'Cardiology',
     licenseNumber: 'MD123456'
+  },
+  {
+    id: '3',
+    email: 'admin@aiforhealth.com',
+    name: 'Admin User',
+    role: 'admin',
+    verified: true,
+    createdAt: '2024-01-01T00:00:00Z',
+    avatar: '/avatars/admin.jpg',
+    phone: '+1 (555) 111-2222'
   }
 ];
 
@@ -64,24 +74,32 @@ let mockAppointments: Appointment[] = [
 let mockNotifications: Notification[] = [
   {
     id: '1',
-    userId: '1',
-    type: 'appointment',
+    type: 'appointment-reminder',
     title: 'Upcoming Appointment',
     message: 'You have an appointment with Dr. Sarah Wilson tomorrow at 10:00 AM',
     timestamp: new Date().toISOString(),
     read: false,
     priority: 'medium',
-    actionUrl: '/appointments/1'
+    actionUrl: '/appointments/1',
+    metadata: {
+      appointmentId: '1',
+      doctorName: 'Dr. Sarah Wilson',
+      appointmentDate: addDays(new Date(), 1).toISOString().split('T')[0],
+      appointmentTime: '10:00',
+      daysUntilAppointment: 1
+    }
   },
   {
     id: '2',
-    userId: '1',
-    type: 'reminder',
+    type: 'medication',
     title: 'Medication Reminder',
     message: 'Time to take your morning medication',
     timestamp: addDays(new Date(), -1).toISOString(),
     read: true,
-    priority: 'high'
+    priority: 'high',
+    metadata: {
+      medicationName: 'Morning Vitamins'
+    }
   }
 ];
 
@@ -96,7 +114,12 @@ export const mockApi = {
       await delay();
       
       const user = mockUsers.find(u => u.email === credentials.email);
-      if (!user || credentials.password !== 'password123') {
+      
+      // Check credentials - accept both mock passwords and real admin password
+      const validPassword = credentials.password === 'password123' || 
+                           (credentials.email === 'admin@aiforhealth.com' && credentials.password === 'Admin123!@#');
+      
+      if (!user || !validPassword) {
         throw new Error('Invalid email or password');
       }
 

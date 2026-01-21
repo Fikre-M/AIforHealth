@@ -54,12 +54,7 @@ export const authService = {
 
   async register(userData: RegisterData): Promise<AuthResponse> {
     try {
-      const response = await apiAdapter.auth.register({
-        name: userData.name,
-        email: userData.email,
-        password: userData.password,
-        role: userData.role || 'patient',
-      });
+      const response = await apiAdapter.auth.register(userData);
 
       // Handle both mock and real API response formats
       const { user, tokens, token, refreshToken } = response;
