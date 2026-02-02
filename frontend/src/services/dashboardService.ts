@@ -266,7 +266,7 @@ export const dashboardService = {
     page?: number;
     limit?: number;
     status?: string;
-  }): Promise<{ appointments: Appointment[]; total: number }> {
+  }): Promise<Appointment[]> {
     try {
       const response = await api.get<
         ApiResponse<{
@@ -284,10 +284,7 @@ export const dashboardService = {
         count: response.data.data.appointments.length,
         total: response.data.data.pagination.total 
       });
-      return {
-        appointments: response.data.data.appointments,
-        total: response.data.data.pagination.total,
-      };
+      return response.data.data.appointments;
     } catch (error) {
       logError("Failed to fetch appointment history", error as Error);
       throw error;
