@@ -70,7 +70,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { AppError, ErrorType } from '@/utils/AppError';
 import { env } from '@/config/env';
-import { logger } from './logger';
+import { logger } from '@/utils/logger';
 
 interface ErrorResponse {
   status: string;

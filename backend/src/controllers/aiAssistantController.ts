@@ -8,10 +8,11 @@ import { AIConversationStatus } from '../models/AIAssistant';
 declare module 'express' {
   interface Request {
     user?: {
-      _id: Types.ObjectId;
+      userId: string;
       role: string;
       email: string;
-      name: string;
+      iat?: number;
+      exp?: number;
     };
   }
 }
@@ -40,7 +41,7 @@ export const createConversation = asyncHandler(async (req: Request, res: Respons
     return;
   }
 
-  const conversation = await AIAssistantService.createConversation(req.user._id, message);
+  const conversation = await AIAssistantService.createConversation(new Types.ObjectId(req.user.userId), message);
 
   res.status(201).json({
     success: true,
@@ -76,7 +77,7 @@ export const sendMessage = asyncHandler(async (req: Request, res: Response) => {
   try {
     const { response, conversation } = await AIAssistantService.processUserInput(
       conversationId,
-      req.user._id,
+      new Types.ObjectId(req.user.userId),
       message
     );
 
@@ -115,7 +116,7 @@ export const getConversations = asyncHandler(async (req: Request, res: Response)
   }
 
   const result = await AIAssistantService.listConversations(
-    req.user._id,
+    new Types.ObjectId(req.user.userId),
     {
       page: parseInt(page as string, 10),
       limit: parseInt(limit as string, 10),
@@ -146,7 +147,7 @@ export const getConversation = asyncHandler(async (req: Request, res: Response) 
     return;
   }
 
-  const conversation = await AIAssistantService.getConversation(conversationId, req.user._id);
+  const conversation = await AIAssistantService.getConversation(conversationId, new Types.ObjectId(req.user.userId));
 
   if (!conversation) {
     res.status(404).json({
@@ -189,7 +190,7 @@ export const updateConversationStatus = asyncHandler(async (req: Request, res: R
 
   const conversation = await AIAssistantService.updateConversationStatus(
     conversationId,
-    req.user._id,
+    new Types.ObjectId(req.user.userId),
     status
   );
 
@@ -223,7 +224,7 @@ export const deleteConversation = asyncHandler(async (req: Request, res: Respons
     return;
   }
 
-  const deleted = await AIAssistantService.deleteConversation(conversationId, req.user._id);
+  const deleted = await AIAssistantService.deleteConversation(conversationId, new Types.ObjectId(req.user.userId));
 
   if (!deleted) {
     res.status(404).json({
@@ -256,7 +257,7 @@ export const getConversationHistory = asyncHandler(async (req: Request, res: Res
   }
 
   const history = await AIAssistantService.getConversationHistory(
-    req.user._id,
+    new Types.ObjectId(req.user.userId),
     parseInt(limit as string, 10)
   );
 
