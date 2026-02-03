@@ -85,8 +85,8 @@ export function RegisterForm() {
     }
 
     if (formData.role === 'doctor') {
-      step2Rules.specialization = { required: true };
-      step2Rules.licenseNumber = { required: true };
+      step2Rules.specialization = validationRules.specialization;
+      step2Rules.licenseNumber = validationRules.licenseNumber;
     }
 
     const validationErrors = validateForm(formData, step2Rules);

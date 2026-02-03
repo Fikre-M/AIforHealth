@@ -18,7 +18,8 @@ export const notificationService = {
   async getNotifications(): Promise<Notification[]> {
     try {
       const response = await apiAdapter.notifications.getNotifications();
-      return response.notifications.sort((a, b) => 
+      // response is already the notifications array from apiAdapter
+      return response.sort((a, b) => 
         new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
       );
     } catch (error) {

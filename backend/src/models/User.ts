@@ -1,5 +1,6 @@
 import mongoose, { Document, Schema } from 'mongoose';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import { UserRole } from '@/types';
 
 export interface IUser extends Document {
@@ -165,8 +166,7 @@ userSchema.methods.comparePassword = async function (
 
 // Instance method to generate password reset token
 userSchema.methods.generatePasswordResetToken = function (): string {
-  const resetToken = Math.random().toString(36).substring(2, 15) + 
-                    Math.random().toString(36).substring(2, 15);
+  const resetToken = crypto.randomBytes(32).toString('hex');
   
   this.passwordResetToken = resetToken;
   this.passwordResetExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
@@ -176,8 +176,7 @@ userSchema.methods.generatePasswordResetToken = function (): string {
 
 // Instance method to generate email verification token
 userSchema.methods.generateEmailVerificationToken = function (): string {
-  const verificationToken = Math.random().toString(36).substring(2, 15) + 
-                           Math.random().toString(36).substring(2, 15);
+  const verificationToken = crypto.randomBytes(32).toString('hex');
   
   this.emailVerificationToken = verificationToken;
   
@@ -224,6 +223,9 @@ userSchema.statics.unlockAccount = function (userId: string) {
     }
   );
 };
+
+// Create explicit unique index for email
+userSchema.index({ email: 1 }, { unique: true });
 
 const User = mongoose.model<IUser>('User', userSchema);
 

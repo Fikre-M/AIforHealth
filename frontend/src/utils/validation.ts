@@ -68,8 +68,8 @@ export const validationRules = {
       if (value && value.length < 8) {
         return 'Password must be at least 8 characters';
       }
-      if (value && !/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(value)) {
-        return 'Password must contain at least one uppercase letter, one lowercase letter, and one number';
+      if (value && !/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/.test(value)) {
+        return 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&)';
       }
       return null;
     }
@@ -91,6 +91,28 @@ export const validationRules = {
     custom: (value: string) => {
       if (value && !/^\+?[\d\s\-\(\)]+$/.test(value)) {
         return 'Please enter a valid phone number';
+      }
+      return null;
+    }
+  },
+  specialization: {
+    required: true,
+    minLength: 2,
+    maxLength: 50,
+    custom: (value: string) => {
+      if (!value || value.trim().length === 0) {
+        return 'Specialization is required for doctors';
+      }
+      return null;
+    }
+  },
+  licenseNumber: {
+    required: true,
+    minLength: 3,
+    maxLength: 20,
+    custom: (value: string) => {
+      if (!value || value.trim().length === 0) {
+        return 'License number is required for doctors';
       }
       return null;
     }

@@ -36,6 +36,21 @@ export class ValidationUtil {
         .optional()
         .isIn(Object.values(UserRole))
         .withMessage('Role must be either patient, doctor, or admin'),
+
+      // Conditional validation for doctor fields
+      body('specialization')
+        .if(body('role').equals('doctor'))
+        .notEmpty()
+        .withMessage('Specialization is required for doctors')
+        .isLength({ min: 2, max: 50 })
+        .withMessage('Specialization must be between 2 and 50 characters'),
+
+      body('licenseNumber')
+        .if(body('role').equals('doctor'))
+        .notEmpty()
+        .withMessage('License number is required for doctors')
+        .isLength({ min: 3, max: 20 })
+        .withMessage('License number must be between 3 and 20 characters'),
     ];
   }
 

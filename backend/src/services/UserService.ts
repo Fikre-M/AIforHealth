@@ -35,18 +35,17 @@ export class UserService {
    */
   static async createUser(userData: CreateUserData): Promise<IUser> {
     try {
-      // Check if user already exists
-      const existingUser = await User.findOne({ email: userData.email });
-      if (existingUser) {
-        throw new Error('User with this email already exists');
-      }
-
-      // Create new user
+      // Create new user directly - let MongoDB unique index handle duplicates
       const user = new User(userData);
       await user.save();
 
       return user;
-    } catch (error) {
+    } catch (error: any) {
+      // Handle MongoDB duplicate key error (E11000)
+      if (error.code === 11000 && error.keyPattern?.email) {
+        throw new Error('User with this email already exists');
+      }
+      
       if (error instanceof Error) {
         throw new Error(`Failed to create user: ${error.message}`);
       }
