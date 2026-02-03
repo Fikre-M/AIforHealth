@@ -1,0 +1,1 @@
+export { AppointmentsPage } from './components/AppointmentsPage';

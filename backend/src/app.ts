@@ -8,6 +8,8 @@ import authRoutes from './routes/authRoutes';
 import appointmentRoutes from './routes/appointmentRoutes';
 import healthRoutes from './routes/healthRoutes';
 import notificationRoutes from './routes/notificationRoutes';
+import doctorRoutes from './routes/doctorRoutes';
+import adminRoutes from './routes/adminRoutes';
 import { errorHandler, notFound } from './middleware/errorHandler';
 import swaggerUi from 'swagger-ui-express';
 import { specs } from './config/swagger';
@@ -109,6 +111,8 @@ class App {
     this.app.use("/api/v1/auth", authRoutes);
     this.app.use("/api/v1/ai-assistant", aiAssistantRoutes);
     this.app.use("/api/v1/patients", patientRoutes);
+    this.app.use("/api/v1/doctors", doctorRoutes);
+    this.app.use("/api/v1/admin", adminRoutes);
     this.app.use("/api/v1/appointments", appointmentRoutes);
     this.app.use("/api/v1/health", healthRoutes);
     this.app.use("/api/v1/notifications", notificationRoutes);
