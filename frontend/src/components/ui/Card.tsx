@@ -227,7 +227,7 @@ const shadowClasses = {
 };
 
 const variantClasses = {
-  default: "bg-white dark:bg-gray-800",
+  default: "bg-white dark:bg-gray-200",
   gradient:
     "bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900",
   glass: "bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm",
