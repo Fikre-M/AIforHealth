@@ -148,14 +148,14 @@ export function LoginForm() {
               </Button>
 
               {/* Demo Accounts */}
-              <div className="bg-gray-50 rounded-lg p-4">
+              {/* <div className="bg-gray-50 rounded-lg p-4">
                 <p className="text-sm font-medium text-gray-700 mb-2">Demo Accounts:</p>
                 <div className="space-y-1 text-xs text-gray-600">
                   <div>Patient: patient@example.com</div>
                   <div>Doctor: doctor@example.com</div>
                   <div>Password: password</div>
                 </div>
-              </div>
+              </div> */}
             </form>
           </CardContent>
         </Card>
