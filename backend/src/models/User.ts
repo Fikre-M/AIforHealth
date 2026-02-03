@@ -224,9 +224,6 @@ userSchema.statics.unlockAccount = function (userId: string) {
   );
 };
 
-// Create explicit unique index for email
-userSchema.index({ email: 1 }, { unique: true });
-
 const User = mongoose.model<IUser>('User', userSchema);
 
 export default User;
