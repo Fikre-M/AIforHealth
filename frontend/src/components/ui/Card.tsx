@@ -1,5 +1,6 @@
 import React from 'react';
 import { clsx } from 'clsx';
+import { designTokens, componentTokens } from '@/styles/design-tokens';
 
 interface CardProps {
   children: React.ReactNode;
@@ -13,7 +14,7 @@ interface CardProps {
 const paddingClasses = {
   none: '',
   sm: 'p-3',
-  md: 'p-4',
+  md: 'p-4', 
   lg: 'p-6'
 };
 
@@ -27,7 +28,7 @@ const shadowClasses = {
 export const Card: React.FC<CardProps> = ({
   children,
   className,
-  padding = 'md',
+  padding = 'none', // Changed default to none since CardHeader/CardContent handle padding
   shadow = 'sm',
   border = true,
   hover = false
@@ -35,11 +36,12 @@ export const Card: React.FC<CardProps> = ({
   return (
     <div
       className={clsx(
-        'bg-white rounded-lg',
+        // Base styles with consistent design tokens
+        'bg-white dark:bg-gray-800 rounded-lg transition-all duration-200',
         paddingClasses[padding],
         shadowClasses[shadow],
-        border && 'border border-gray-200',
-        hover && 'hover:shadow-md transition-shadow duration-200',
+        border && 'border border-gray-200 dark:border-gray-700',
+        hover && 'hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600',
         className
       )}
     >
@@ -48,7 +50,7 @@ export const Card: React.FC<CardProps> = ({
   );
 };
 
-// Card header component
+// Card header component with consistent styling
 interface CardHeaderProps {
   children: React.ReactNode;
   className?: string;
@@ -64,7 +66,7 @@ export const CardHeader: React.FC<CardHeaderProps> = ({
     <div
       className={clsx(
         'px-6 py-4',
-        border && 'border-b border-gray-200',
+        border && 'border-b border-gray-200 dark:border-gray-700',
         className
       )}
     >
@@ -73,18 +75,26 @@ export const CardHeader: React.FC<CardHeaderProps> = ({
   );
 };
 
-// Card content component
+// Card content component with consistent padding
 interface CardContentProps {
   children: React.ReactNode;
   className?: string;
+  padding?: 'sm' | 'md' | 'lg';
 }
 
 export const CardContent: React.FC<CardContentProps> = ({
   children,
-  className
+  className,
+  padding = 'md'
 }) => {
+  const paddingClass = {
+    sm: 'px-4 py-3',
+    md: 'px-6 py-4', 
+    lg: 'px-8 py-6'
+  }[padding];
+
   return (
-    <div className={clsx('px-6 py-4', className)}>
+    <div className={clsx(paddingClass, className)}>
       {children}
     </div>
   );
@@ -95,18 +105,27 @@ interface CardFooterProps {
   children: React.ReactNode;
   className?: string;
   border?: boolean;
+  padding?: 'sm' | 'md' | 'lg';
 }
 
 export const CardFooter: React.FC<CardFooterProps> = ({
   children,
   className,
-  border = true
+  border = true,
+  padding = 'md'
 }) => {
+  const paddingClass = {
+    sm: 'px-4 py-3',
+    md: 'px-6 py-4',
+    lg: 'px-8 py-6'
+  }[padding];
+
   return (
     <div
       className={clsx(
-        'px-6 py-4',
-        border && 'border-t border-gray-200',
+        paddingClass,
+        border && 'border-t border-gray-200 dark:border-gray-700',
+        'bg-gray-50 dark:bg-gray-800/50 rounded-b-lg',
         className
       )}
     >

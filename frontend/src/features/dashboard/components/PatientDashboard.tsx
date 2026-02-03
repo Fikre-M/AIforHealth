@@ -133,19 +133,19 @@ export function PatientDashboard() {
   const nextMedication = medicationsState.data?.find(med => new Date(med.nextDose) > new Date());
 
   return (
-    <div className="space-y-6" role="main" aria-label="Patient Dashboard">
-      {/* Welcome Header */}
-      <div className="bg-gradient-to-r from-medical-600 to-blue-600 dark:from-medical-700 dark:to-blue-700 rounded-xl p-6 text-white">
+    <div className="space-y-8" role="main" aria-label="Patient Dashboard">
+      {/* Welcome Header with consistent gradient and typography */}
+      <div className="bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-700 dark:to-blue-800 rounded-xl p-6 text-white shadow-lg">
         <h1 className="text-2xl font-bold mb-2">
           Welcome back, {user?.name?.split(' ')[0]}! 👋
         </h1>
-        <p className="text-medical-100 dark:text-medical-200">
+        <p className="text-blue-100 dark:text-blue-200 text-base">
           Here's your health overview for today
         </p>
       </div>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      {/* Quick Stats with consistent spacing */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="Next Appointment"
           value={nextAppointment ? getDateLabel(nextAppointment.date) : 'None'}
@@ -183,10 +183,11 @@ export function PatientDashboard() {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Upcoming Appointments */}
+      {/* Main Content Grid with consistent spacing */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Left Column - Main Content */}
+        <div className="lg:col-span-2 space-y-8">
+          {/* Upcoming Appointments with consistent styling */}
           <DashboardWidget
             title="Upcoming Appointments"
             icon={<Calendar className="h-5 w-5" />}
@@ -219,32 +220,36 @@ export function PatientDashboard() {
             ) : (
               <div className="space-y-4">
                 {appointmentsState.data?.slice(0, 3).map((appointment) => (
-                  <div key={appointment.id} className="flex items-center space-x-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                    <div className="w-12 h-12 bg-medical-100 dark:bg-medical-900 rounded-full flex items-center justify-center">
-                      <User className="h-6 w-6 text-medical-600 dark:text-medical-400" />
+                  <div key={appointment.id} className="flex items-center space-x-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
+                    <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center flex-shrink-0">
+                      <User className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                     </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between mb-1">
-                        <h4 className="font-semibold text-gray-900 dark:text-gray-100">{appointment.doctorName}</h4>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(appointment.status)}`}>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-semibold text-gray-900 dark:text-gray-100 truncate">
+                          {appointment.doctorName}
+                        </h4>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium flex-shrink-0 ml-2 ${getStatusColor(appointment.status)}`}>
                           {appointment.status}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{appointment.doctorSpecialty}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 truncate">
+                        {appointment.doctorSpecialty}
+                      </p>
                       <div className="flex items-center text-sm text-gray-500 dark:text-gray-500 space-x-4">
                         <div className="flex items-center">
-                          <Clock className="h-4 w-4 mr-1" />
-                          {getDateLabel(appointment.date)} at {appointment.time}
+                          <Clock className="h-4 w-4 mr-1 flex-shrink-0" />
+                          <span className="truncate">{getDateLabel(appointment.date)} at {appointment.time}</span>
                         </div>
                         <div className="flex items-center">
-                          <MapPin className="h-4 w-4 mr-1" />
-                          {appointment.location}
+                          <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
+                          <span className="truncate">{appointment.location}</span>
                         </div>
                       </div>
                     </div>
                   </div>
                 ))}
-                <Link to="/app/appointments/book">
+                <Link to="/app/appointments/book" className="block">
                   <Button variant="outline" className="w-full">
                     <Plus className="mr-2 h-4 w-4" />
                     Book New Appointment
@@ -254,14 +259,15 @@ export function PatientDashboard() {
             )}
           </DashboardWidget>
 
-          {/* Appointment History */}
+          {/* Appointment History with consistent styling */}
           <DashboardWidget
             title="Recent Appointment History"
             icon={<Clock className="h-5 w-5" />}
             action={
-              <Link to="/app/appointments/history">
+              <Link to="/app/appointments">
                 <Button variant="ghost" size="sm">
                   View All
+                  <ArrowRight className="ml-1 h-4 w-4" />
                 </Button>
               </Link>
             }
@@ -288,20 +294,29 @@ export function PatientDashboard() {
             ) : (
               <div className="space-y-3">
                 {historyState.data?.slice(0, 3).map((appointment) => (
-                  <div key={appointment.id} className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
-                        <User className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                  <div key={appointment.id} className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
+                    <div className="flex items-center space-x-3 flex-1 min-w-0">
+                      <div className="w-10 h-10 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center flex-shrink-0">
+                        <User className="h-5 w-5 text-gray-600 dark:text-gray-400" />
                       </div>
-                      <div>
-                        <p className="font-medium text-gray-900 dark:text-gray-100">{appointment.doctorName}</p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">{appointment.doctorSpecialty}</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-gray-900 dark:text-gray-100 truncate">
+                          {appointment.doctorName}
+                        </p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                          {appointment.doctorSpecialty}
+                        </p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                        {format(parseISO(appointment.date), 'MMM d, yyyy')}
-                      </p>
+                    <div className="flex items-center space-x-3 flex-shrink-0">
+                      <div className="text-right">
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                          {getDateLabel(appointment.date)}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-500">
+                          {appointment.time}
+                        </p>
+                      </div>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(appointment.status)}`}>
                         {appointment.status}
                       </span>
@@ -313,9 +328,10 @@ export function PatientDashboard() {
           </DashboardWidget>
         </div>
 
-        {/* Right Column */}
-        <div className="space-y-6">
-          {/* AI Health Reminders */}
+
+        {/* Right Column - Sidebar */}
+        <div className="space-y-8">
+          {/* AI Health Reminders with consistent styling */}
           <DashboardWidget
             title="AI Health Reminders"
             icon={<Bell className="h-5 w-5" />}
@@ -330,11 +346,11 @@ export function PatientDashboard() {
             }
           >
             {remindersState.isLoading ? (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {Array.from({ length: 3 }).map((_, i) => (
                   <div key={i} className="animate-pulse">
-                    <div className="flex items-start space-x-3 p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
-                      <div className="w-6 h-6 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
+                    <div className="flex items-start space-x-3 p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+                      <div className="w-6 h-6 bg-gray-300 dark:bg-gray-600 rounded-full flex-shrink-0"></div>
                       <div className="flex-1 space-y-2">
                         <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-3/4"></div>
                         <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded w-1/2"></div>
@@ -353,15 +369,15 @@ export function PatientDashboard() {
                 showIcon={false}
               />
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {pendingReminders.slice(0, 4).map((reminder) => (
-                  <div key={reminder.id} className="flex items-start space-x-3 p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
-                    <div className={`p-1 rounded-full ${getPriorityColor(reminder.priority)}`}>
+                  <div key={reminder.id} className="flex items-start space-x-3 p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
+                    <div className={`p-1.5 rounded-full flex-shrink-0 ${getPriorityColor(reminder.priority)}`}>
                       <Bell className="h-3 w-3" />
                     </div>
-                    <div className="flex-1">
-                      <h5 className="font-medium text-gray-900 dark:text-gray-100 text-sm">{reminder.title}</h5>
-                      <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">{reminder.description}</p>
+                    <div className="flex-1 min-w-0">
+                      <h5 className="font-semibold text-gray-900 dark:text-gray-100 text-sm mb-1 truncate">{reminder.title}</h5>
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">{reminder.description}</p>
                       <div className="flex items-center justify-between">
                         <span className="text-xs text-gray-500 dark:text-gray-500">
                           {format(parseISO(reminder.dueDate), 'MMM d, h:mm a')}
@@ -371,7 +387,7 @@ export function PatientDashboard() {
                           size="sm"
                           onClick={() => handleCompleteReminder(reminder.id)}
                           disabled={loadingStates.completeReminder}
-                          className="text-xs px-2 py-1 h-auto"
+                          className="text-xs px-2 py-1 h-auto flex-shrink-0"
                           aria-label={`Mark "${reminder.title}" as complete`}
                         >
                           <CheckCircle className="h-3 w-3 mr-1" />
@@ -382,34 +398,35 @@ export function PatientDashboard() {
                   </div>
                 ))}
                 {pendingReminders.length === 0 && (
-                  <div className="text-center py-4">
-                    <CheckCircle className="h-8 w-8 text-green-500 mx-auto mb-2" />
-                    <p className="text-sm text-gray-600 dark:text-gray-400">All caught up!</p>
+                  <div className="text-center py-8">
+                    <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-3" />
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">All caught up!</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-500">No pending reminders</p>
                   </div>
                 )}
               </div>
             )}
           </DashboardWidget>
 
-          {/* Medication Reminders */}
+          {/* Medication Schedule with consistent styling */}
           <DashboardWidget
             title="Medication Schedule"
             icon={<Pill className="h-5 w-5" />}
             variant="success"
           >
             {medicationsState.isLoading ? (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {Array.from({ length: 3 }).map((_, i) => (
                   <div key={i} className="animate-pulse">
-                    <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                    <div className="flex items-center justify-between p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
                       <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
+                        <div className="w-10 h-10 bg-gray-300 dark:bg-gray-600 rounded-full flex-shrink-0"></div>
                         <div className="space-y-2">
-                          <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-20"></div>
-                          <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded w-16"></div>
+                          <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-24"></div>
+                          <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded w-20"></div>
                         </div>
                       </div>
-                      <div className="w-16 h-8 bg-gray-300 dark:bg-gray-600 rounded"></div>
+                      <div className="w-20 h-8 bg-gray-300 dark:bg-gray-600 rounded"></div>
                     </div>
                   </div>
                 ))}
@@ -432,28 +449,31 @@ export function PatientDashboard() {
                 className="py-8"
               />
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {medicationsState.data?.slice(0, 3).map((medication) => (
-                  <div key={medication.id} className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-green-100 dark:bg-green-800 rounded-full flex items-center justify-center">
-                        <Pill className="h-4 w-4 text-green-600 dark:text-green-400" />
+                  <div key={medication.id} className="flex items-center justify-between p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800 hover:border-green-300 dark:hover:border-green-700 transition-colors">
+                    <div className="flex items-center space-x-3 flex-1 min-w-0">
+                      <div className="w-10 h-10 bg-green-100 dark:bg-green-800 rounded-full flex items-center justify-center flex-shrink-0">
+                        <Pill className="h-5 w-5 text-green-600 dark:text-green-400" />
                       </div>
-                      <div>
-                        <p className="font-medium text-gray-900 dark:text-gray-100 text-sm">{medication.name}</p>
-                        <p className="text-xs text-gray-600 dark:text-gray-400">{medication.dosage} - {medication.frequency}</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold text-gray-900 dark:text-gray-100 text-sm mb-1 truncate">{medication.name}</p>
+                        <p className="text-xs text-gray-600 dark:text-gray-400 truncate">{medication.dosage} - {medication.frequency}</p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-xs font-medium text-gray-900 dark:text-gray-100">
+                    <div className="text-right flex-shrink-0 ml-3">
+                      <p className="text-xs font-semibold text-gray-900 dark:text-gray-100 mb-2">
                         Next: {format(parseISO(medication.nextDose), 'h:mm a')}
                       </p>
-                      <div className="w-16 bg-gray-200 dark:bg-gray-700 rounded-full h-1 mt-1">
+                      <div className="w-20 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                         <div 
-                          className="bg-green-500 h-1 rounded-full" 
+                          className="bg-green-500 h-2 rounded-full transition-all duration-300" 
                           style={{ width: `${(medication.remainingDoses / medication.totalDoses) * 100}%` }}
                         ></div>
                       </div>
+                      <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                        {medication.remainingDoses}/{medication.totalDoses} left
+                      </p>
                     </div>
                   </div>
                 ))}
@@ -461,34 +481,34 @@ export function PatientDashboard() {
             )}
           </DashboardWidget>
 
-          {/* Quick Actions */}
+          {/* Quick Actions with consistent styling */}
           <DashboardWidget
             title="Quick Actions"
             icon={<TrendingUp className="h-5 w-5" />}
           >
             <div className="space-y-3">
               <Link to="/app/symptom-checker" className="block">
-                <Button variant="primary" className="w-full justify-start">
-                  <Activity className="mr-3 h-4 w-4" />
-                  Symptom Checker
+                <Button variant="primary" className="w-full justify-start text-left">
+                  <Activity className="mr-3 h-5 w-5 flex-shrink-0" />
+                  <span className="truncate">Symptom Checker</span>
                 </Button>
               </Link>
               <Link to="/app/ai-chat" className="block">
-                <Button variant="outline" className="w-full justify-start">
-                  <MessageCircle className="mr-3 h-4 w-4" />
-                  Ask AI Assistant
+                <Button variant="outline" className="w-full justify-start text-left">
+                  <MessageCircle className="mr-3 h-5 w-5 flex-shrink-0" />
+                  <span className="truncate">Ask AI Assistant</span>
                 </Button>
               </Link>
               <Link to="/app/appointments/book" className="block">
-                <Button variant="outline" className="w-full justify-start">
-                  <Calendar className="mr-3 h-4 w-4" />
-                  Book Appointment
+                <Button variant="outline" className="w-full justify-start text-left">
+                  <Calendar className="mr-3 h-5 w-5 flex-shrink-0" />
+                  <span className="truncate">Book Appointment</span>
                 </Button>
               </Link>
               <Link to="/app/health-records" className="block">
-                <Button variant="outline" className="w-full justify-start">
-                  <Heart className="mr-3 h-4 w-4" />
-                  View Health Records
+                <Button variant="outline" className="w-full justify-start text-left">
+                  <Heart className="mr-3 h-5 w-5 flex-shrink-0" />
+                  <span className="truncate">View Health Records</span>
                 </Button>
               </Link>
             </div>

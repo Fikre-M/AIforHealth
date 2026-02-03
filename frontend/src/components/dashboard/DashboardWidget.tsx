@@ -1,5 +1,6 @@
 import { clsx } from 'clsx';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
+import { designTokens, getVariantColors } from '@/styles/design-tokens';
 
 interface DashboardWidgetProps {
   title: string;
@@ -20,29 +21,32 @@ export function DashboardWidget({
 }: DashboardWidgetProps) {
   return (
     <Card className={clsx('h-full', className)} hover>
-      <CardHeader>
+      <CardHeader border={true}>
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-3 min-w-0 flex-1">
             {icon && (
               <div className={clsx(
-                'p-2 rounded-lg',
-                {
-                  'bg-gray-100 text-gray-600': variant === 'default',
-                  'bg-medical-100 text-medical-600': variant === 'primary',
-                  'bg-green-100 text-green-600': variant === 'success',
-                  'bg-yellow-100 text-yellow-600': variant === 'warning',
-                  'bg-red-100 text-red-600': variant === 'error',
-                }
+                'p-2 rounded-lg flex-shrink-0',
+                `bg-${variant === 'primary' ? 'blue' : variant === 'success' ? 'green' : variant === 'warning' ? 'yellow' : variant === 'error' ? 'red' : 'gray'}-100`,
+                `text-${variant === 'primary' ? 'blue' : variant === 'success' ? 'green' : variant === 'warning' ? 'yellow' : variant === 'error' ? 'red' : 'gray'}-600`,
+                `dark:bg-${variant === 'primary' ? 'blue' : variant === 'success' ? 'green' : variant === 'warning' ? 'yellow' : variant === 'error' ? 'red' : 'gray'}-900/30`,
+                `dark:text-${variant === 'primary' ? 'blue' : variant === 'success' ? 'green' : variant === 'warning' ? 'yellow' : variant === 'error' ? 'red' : 'gray'}-400`
               )}>
                 {icon}
               </div>
             )}
-            <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate">
+              {title}
+            </h3>
           </div>
-          {action}
+          {action && (
+            <div className="flex-shrink-0 ml-4">
+              {action}
+            </div>
+          )}
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent padding="md">
         {children}
       </CardContent>
     </Card>

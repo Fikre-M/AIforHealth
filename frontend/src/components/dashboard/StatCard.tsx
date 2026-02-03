@@ -1,6 +1,7 @@
 import { clsx } from 'clsx';
 import { Card, CardContent } from '@/components/ui/Card';
 import { LoadingSkeleton } from '@/components/ui/LoadingSkeleton';
+import { designTokens, getVariantColors } from '@/styles/design-tokens';
 
 interface StatCardProps {
   title: string;
@@ -28,10 +29,10 @@ export function StatCard({
 }: StatCardProps) {
   if (isLoading) {
     return (
-      <Card className={clsx('h-full', className)}>
-        <CardContent>
+      <Card className={clsx('h-full', className)} hover>
+        <CardContent padding="md">
           <div className="flex items-center justify-between">
-            <div className="flex-1 space-y-2">
+            <div className="flex-1 space-y-3">
               <LoadingSkeleton className="h-4 w-24" />
               <LoadingSkeleton className="h-8 w-16" />
               <LoadingSkeleton className="h-3 w-32" />
@@ -43,35 +44,53 @@ export function StatCard({
     );
   }
 
+  const variantColors = getVariantColors(variant);
+
   return (
     <Card className={clsx('h-full', className)} hover>
-      <CardContent>
+      <CardContent padding="md">
         <div className="flex items-center justify-between">
-          <div className="flex-1">
-            <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">{title}</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">{value}</p>
+          <div className="flex-1 min-w-0">
+            {/* Title with consistent typography */}
+            <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2 truncate">
+              {title}
+            </p>
+            
+            {/* Value with consistent large text */}
+            <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1 truncate">
+              {value}
+            </p>
+            
+            {/* Subtitle with consistent small text */}
             {subtitle && (
-              <p className="text-sm text-gray-500 dark:text-gray-400">{subtitle}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                {subtitle}
+              </p>
             )}
+            
+            {/* Trend indicator with consistent styling */}
             {trend && (
               <div className={clsx(
                 'flex items-center text-sm font-medium mt-2',
-                trend.isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                trend.isPositive 
+                  ? 'text-green-600 dark:text-green-400' 
+                  : 'text-red-600 dark:text-red-400'
               )}>
-                <span>{trend.isPositive ? '↗' : '↘'}</span>
-                <span className="ml-1">{Math.abs(trend.value)}%</span>
+                <span className="mr-1">
+                  {trend.isPositive ? '↗' : '↘'}
+                </span>
+                <span>{Math.abs(trend.value)}%</span>
               </div>
             )}
           </div>
+          
+          {/* Icon with consistent variant styling */}
           <div className={clsx(
-            'p-3 rounded-lg',
-            {
-              'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400': variant === 'default',
-              'bg-medical-100 text-medical-600 dark:bg-medical-900 dark:text-medical-400': variant === 'primary',
-              'bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-400': variant === 'success',
-              'bg-yellow-100 text-yellow-600 dark:bg-yellow-900 dark:text-yellow-400': variant === 'warning',
-              'bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-400': variant === 'error',
-            }
+            'p-3 rounded-lg flex-shrink-0 ml-4',
+            `bg-${variant === 'primary' ? 'blue' : variant === 'success' ? 'green' : variant === 'warning' ? 'yellow' : variant === 'error' ? 'red' : 'gray'}-100`,
+            `text-${variant === 'primary' ? 'blue' : variant === 'success' ? 'green' : variant === 'warning' ? 'yellow' : variant === 'error' ? 'red' : 'gray'}-600`,
+            `dark:bg-${variant === 'primary' ? 'blue' : variant === 'success' ? 'green' : variant === 'warning' ? 'yellow' : variant === 'error' ? 'red' : 'gray'}-900/30`,
+            `dark:text-${variant === 'primary' ? 'blue' : variant === 'success' ? 'green' : variant === 'warning' ? 'yellow' : variant === 'error' ? 'red' : 'gray'}-400`
           )}>
             {icon}
           </div>
