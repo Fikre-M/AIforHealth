@@ -253,4 +253,68 @@ export class AuthController {
       ResponseUtil.success(res, null, "Email verified successfully");
     }
   );
+
+  /**
+   * Update user profile
+   */
+  static updateProfile = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
+      const userId = (req as any).user?.userId;
+      const { name, phone, specialization, licenseNumber } = req.body;
+
+      if (!userId) {
+        ResponseUtil.error(res, "User not authenticated", 401);
+        return;
+      }
+
+      const user = await AuthService.updateProfile(userId, {
+        name,
+        phone,
+        specialization,
+        licenseNumber
+      });
+
+      if (!user) {
+        ResponseUtil.error(res, "Failed to update profile", 400);
+        return;
+      }
+
+      ResponseUtil.success(res, { user }, "Profile updated successfully");
+    }
+  );
+
+  /**
+   * Get user settings
+   */
+  static getSettings = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
+      const userId = (req as any).user?.userId;
+
+      if (!userId) {
+        ResponseUtil.error(res, "User not authenticated", 401);
+        return;
+      }
+
+      const settings = await AuthService.getSettings(userId);
+      ResponseUtil.success(res, { settings }, "Settings retrieved successfully");
+    }
+  );
+
+  /**
+   * Update user settings
+   */
+  static updateSettings = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
+      const userId = (req as any).user?.userId;
+      const settingsData = req.body;
+
+      if (!userId) {
+        ResponseUtil.error(res, "User not authenticated", 401);
+        return;
+      }
+
+      const settings = await AuthService.updateSettings(userId, settingsData);
+      ResponseUtil.success(res, { settings }, "Settings updated successfully");
+    }
+  );
 }

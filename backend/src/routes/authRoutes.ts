@@ -24,6 +24,9 @@ router.post('/verify-email', AuthController.verifyEmail);
 // Protected authentication routes
 router.post('/logout', authenticate, AuthController.logout);
 router.get('/profile', authenticate, AuthController.getProfile);
+router.put('/profile', authenticate, AuthController.updateProfile);
+router.get('/settings', authenticate, AuthController.getSettings);
+router.put('/settings', authenticate, AuthController.updateSettings);
 router.put(
   '/change-password',
   authenticate,

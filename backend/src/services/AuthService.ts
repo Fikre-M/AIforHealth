@@ -297,4 +297,91 @@ export class AuthService {
       return null;
     }
   }
+
+  /**
+   * Update user profile
+   */
+  static async updateProfile(userId: string, updateData: {
+    name?: string;
+    phone?: string;
+    specialization?: string;
+    licenseNumber?: string;
+  }): Promise<IUser | null> {
+    try {
+      const user = await User.findByIdAndUpdate(
+        userId,
+        { $set: updateData },
+        { new: true, runValidators: true }
+      );
+      return user;
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new Error(`Profile update failed: ${error.message}`);
+      }
+      throw new Error('Profile update failed: Unknown error');
+    }
+  }
+
+  /**
+   * Get user settings (placeholder - returns default settings)
+   */
+  static async getSettings(userId: string): Promise<any> {
+    try {
+      // For now, return default settings
+      // In a real app, you'd have a Settings model
+      return {
+        id: `settings-${userId}`,
+        userId,
+        notifications: {
+          email: true,
+          push: true,
+          sms: false,
+          appointmentReminders: true,
+          medicationReminders: true,
+          healthTips: true
+        },
+        appointmentReminders: {
+          enabled: true,
+          timing: ['1day', '1hour']
+        },
+        accessibility: {
+          fontSize: 'medium',
+          highContrast: false,
+          screenReader: false
+        },
+        privacy: {
+          profileVisibility: 'private',
+          shareDataForResearch: false,
+          allowMarketing: false
+        },
+        updatedAt: new Date().toISOString()
+      };
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new Error(`Failed to get settings: ${error.message}`);
+      }
+      throw new Error('Failed to get settings: Unknown error');
+    }
+  }
+
+  /**
+   * Update user settings (placeholder - just returns updated settings)
+   */
+  static async updateSettings(userId: string, settingsData: any): Promise<any> {
+    try {
+      // For now, just return the updated settings
+      // In a real app, you'd save to a Settings model
+      return {
+        id: `settings-${userId}`,
+        userId,
+        ...settingsData,
+        updatedAt: new Date().toISOString()
+      };
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new Error(`Failed to update settings: ${error.message}`);
+      }
+      throw new Error('Failed to update settings: Unknown error');
+    }
+  }
 }
