@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { 
   Calendar, 
   Users, 
@@ -139,10 +139,18 @@ export function DoctorDashboard() {
               You have {scheduledAppointments} appointments scheduled for today
             </p>
           </div>
-          <div className="text-right">
-            <div className="text-3xl font-bold">{new Date().getDate()}</div>
-            <div className="text-medical-100">
-              {new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+          <div className="flex items-center space-x-4">
+            <Link to="/app/patients/new">
+              <Button variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
+                <Plus className="mr-2 h-4 w-4" />
+                Add Patient
+              </Button>
+            </Link>
+            <div className="text-right">
+              <div className="text-3xl font-bold">{new Date().getDate()}</div>
+              <div className="text-medical-100">
+                {new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+              </div>
             </div>
           </div>
         </div>
