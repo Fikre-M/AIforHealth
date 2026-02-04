@@ -9,6 +9,8 @@ import { AIChat } from '@/features/chat/components/AIChat';
 import { AISymptomChecker } from '@/features/symptomChecker/components/AISymptomChecker';
 import { AppointmentBooking } from '@/features/booking/components/AppointmentBooking';
 import { AppointmentsPage } from '@/features/appointments';
+import { PatientsPage, AddPatientPage } from '@/features/patients';
+import { AnalyticsPage } from '@/features/analytics';
 import { NotificationsPage } from '@/features/notifications/components/NotificationsPage';
 import { ProfilePage, SettingsPage } from '@/features/profile';
 import { useAuth } from '@/hooks/useAuth';
@@ -65,6 +67,21 @@ function App() {
           <Route path="appointments/book" element={
             <ProtectedRoute>
               <AppointmentBooking />
+            </ProtectedRoute>
+          } />
+          <Route path="patients" element={
+            <ProtectedRoute>
+              <PatientsPage />
+            </ProtectedRoute>
+          } />
+          <Route path="patients/new" element={
+            <ProtectedRoute>
+              <AddPatientPage />
+            </ProtectedRoute>
+          } />
+          <Route path="analytics" element={
+            <ProtectedRoute>
+              <AnalyticsPage />
             </ProtectedRoute>
           } />
           <Route path="profile" element={

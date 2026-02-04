@@ -344,4 +344,36 @@ export const doctorService = {
       throw error;
     }
   },
+
+  /**
+   * Create a new patient
+   */
+  async createPatient(patientData: Omit<Patient, 'id'>): Promise<Patient> {
+    try {
+      const response = await api.post<ApiResponse<{ patient: Patient }>>(
+        '/doctor/patients',
+        patientData
+      );
+      return response.data.data.patient;
+    } catch (error) {
+      console.error('Failed to create patient:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Update a patient
+   */
+  async updatePatient(patientId: string, patientData: Partial<Patient>): Promise<Patient> {
+    try {
+      const response = await api.patch<ApiResponse<{ patient: Patient }>>(
+        `/doctor/patients/${patientId}`,
+        patientData
+      );
+      return response.data.data.patient;
+    } catch (error) {
+      console.error('Failed to update patient:', error);
+      throw error;
+    }
+  },
 };

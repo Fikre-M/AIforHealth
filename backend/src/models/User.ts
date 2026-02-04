@@ -19,6 +19,21 @@ export interface IUser extends Document {
   createdAt: Date;
   updatedAt: Date;
   
+  // Patient-specific fields
+  phone?: string;
+  dateOfBirth?: Date;
+  gender?: 'male' | 'female' | 'other';
+  address?: string;
+  emergencyContact?: {
+    name: string;
+    phone: string;
+    relationship: string;
+  };
+  medicalHistory?: string[];
+  allergies?: string[];
+  currentMedications?: string[];
+  createdBy?: mongoose.Types.ObjectId; // For doctor-created patients
+  
   // Instance methods
   comparePassword(candidatePassword: string): Promise<boolean>;
   generatePasswordResetToken(): string;
@@ -90,6 +105,57 @@ const userSchema = new Schema<IUser>(
     },
     lockUntil: {
       type: Date,
+    },
+    // Patient-specific fields
+    phone: {
+      type: String,
+      trim: true,
+      match: [/^[\+]?[1-9][\d]{0,15}$/, 'Please provide a valid phone number'],
+    },
+    dateOfBirth: {
+      type: Date,
+    },
+    gender: {
+      type: String,
+      enum: ['male', 'female', 'other'],
+    },
+    address: {
+      type: String,
+      trim: true,
+      maxlength: [200, 'Address cannot exceed 200 characters'],
+    },
+    emergencyContact: {
+      name: {
+        type: String,
+        trim: true,
+        maxlength: [50, 'Emergency contact name cannot exceed 50 characters'],
+      },
+      phone: {
+        type: String,
+        trim: true,
+        match: [/^[\+]?[1-9][\d]{0,15}$/, 'Please provide a valid emergency contact phone number'],
+      },
+      relationship: {
+        type: String,
+        trim: true,
+        maxlength: [30, 'Relationship cannot exceed 30 characters'],
+      },
+    },
+    medicalHistory: [{
+      type: String,
+      trim: true,
+    }],
+    allergies: [{
+      type: String,
+      trim: true,
+    }],
+    currentMedications: [{
+      type: String,
+      trim: true,
+    }],
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
     },
   },
   {

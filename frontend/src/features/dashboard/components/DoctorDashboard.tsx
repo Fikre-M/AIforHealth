@@ -347,7 +347,7 @@ export function DoctorDashboard() {
             className="justify-center"
             onClick={() => {
               // Navigate to add patient page
-              navigate('/app/doctor/patients/new');
+              navigate('/app/patients/new');
             }}
           >
             <Plus className="mr-2 h-4 w-4" />
@@ -380,7 +380,7 @@ export function DoctorDashboard() {
             className="justify-center"
             onClick={() => {
               // Navigate to analytics page
-              navigate('/app/doctor/analytics');
+              navigate('/app/analytics');
             }}
           >
             <Activity className="mr-2 h-4 w-4" />

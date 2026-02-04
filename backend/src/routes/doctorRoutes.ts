@@ -22,5 +22,14 @@ router.patch(
 
 // Doctor patient endpoints
 router.get("/patients", doctorController.getPatientList);
+router.post("/patients", doctorController.createPatient);
+router.get("/patients/:patientId", doctorController.getPatient);
+router.patch("/patients/:patientId", doctorController.updatePatient);
+
+// Patient summaries and analytics
+router.get("/patients/summaries", doctorController.getPatientSummaries);
+router.get("/appointment-requests", doctorController.getAppointmentRequests);
+router.post("/appointment-requests/:requestId/approve", doctorController.approveAppointmentRequest);
+router.post("/appointment-requests/:requestId/reject", doctorController.rejectAppointmentRequest);
 
 export default router;

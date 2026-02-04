@@ -4,7 +4,9 @@ export interface Patient {
   email: string;
   phone: string;
   dateOfBirth: string;
+  age: number;
   gender: 'male' | 'female' | 'other';
+  address?: string;
   bloodType?: string;
   allergies: string[];
   emergencyContact: {
@@ -18,6 +20,8 @@ export interface Patient {
   avatar?: string;
   medicalHistory: string[];
   currentMedications: string[];
+  createdAt: string;
+  updatedAt: string;
   vitalSigns?: {
     bloodPressure: string;
     heartRate: number;
