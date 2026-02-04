@@ -1,6 +1,5 @@
 import { clsx } from 'clsx';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
-import { designTokens, getVariantColors } from '@/styles/design-tokens';
 
 interface DashboardWidgetProps {
   title: string;
@@ -20,7 +19,7 @@ export function DashboardWidget({
   variant = 'default'
 }: DashboardWidgetProps) {
   return (
-    <Card className={clsx('h-full', className)} hover>
+    <Card className={clsx('min-h-[200px]', className)} hover>
       <CardHeader border={true}>
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3 min-w-0 flex-1">
@@ -46,7 +45,7 @@ export function DashboardWidget({
           )}
         </div>
       </CardHeader>
-      <CardContent padding="md">
+      <CardContent padding="md" className="flex-1">
         {children}
       </CardContent>
     </Card>

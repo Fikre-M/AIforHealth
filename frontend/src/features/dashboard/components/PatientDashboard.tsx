@@ -183,11 +183,11 @@ export function PatientDashboard() {
         />
       </div>
 
-      {/* Main Content Grid with consistent spacing */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {/* Main Content Grid with consistent spacing and better proportions */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         {/* Left Column - Main Content */}
-        <div className="lg:col-span-2 space-y-8">
-          {/* Upcoming Appointments with consistent styling */}
+        <div className="xl:col-span-2 space-y-6">
+          {/* Upcoming Appointments */}
           <DashboardWidget
             title="Upcoming Appointments"
             icon={<Calendar className="h-5 w-5" />}
@@ -201,65 +201,67 @@ export function PatientDashboard() {
               </Link>
             }
           >
-            {appointmentsState.isLoading ? (
-              <AppointmentSkeleton />
-            ) : appointmentsState.hasError() ? (
-              <ErrorState
-                title="Failed to load appointments"
-                message={appointmentsState.error?.message}
-                type="server"
-                onRetry={() => handleRetrySection('appointments')}
-                className="py-8"
-                showIcon={false}
-              />
-            ) : appointmentsState.isEmpty ? (
-              <EmptyAppointments
-                onAction={() => window.location.href = '/app/appointments/book'}
-                className="py-8"
-              />
-            ) : (
-              <div className="space-y-4">
-                {appointmentsState.data?.slice(0, 3).map((appointment) => (
-                  <div key={appointment.id} className="flex items-center space-x-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
-                    <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center flex-shrink-0">
-                      <User className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-semibold text-gray-900 dark:text-gray-100 truncate">
-                          {appointment.doctorName}
-                        </h4>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium flex-shrink-0 ml-2 ${getStatusColor(appointment.status)}`}>
-                          {appointment.status}
-                        </span>
+            <div className="max-h-[350px] overflow-y-auto">
+              {appointmentsState.isLoading ? (
+                <AppointmentSkeleton />
+              ) : appointmentsState.hasError() ? (
+                <ErrorState
+                  title="Failed to load appointments"
+                  message={appointmentsState.error?.message}
+                  type="server"
+                  onRetry={() => handleRetrySection('appointments')}
+                  className="py-8"
+                  showIcon={false}
+                />
+              ) : appointmentsState.isEmpty ? (
+                <EmptyAppointments
+                  onAction={() => window.location.href = '/app/appointments/book'}
+                  className="py-8"
+                />
+              ) : (
+                <div className="space-y-3 pb-4">
+                  {appointmentsState.data?.slice(0, 4).map((appointment) => (
+                    <div key={appointment.id} className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
+                      <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center flex-shrink-0">
+                        <User className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                       </div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2 truncate">
-                        {appointment.doctorSpecialty}
-                      </p>
-                      <div className="flex items-center text-sm text-gray-500 dark:text-gray-500 space-x-4">
-                        <div className="flex items-center">
-                          <Clock className="h-4 w-4 mr-1 flex-shrink-0" />
-                          <span className="truncate">{getDateLabel(appointment.date)} at {appointment.time}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <h4 className="font-semibold text-gray-900 dark:text-gray-100 truncate text-sm">
+                            {appointment.doctorName}
+                          </h4>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium flex-shrink-0 ml-2 ${getStatusColor(appointment.status)}`}>
+                            {appointment.status}
+                          </span>
                         </div>
-                        <div className="flex items-center">
-                          <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
-                          <span className="truncate">{appointment.location}</span>
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mb-1 truncate">
+                          {appointment.doctorSpecialty}
+                        </p>
+                        <div className="flex items-center text-xs text-gray-500 dark:text-gray-500 space-x-3">
+                          <div className="flex items-center">
+                            <Clock className="h-3 w-3 mr-1 flex-shrink-0" />
+                            <span className="truncate">{getDateLabel(appointment.date)} at {appointment.time}</span>
+                          </div>
+                          <div className="flex items-center">
+                            <MapPin className="h-3 w-3 mr-1 flex-shrink-0" />
+                            <span className="truncate">{appointment.location}</span>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-                <Link to="/app/appointments/book" className="block">
-                  <Button variant="outline" className="w-full">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Book New Appointment
-                  </Button>
-                </Link>
-              </div>
-            )}
+                  ))}
+                  <Link to="/app/appointments/book" className="block mt-3">
+                    <Button variant="outline" size="sm" className="w-full">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Book New Appointment
+                    </Button>
+                  </Link>
+                </div>
+              )}
+            </div>
           </DashboardWidget>
 
-          {/* Appointment History with consistent styling */}
+          {/* Appointment History */}
           <DashboardWidget
             title="Recent Appointment History"
             icon={<Clock className="h-5 w-5" />}
@@ -272,66 +274,68 @@ export function PatientDashboard() {
               </Link>
             }
           >
-            {historyState.isLoading ? (
-              <AppointmentSkeleton />
-            ) : historyState.hasError() ? (
-              <ErrorState
-                title="Failed to load history"
-                message={historyState.error?.message}
-                type="server"
-                onRetry={() => handleRetrySection('history')}
-                className="py-8"
-                showIcon={false}
-              />
-            ) : historyState.isEmpty ? (
-              <EmptyState
-                type="generic"
-                title="No History"
-                message="No appointment history available yet"
-                showAction={false}
-                className="py-8"
-              />
-            ) : (
-              <div className="space-y-3">
-                {historyState.data?.slice(0, 3).map((appointment) => (
-                  <div key={appointment.id} className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
-                    <div className="flex items-center space-x-3 flex-1 min-w-0">
-                      <div className="w-10 h-10 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center flex-shrink-0">
-                        <User className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+            <div className="max-h-[300px] overflow-y-auto">
+              {historyState.isLoading ? (
+                <AppointmentSkeleton />
+              ) : historyState.hasError() ? (
+                <ErrorState
+                  title="Failed to load history"
+                  message={historyState.error?.message}
+                  type="server"
+                  onRetry={() => handleRetrySection('history')}
+                  className="py-8"
+                  showIcon={false}
+                />
+              ) : historyState.isEmpty ? (
+                <EmptyState
+                  type="generic"
+                  title="No History"
+                  message="No appointment history available yet"
+                  showAction={false}
+                  className="py-8"
+                />
+              ) : (
+                <div className="space-y-2 pb-4">
+                  {historyState.data?.slice(0, 4).map((appointment) => (
+                    <div key={appointment.id} className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
+                      <div className="flex items-center space-x-3 flex-1 min-w-0">
+                        <div className="w-8 h-8 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center flex-shrink-0">
+                          <User className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-gray-900 dark:text-gray-100 truncate text-sm">
+                            {appointment.doctorName}
+                          </p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400 truncate">
+                            {appointment.doctorSpecialty}
+                          </p>
+                        </div>
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium text-gray-900 dark:text-gray-100 truncate">
-                          {appointment.doctorName}
-                        </p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                          {appointment.doctorSpecialty}
-                        </p>
+                      <div className="flex items-center space-x-2 flex-shrink-0">
+                        <div className="text-right">
+                          <p className="text-xs font-medium text-gray-900 dark:text-gray-100">
+                            {getDateLabel(appointment.date)}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-500">
+                            {appointment.time}
+                          </p>
+                        </div>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(appointment.status)}`}>
+                          {appointment.status}
+                        </span>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-3 flex-shrink-0">
-                      <div className="text-right">
-                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                          {getDateLabel(appointment.date)}
-                        </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-500">
-                          {appointment.time}
-                        </p>
-                      </div>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(appointment.status)}`}>
-                        {appointment.status}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
+            </div>
           </DashboardWidget>
         </div>
 
 
         {/* Right Column - Sidebar */}
-        <div className="space-y-8">
-          {/* AI Health Reminders with consistent styling */}
+        <div className="space-y-6">
+          {/* AI Health Reminders */}
           <DashboardWidget
             title="AI Health Reminders"
             icon={<Bell className="h-5 w-5" />}
@@ -345,143 +349,147 @@ export function PatientDashboard() {
               </Link>
             }
           >
-            {remindersState.isLoading ? (
-              <div className="space-y-4">
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="animate-pulse">
-                    <div className="flex items-start space-x-3 p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
-                      <div className="w-6 h-6 bg-gray-300 dark:bg-gray-600 rounded-full flex-shrink-0"></div>
-                      <div className="flex-1 space-y-2">
-                        <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-3/4"></div>
-                        <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded w-1/2"></div>
+            <div className="max-h-[280px] overflow-y-auto">
+              {remindersState.isLoading ? (
+                <div className="space-y-3 pb-4">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="animate-pulse">
+                      <div className="flex items-start space-x-3 p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
+                        <div className="w-6 h-6 bg-gray-300 dark:bg-gray-600 rounded-full flex-shrink-0"></div>
+                        <div className="flex-1 space-y-2">
+                          <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-3/4"></div>
+                          <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded w-1/2"></div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            ) : remindersState.hasError() ? (
-              <ErrorState
-                title="Failed to load reminders"
-                message={remindersState.error?.message}
-                type="server"
-                onRetry={() => handleRetrySection('reminders')}
-                className="py-8"
-                showIcon={false}
-              />
-            ) : (
-              <div className="space-y-4">
-                {pendingReminders.slice(0, 4).map((reminder) => (
-                  <div key={reminder.id} className="flex items-start space-x-3 p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
-                    <div className={`p-1.5 rounded-full flex-shrink-0 ${getPriorityColor(reminder.priority)}`}>
-                      <Bell className="h-3 w-3" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h5 className="font-semibold text-gray-900 dark:text-gray-100 text-sm mb-1 truncate">{reminder.title}</h5>
-                      <p className="text-xs text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">{reminder.description}</p>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-gray-500 dark:text-gray-500">
-                          {format(parseISO(reminder.dueDate), 'MMM d, h:mm a')}
-                        </span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleCompleteReminder(reminder.id)}
-                          disabled={loadingStates.completeReminder}
-                          className="text-xs px-2 py-1 h-auto flex-shrink-0"
-                          aria-label={`Mark "${reminder.title}" as complete`}
-                        >
-                          <CheckCircle className="h-3 w-3 mr-1" />
-                          {loadingStates.completeReminder ? 'Completing...' : 'Done'}
-                        </Button>
+                  ))}
+                </div>
+              ) : remindersState.hasError() ? (
+                <ErrorState
+                  title="Failed to load reminders"
+                  message={remindersState.error?.message}
+                  type="server"
+                  onRetry={() => handleRetrySection('reminders')}
+                  className="py-8"
+                  showIcon={false}
+                />
+              ) : (
+                <div className="space-y-3 pb-4">
+                  {pendingReminders.slice(0, 4).map((reminder) => (
+                    <div key={reminder.id} className="flex items-start space-x-3 p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
+                      <div className={`p-1.5 rounded-full flex-shrink-0 ${getPriorityColor(reminder.priority)}`}>
+                        <Bell className="h-3 w-3" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h5 className="font-semibold text-gray-900 dark:text-gray-100 text-sm mb-1 truncate">{reminder.title}</h5>
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mb-2 line-clamp-2">{reminder.description}</p>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-gray-500 dark:text-gray-500">
+                            {format(parseISO(reminder.dueDate), 'MMM d, h:mm a')}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleCompleteReminder(reminder.id)}
+                            disabled={loadingStates.completeReminder}
+                            className="text-xs px-2 py-1 h-auto flex-shrink-0"
+                            aria-label={`Mark "${reminder.title}" as complete`}
+                          >
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                            {loadingStates.completeReminder ? 'Completing...' : 'Done'}
+                          </Button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-                {pendingReminders.length === 0 && (
-                  <div className="text-center py-8">
-                    <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-3" />
-                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">All caught up!</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-500">No pending reminders</p>
-                  </div>
-                )}
-              </div>
-            )}
+                  ))}
+                  {pendingReminders.length === 0 && (
+                    <div className="text-center py-8">
+                      <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-3" />
+                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">All caught up!</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-500">No pending reminders</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </DashboardWidget>
 
-          {/* Medication Schedule with consistent styling */}
+          {/* Medication Schedule */}
           <DashboardWidget
             title="Medication Schedule"
             icon={<Pill className="h-5 w-5" />}
             variant="success"
           >
-            {medicationsState.isLoading ? (
-              <div className="space-y-4">
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="animate-pulse">
-                    <div className="flex items-center justify-between p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-gray-300 dark:bg-gray-600 rounded-full flex-shrink-0"></div>
-                        <div className="space-y-2">
-                          <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-24"></div>
-                          <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded w-20"></div>
+            <div className="max-h-[250px] overflow-y-auto">
+              {medicationsState.isLoading ? (
+                <div className="space-y-3 pb-4">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="animate-pulse">
+                      <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-gray-300 dark:bg-gray-600 rounded-full flex-shrink-0"></div>
+                          <div className="space-y-2">
+                            <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-24"></div>
+                            <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded w-20"></div>
+                          </div>
+                        </div>
+                        <div className="w-20 h-8 bg-gray-300 dark:bg-gray-600 rounded"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : medicationsState.hasError() ? (
+                <ErrorState
+                  title="Failed to load medications"
+                  message={medicationsState.error?.message}
+                  type="server"
+                  onRetry={() => handleRetrySection('medications')}
+                  className="py-8"
+                  showIcon={false}
+                />
+              ) : medicationsState.isEmpty ? (
+                <EmptyState
+                  type="generic"
+                  title="No Medications"
+                  message="No medications scheduled"
+                  showAction={false}
+                  className="py-8"
+                />
+              ) : (
+                <div className="space-y-3 pb-4">
+                  {medicationsState.data?.slice(0, 3).map((medication) => (
+                    <div key={medication.id} className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800 hover:border-green-300 dark:hover:border-green-700 transition-colors">
+                      <div className="flex items-center space-x-3 flex-1 min-w-0">
+                        <div className="w-8 h-8 bg-green-100 dark:bg-green-800 rounded-full flex items-center justify-center flex-shrink-0">
+                          <Pill className="h-4 w-4 text-green-600 dark:text-green-400" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-semibold text-gray-900 dark:text-gray-100 text-sm mb-1 truncate">{medication.name}</p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400 truncate">{medication.dosage} - {medication.frequency}</p>
                         </div>
                       </div>
-                      <div className="w-20 h-8 bg-gray-300 dark:bg-gray-600 rounded"></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : medicationsState.hasError() ? (
-              <ErrorState
-                title="Failed to load medications"
-                message={medicationsState.error?.message}
-                type="server"
-                onRetry={() => handleRetrySection('medications')}
-                className="py-8"
-                showIcon={false}
-              />
-            ) : medicationsState.isEmpty ? (
-              <EmptyState
-                type="generic"
-                title="No Medications"
-                message="No medications scheduled"
-                showAction={false}
-                className="py-8"
-              />
-            ) : (
-              <div className="space-y-4">
-                {medicationsState.data?.slice(0, 3).map((medication) => (
-                  <div key={medication.id} className="flex items-center justify-between p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800 hover:border-green-300 dark:hover:border-green-700 transition-colors">
-                    <div className="flex items-center space-x-3 flex-1 min-w-0">
-                      <div className="w-10 h-10 bg-green-100 dark:bg-green-800 rounded-full flex items-center justify-center flex-shrink-0">
-                        <Pill className="h-5 w-5 text-green-600 dark:text-green-400" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="font-semibold text-gray-900 dark:text-gray-100 text-sm mb-1 truncate">{medication.name}</p>
-                        <p className="text-xs text-gray-600 dark:text-gray-400 truncate">{medication.dosage} - {medication.frequency}</p>
+                      <div className="text-right flex-shrink-0 ml-3">
+                        <p className="text-xs font-semibold text-gray-900 dark:text-gray-100 mb-1">
+                          Next: {format(parseISO(medication.nextDose), 'h:mm a')}
+                        </p>
+                        <div className="w-16 bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
+                          <div 
+                            className="bg-green-500 h-1.5 rounded-full transition-all duration-300" 
+                            style={{ width: `${(medication.remainingDoses / medication.totalDoses) * 100}%` }}
+                          ></div>
+                        </div>
+                        <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                          {medication.remainingDoses}/{medication.totalDoses} left
+                        </p>
                       </div>
                     </div>
-                    <div className="text-right flex-shrink-0 ml-3">
-                      <p className="text-xs font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                        Next: {format(parseISO(medication.nextDose), 'h:mm a')}
-                      </p>
-                      <div className="w-20 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                        <div 
-                          className="bg-green-500 h-2 rounded-full transition-all duration-300" 
-                          style={{ width: `${(medication.remainingDoses / medication.totalDoses) * 100}%` }}
-                        ></div>
-                      </div>
-                      <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                        {medication.remainingDoses}/{medication.totalDoses} left
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
+            </div>
           </DashboardWidget>
 
-          {/* Quick Actions with consistent styling */}
+          {/* Quick Actions */}
           <DashboardWidget
             title="Quick Actions"
             icon={<TrendingUp className="h-5 w-5" />}
