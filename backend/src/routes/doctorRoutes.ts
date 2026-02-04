@@ -16,6 +16,9 @@ router.use(authorize(UserRole.DOCTOR));
 router.get("/appointments/daily", doctorController.getDailyAppointments);
 router.get("/appointments/upcoming", doctorController.getUpcomingAppointments);
 
+// Doctor notification endpoints
+// router.get("/notifications", doctorController.getNotifications);
+
 // Doctor patient endpoints
 router.get("/patients", doctorController.getPatientList);
 // router.post("/patients", doctorController.createPatient);

@@ -36,7 +36,7 @@ export const SettingsPage: React.FC = () => {
     
     try {
       setLoading(true);
-      const settingsData = await profileService.getSettings(user.id);
+      const settingsData = await profileService.getSettings();
       setSettings(settingsData);
     } catch (err) {
       setError('Failed to load settings');
@@ -59,7 +59,7 @@ export const SettingsPage: React.FC = () => {
         privacy: settings.privacy
       };
 
-      const updatedSettings = await profileService.updateSettings(user.id, updateData);
+      const updatedSettings = await profileService.updateSettings(updateData);
       setSettings(updatedSettings);
       setSuccess(true);
       
@@ -587,6 +587,7 @@ export const SettingsPage: React.FC = () => {
           {/* Save Button */}
           <div className="flex justify-end pt-6 border-t border-gray-200">
             <button
+              type="button"
               onClick={handleSave}
               disabled={saving}
               className="flex items-center space-x-2 bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"

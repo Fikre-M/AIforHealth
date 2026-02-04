@@ -5,6 +5,7 @@ import type {
   NotificationStats 
 } from '@/types/notification';
 import apiAdapter from './apiAdapter';
+import api from './api';
 
 interface ApiResponse<T> {
   data: T;
@@ -18,8 +19,9 @@ export const notificationService = {
   async getNotifications(): Promise<Notification[]> {
     try {
       const response = await apiAdapter.notifications.getNotifications();
-      // response is already the notifications array from apiAdapter
-      return response.sort((a, b) => 
+      // Handle both mock API format { notifications: [] } and real API format []
+      const notifications = Array.isArray(response) ? response : response.notifications || [];
+      return notifications.sort((a, b) => 
         new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
       );
     } catch (error) {

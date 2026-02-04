@@ -135,7 +135,7 @@ export function NotificationsPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => navigate('/app/notifications/settings')}
+            onClick={() => navigate('/app/settings')}
           >
             <Settings className="h-4 w-4 mr-2" />
             Settings
