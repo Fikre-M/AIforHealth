@@ -9,6 +9,7 @@ interface CardProps {
   shadow?: 'none' | 'sm' | 'md' | 'lg';
   border?: boolean;
   hover?: boolean;
+  overflow?: 'visible' | 'hidden' | 'auto';
 }
 
 const paddingClasses = {
@@ -31,8 +32,15 @@ export const Card: React.FC<CardProps> = ({
   padding = 'none', // Changed default to none since CardHeader/CardContent handle padding
   shadow = 'sm',
   border = true,
-  hover = false
+  hover = false,
+  overflow = 'visible'
 }) => {
+  const overflowClasses = {
+    visible: '',
+    hidden: 'overflow-hidden',
+    auto: 'overflow-auto'
+  };
+
   return (
     <div
       className={clsx(
@@ -42,6 +50,7 @@ export const Card: React.FC<CardProps> = ({
         shadowClasses[shadow],
         border && 'border border-gray-200 dark:border-gray-700',
         hover && 'hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600',
+        overflowClasses[overflow],
         className
       )}
     >

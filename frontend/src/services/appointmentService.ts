@@ -34,6 +34,16 @@ export interface AppointmentFilter {
   dateTo?: string;
 }
 
+export interface AppointmentSearchParams {
+  query?: string;
+  status?: string;
+  type?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  limit?: number;
+  offset?: number;
+}
+
 export interface AppointmentStats {
   total: number;
   upcoming: number;
@@ -165,6 +175,69 @@ export const appointmentService = {
     } catch (error) {
       console.error('Failed to fetch appointments:', error);
       throw error;
+    }
+  },
+
+  /**
+   * Search appointments with enhanced filtering and pagination
+   */
+  async searchAppointments(params: AppointmentSearchParams): Promise<{
+    appointments: Appointment[];
+    total: number;
+    hasMore: boolean;
+  }> {
+    await delay(400);
+    simulateNetworkError();
+
+    try {
+      // Try API first
+      const response = await apiAdapter.get('/appointments/search', { params });
+      return response.data;
+    } catch (error) {
+      console.warn('Search API failed, using mock search:', error);
+      
+      // Mock search implementation
+      let filtered = [...mockAppointments];
+      
+      if (params.query) {
+        const query = params.query.toLowerCase();
+        filtered = filtered.filter(apt => 
+          apt.notes?.toLowerCase().includes(query) ||
+          apt.type.toLowerCase().includes(query) ||
+          apt.status.toLowerCase().includes(query) ||
+          // Add doctor name search (would come from API in real implementation)
+          'Dr. Sarah Wilson'.toLowerCase().includes(query) ||
+          'Dr. Michael Chen'.toLowerCase().includes(query) ||
+          'Dr. Emily Rodriguez'.toLowerCase().includes(query)
+        );
+      }
+      
+      if (params.status) {
+        filtered = filtered.filter(apt => apt.status === params.status);
+      }
+      
+      if (params.type) {
+        filtered = filtered.filter(apt => apt.type === params.type);
+      }
+      
+      if (params.dateFrom) {
+        filtered = filtered.filter(apt => apt.date >= params.dateFrom!);
+      }
+      
+      if (params.dateTo) {
+        filtered = filtered.filter(apt => apt.date <= params.dateTo!);
+      }
+      
+      // Apply pagination
+      const limit = params.limit || 10;
+      const offset = params.offset || 0;
+      const paginatedResults = filtered.slice(offset, offset + limit);
+      
+      return {
+        appointments: paginatedResults,
+        total: filtered.length,
+        hasMore: offset + limit < filtered.length
+      };
     }
   },
 
