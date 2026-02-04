@@ -17,8 +17,22 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Section } from '@/components/ui/Section';
 import { Container } from '@/components/ui/Container';
+import { DemoModal } from '@/components/modals/DemoModal';
+import { useState } from 'react';
 
 export function LandingPage() {
+  const [demoModal, setDemoModal] = useState<{ isOpen: boolean; type: 'watch' | 'schedule' }>({
+    isOpen: false,
+    type: 'watch'
+  });
+
+  const openDemoModal = (type: 'watch' | 'schedule') => {
+    setDemoModal({ isOpen: true, type });
+  };
+
+  const closeDemoModal = () => {
+    setDemoModal({ isOpen: false, type: 'watch' });
+  };
   return (
     <div className="min-h-screen">
       {/* Header */}
@@ -67,7 +81,7 @@ export function LandingPage() {
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
-            <Button variant="outline" size="lg" className="w-full sm:w-auto">
+            <Button variant="outline" size="lg" className="w-full sm:w-auto" onClick={() => openDemoModal('watch')}>
               Watch Demo
             </Button>
           </div>
@@ -109,7 +123,7 @@ export function LandingPage() {
               <h3 className="text-xl font-semibold text-gray-900 mb-3">
                 67M Missed Appointments
               </h3>
-              <p className="text-gray-600 mb-4">
+              <p className="text-gray-800 mb-4">
                 Every year in the US alone, costing the healthcare system billions and 
                 putting patient health at risk.
               </p>
@@ -127,7 +141,7 @@ export function LandingPage() {
               <h3 className="text-xl font-semibold text-gray-900 mb-3">
                 Poor Follow-Up Care
               </h3>
-              <p className="text-gray-600 mb-4">
+              <p className="text-gray-800 mb-4">
                 40% of patients don't follow up after initial consultations, 
                 leading to worsening conditions and preventable complications.
               </p>
@@ -145,7 +159,7 @@ export function LandingPage() {
               <h3 className="text-xl font-semibold text-gray-900 mb-3">
                 Overwhelmed Patients
               </h3>
-              <p className="text-gray-600 mb-4">
+              <p className="text-gray-800 mb-4">
                 Managing multiple appointments, medications, and health records 
                 across different providers is confusing and time-consuming.
               </p>
@@ -182,7 +196,7 @@ export function LandingPage() {
                 </div>
                 <div>
                   <h4 className="font-semibold text-gray-900 mb-1">Intelligent Reminders</h4>
-                  <p className="text-gray-600">
+                  <p className="text-gray-800">
                     AI-powered notifications sent at the optimal time based on your schedule and preferences
                   </p>
                 </div>
@@ -194,7 +208,7 @@ export function LandingPage() {
                 </div>
                 <div>
                   <h4 className="font-semibold text-gray-900 mb-1">24/7 Health Assistant</h4>
-                  <p className="text-gray-600">
+                  <p className="text-gray-800">
                     Get instant answers to health questions and symptom guidance anytime, anywhere
                   </p>
                 </div>
@@ -206,7 +220,7 @@ export function LandingPage() {
                 </div>
                 <div>
                   <h4 className="font-semibold text-gray-900 mb-1">Smart Scheduling</h4>
-                  <p className="text-gray-600">
+                  <p className="text-gray-800">
                     Automatically find the best appointment times that work for both you and your doctor
                   </p>
                 </div>
@@ -280,7 +294,7 @@ export function LandingPage() {
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">
                   Create Your Profile
                 </h3>
-                <p className="text-gray-600">
+                <p className="text-gray-800">
                   Sign up in 60 seconds and add your health information, 
                   preferences, and insurance details securely.
                 </p>
@@ -301,7 +315,7 @@ export function LandingPage() {
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">
                   Book Appointments
                 </h3>
-                <p className="text-gray-600">
+                <p className="text-gray-800">
                   Find and book appointments with top-rated doctors in your area. 
                   Our AI suggests the best times for you.
                 </p>
@@ -322,7 +336,7 @@ export function LandingPage() {
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">
                   Let AI Handle the Rest
                 </h3>
-                <p className="text-gray-600">
+                <p className="text-gray-800">
                   Receive smart reminders, health insights, and personalized 
                   recommendations to stay on top of your health.
                 </p>
@@ -347,7 +361,7 @@ export function LandingPage() {
                 <Shield className="h-6 w-6 text-medical-600" />
               </div>
               <h4 className="font-semibold text-gray-900 mb-2">HIPAA Compliant</h4>
-              <p className="text-sm text-gray-600">Your data is encrypted and secure</p>
+              <p className="text-sm text-gray-800">Your data is encrypted and secure</p>
             </CardContent>
           </Card>
 
@@ -357,7 +371,7 @@ export function LandingPage() {
                 <Zap className="h-6 w-6 text-medical-600" />
               </div>
               <h4 className="font-semibold text-gray-900 mb-2">Instant Access</h4>
-              <p className="text-sm text-gray-600">Available 24/7 on any device</p>
+              <p className="text-sm text-gray-800">Available 24/7 on any device</p>
             </CardContent>
           </Card>
 
@@ -367,7 +381,7 @@ export function LandingPage() {
                 <Users className="h-6 w-6 text-medical-600" />
               </div>
               <h4 className="font-semibold text-gray-900 mb-2">Family Accounts</h4>
-              <p className="text-sm text-gray-600">Manage care for loved ones</p>
+              <p className="text-sm text-gray-800">Manage care for loved ones</p>
             </CardContent>
           </Card>
 
@@ -377,7 +391,7 @@ export function LandingPage() {
                 <MessageCircle className="h-6 w-6 text-medical-600" />
               </div>
               <h4 className="font-semibold text-gray-900 mb-2">AI Assistant</h4>
-              <p className="text-sm text-gray-600">Get instant health guidance</p>
+              <p className="text-sm text-gray-800">Get instant health guidance</p>
             </CardContent>
           </Card>
         </div>
@@ -407,6 +421,7 @@ export function LandingPage() {
               variant="outline" 
               size="lg" 
               className="w-full sm:w-auto border-white text-white hover:bg-medical-700"
+              onClick={() => openDemoModal('schedule')}
             >
               Schedule a Demo
             </Button>
@@ -479,6 +494,13 @@ export function LandingPage() {
           </p>
         </Container>
       </div>
+
+      {/* Demo Modal */}
+      <DemoModal 
+        isOpen={demoModal.isOpen} 
+        onClose={closeDemoModal} 
+        type={demoModal.type} 
+      />
     </div>
   );
 }

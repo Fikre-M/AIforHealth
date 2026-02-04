@@ -146,14 +146,14 @@ export const StatCard: React.FC<{
   const changeColors = {
     positive: 'text-green-600',
     negative: 'text-red-600',
-    neutral: 'text-gray-600'
+    neutral: 'text-gray-800' // Improved contrast
   };
 
   return (
     <Card className={clsx('p-6', className)} hover>
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-medium text-gray-600">{title}</p>
+          <p className="text-sm font-medium text-gray-800">{title}</p>
           <p className="text-2xl font-bold text-gray-900">{value}</p>
           {change && (
             <p className={clsx('text-sm', changeColors[changeType])}>
@@ -188,7 +188,7 @@ export const ActionCard: React.FC<{
         )}
         <div className="flex-1 min-w-0">
           <h3 className="text-lg font-medium text-gray-900">{title}</h3>
-          <p className="text-gray-600 mt-1">{description}</p>
+          <p className="text-gray-800 mt-1">{description}</p>
           <div className="mt-4">
             {action}
           </div>

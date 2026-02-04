@@ -202,7 +202,7 @@ export const componentTokens = {
     subtitle: {
       fontSize: designTokens.typography.fontSize.sm,
       fontWeight: designTokens.typography.fontWeight.normal,
-      color: designTokens.colors.gray[600],
+      color: designTokens.colors.gray[800], // Improved contrast from gray-600
     },
     value: {
       fontSize: designTokens.typography.fontSize['2xl'],
@@ -246,9 +246,9 @@ export const getVariantColors = (variant: 'primary' | 'success' | 'warning' | 'e
     default:
       return {
         bg: designTokens.colors.gray[100],
-        text: designTokens.colors.gray[700],
+        text: designTokens.colors.gray[800], // Improved contrast from gray-700
         darkBg: designTokens.colors.gray[800],
-        darkText: designTokens.colors.gray[400],
+        darkText: designTokens.colors.gray[300], // Improved contrast from gray-400
       };
   }
 };
