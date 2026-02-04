@@ -301,6 +301,36 @@ export class AuthController {
   );
 
   /**
+   * Upload user avatar
+   */
+  static uploadAvatar = asyncHandler(
+    async (req: Request, res: Response): Promise<void> => {
+      const userId = (req as any).user?.userId;
+
+      if (!userId) {
+        ResponseUtil.error(res, "User not authenticated", 401);
+        return;
+      }
+
+      // For now, we'll simulate avatar upload with a mock URL
+      // In production, you would handle file upload to cloud storage (AWS S3, Cloudinary, etc.)
+      const mockAvatarUrl = `/avatars/user-${userId}-${Date.now()}.jpg`;
+
+      // Update user's avatar in database
+      const user = await AuthService.updateProfile(userId, {
+        avatar: mockAvatarUrl
+      });
+
+      if (!user) {
+        ResponseUtil.error(res, "Failed to update avatar", 400);
+        return;
+      }
+
+      ResponseUtil.success(res, { avatarUrl: mockAvatarUrl }, "Avatar uploaded successfully");
+    }
+  );
+
+  /**
    * Update user settings
    */
   static updateSettings = asyncHandler(

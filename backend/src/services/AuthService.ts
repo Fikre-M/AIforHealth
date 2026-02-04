@@ -306,6 +306,7 @@ export class AuthService {
     phone?: string;
     specialization?: string;
     licenseNumber?: string;
+    avatar?: string;
   }): Promise<IUser | null> {
     try {
       const user = await User.findByIdAndUpdate(

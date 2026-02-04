@@ -24,6 +24,7 @@ export interface IUser extends Document {
   dateOfBirth?: Date;
   gender?: 'male' | 'female' | 'other';
   address?: string;
+  avatar?: string;
   emergencyContact?: {
     name: string;
     phone: string;
@@ -123,6 +124,10 @@ const userSchema = new Schema<IUser>(
       type: String,
       trim: true,
       maxlength: [200, 'Address cannot exceed 200 characters'],
+    },
+    avatar: {
+      type: String,
+      trim: true,
     },
     emergencyContact: {
       name: {

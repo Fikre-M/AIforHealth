@@ -25,6 +25,7 @@ router.post('/verify-email', AuthController.verifyEmail);
 router.post('/logout', authenticate, AuthController.logout);
 router.get('/profile', authenticate, AuthController.getProfile);
 router.put('/profile', authenticate, AuthController.updateProfile);
+router.post('/profile/avatar', authenticate, AuthController.uploadAvatar);
 router.get('/settings', authenticate, AuthController.getSettings);
 router.put('/settings', authenticate, AuthController.updateSettings);
 router.put(

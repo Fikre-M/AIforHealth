@@ -53,7 +53,7 @@ export const ProfilePage: React.FC = () => {
     
     try {
       setLoading(true);
-      const profileData = await profileService.getProfile(user.id);
+      const profileData = await profileService.getProfile();
       setProfile(profileData);
       
       // Update form data
@@ -96,7 +96,7 @@ export const ProfilePage: React.FC = () => {
       setSaving(true);
       setError(null);
       
-      const updatedProfile = await profileService.updateProfile(user.id, formData);
+      const updatedProfile = await profileService.updateProfile(formData);
       setProfile(updatedProfile);
       setSuccess(true);
       
@@ -113,7 +113,7 @@ export const ProfilePage: React.FC = () => {
     if (!file || !user) return;
 
     try {
-      const avatarUrl = await profileService.uploadAvatar(user.id, file);
+      const avatarUrl = await profileService.uploadAvatar(file);
       if (profile) {
         setProfile({ ...profile, avatar: avatarUrl });
       }
