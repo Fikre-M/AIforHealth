@@ -11,15 +11,15 @@ export function MedicalDisclaimer({ onAccept, onDecline }: MedicalDisclaimerProp
   return (
     <div className="max-w-2xl mx-auto">
       <Card>
-        <CardContent>
+        <CardContent className="p-6">
           <div className="text-center mb-6">
             <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <AlertTriangle className="h-8 w-8 text-yellow-600" />
             </div>
-            <h2 className="text-2xl font-bold text-white mb-2">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
               Important Medical Disclaimer
             </h2>
-            <p className="text-gray-300">
+            <p className="text-gray-700 dark:text-gray-300">
               Please read and understand before using the AI Symptom Checker
             </p>
           </div>
@@ -28,10 +28,10 @@ export function MedicalDisclaimer({ onAccept, onDecline }: MedicalDisclaimerProp
             <div className="flex items-start space-x-3">
               <Shield className="h-5 w-5 text-medical-600 mt-1 flex-shrink-0" />
               <div>
-                <h3 className="font-semibold text-gray-300 mb-1">
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-1">
                   Not a Medical Diagnosis
                 </h3>
-                <p className="text-sm text-white">
+                <p className="text-sm text-gray-800 dark:text-gray-200">
                   This AI tool provides general health information only and cannot diagnose 
                   medical conditions. It is not a substitute for professional medical advice, 
                   diagnosis, or treatment.
@@ -42,10 +42,10 @@ export function MedicalDisclaimer({ onAccept, onDecline }: MedicalDisclaimerProp
             <div className="flex items-start space-x-3">
               <Phone className="h-5 w-5 text-medical-600 mt-1 flex-shrink-0" />
               <div>
-                <h3 className="font-semibold text-gray-300 mb-1">
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-1">
                   Emergency Situations
                 </h3>
-                <p className="text-sm text-white">
+                <p className="text-sm text-gray-800 dark:text-gray-200">
                   If you are experiencing a medical emergency, call emergency services 
                   immediately. Do not rely on this tool for emergency medical situations.
                 </p>
@@ -55,10 +55,10 @@ export function MedicalDisclaimer({ onAccept, onDecline }: MedicalDisclaimerProp
             <div className="flex items-start space-x-3">
               <AlertTriangle className="h-5 w-5 text-medical-600 mt-1 flex-shrink-0" />
               <div>
-                <h3 className="font-semibold text-gray-300 mb-1">
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-1">
                   Professional Medical Care
                 </h3>
-                <p className="text-sm text-white">
+                <p className="text-sm text-gray-800 dark:text-gray-200">
                   Always seek the advice of qualified healthcare providers with any 
                   questions about medical conditions. Never disregard professional 
                   medical advice because of information from this tool.
@@ -117,7 +117,7 @@ export function MedicalDisclaimer({ onAccept, onDecline }: MedicalDisclaimerProp
             </Button>
           </div>
 
-          <p className="text-xs text-gray-100 text-center mt-4">
+          <p className="text-xs text-gray-600 dark:text-gray-400 text-center mt-4">
             By continuing, you acknowledge that you have read and understood this disclaimer.
           </p>
         </CardContent>

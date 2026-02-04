@@ -17,6 +17,8 @@ export function AISymptomChecker() {
   const [showDisclaimer, setShowDisclaimer] = useState(true);
   const [showSymptomInput, setShowSymptomInput] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -24,13 +26,21 @@ export function AISymptomChecker() {
   }, [messages]);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // Scroll only the chat container, not the entire page
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
   };
 
   const initializeChat = () => {
     const initialMessage = symptomCheckerService.getInitialMessage();
     const disclaimerMessage = symptomCheckerService.getDisclaimerMessage();
     setMessages([initialMessage, disclaimerMessage]);
+    
+    // Focus on input after chat is initialized
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 100);
   };
 
   const handleAcceptDisclaimer = () => {
@@ -56,6 +66,11 @@ export function AISymptomChecker() {
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
+
+    // Keep focus on input after sending message
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 100);
 
     try {
       const response = await symptomCheckerService.sendMessage(input, messages);
@@ -205,19 +220,43 @@ export function AISymptomChecker() {
     initializeChat();
   };
 
+  // Prevent page scroll when input is focused
+  useEffect(() => {
+    const handleFocus = (e: FocusEvent) => {
+      if (e.target === inputRef.current) {
+        // Prevent default scroll behavior
+        e.preventDefault();
+        // Ensure chat container stays in view
+        if (chatContainerRef.current) {
+          chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+        }
+      }
+    };
+
+    const inputElement = inputRef.current;
+    if (inputElement) {
+      inputElement.addEventListener('focus', handleFocus);
+      return () => {
+        inputElement.removeEventListener('focus', handleFocus);
+      };
+    }
+  }, []);
+
   if (showDisclaimer) {
     return (
-      <MedicalDisclaimer
-        onAccept={handleAcceptDisclaimer}
-        onDecline={handleDeclineDisclaimer}
-      />
+      <div className="min-h-[calc(100vh-200px)] flex items-center justify-center p-4">
+        <MedicalDisclaimer
+          onAccept={handleAcceptDisclaimer}
+          onDecline={handleDeclineDisclaimer}
+        />
+      </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto h-[calc(100vh-200px)] flex flex-col space-y-6">
+    <div className="h-[calc(100vh-120px)] flex flex-col space-y-4 p-4 max-w-4xl mx-auto">
       {/* Header */}
-      <Card>
+      <Card className="flex-shrink-0">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
@@ -251,7 +290,7 @@ export function AISymptomChecker() {
       </Card>
 
       {/* Emergency Warning */}
-      <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 dark:border-red-400 p-4 rounded-r-lg">
+      <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 dark:border-red-400 p-4 rounded-r-lg flex-shrink-0">
         <div className="flex items-center">
           <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400 mr-2 flex-shrink-0" />
           <p className="text-sm text-red-800 dark:text-red-200">
@@ -261,42 +300,49 @@ export function AISymptomChecker() {
         </div>
       </div>
 
-      {/* Messages */}
-      <Card className="flex-1 flex flex-col">
-        <CardContent className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 dark:bg-gray-800/50">
-          {messages.map((message) => (
-            <ChatMessage
-              key={message.id}
-              message={message}
-              onBookAppointment={message.type === 'appointment-prompt' ? handleBookAppointment : undefined}
-            />
-          ))}
-          
-          {isLoading && (
-            <div className="flex justify-start">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full">
-                  <Bot className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                </div>
-                <div className="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
-                  <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                    <div className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+      {/* Chat Container */}
+      <Card className="flex-1 flex flex-col min-h-0">
+        {/* Messages */}
+        <div 
+          ref={chatContainerRef}
+          className="flex-1 overflow-y-auto scroll-smooth"
+        >
+          <CardContent className="p-4 space-y-4 bg-gray-50 dark:bg-gray-800/50">
+            {messages.map((message) => (
+              <ChatMessage
+                key={message.id}
+                message={message}
+                onBookAppointment={message.type === 'appointment-prompt' ? handleBookAppointment : undefined}
+              />
+            ))}
+            
+            {isLoading && (
+              <div className="flex justify-start">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-gray-200 dark:bg-gray-700 rounded-full">
+                    <Bot className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                  </div>
+                  <div className="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                    <div className="flex space-x-1">
+                      <div className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                      <div className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
-          
-          <div ref={messagesEndRef} />
-        </CardContent>
+            )}
+            
+            <div ref={messagesEndRef} />
+          </CardContent>
+        </div>
 
         {/* Input */}
-        <CardContent className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+        <CardContent className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0">
           <div className="flex space-x-3">
             <div className="flex-1">
               <Input
+                ref={inputRef}
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
