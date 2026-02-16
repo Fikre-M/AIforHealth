@@ -84,12 +84,22 @@ function sanitizeBody(body: any): any {
 export const performanceMonitor = (req: Request, res: Response, next: NextFunction) => {
   const startTime = process.hrtime();
 
-  res.on('finish', () => {
+  // Capture original end method
+  const originalEnd = res.end.bind(res);
+  
+  // Override end to add headers before response is sent
+  res.end = function(chunk?: any, encoding?: any, callback?: any): Response {
     const [seconds, nanoseconds] = process.hrtime(startTime);
     const duration = seconds * 1000 + nanoseconds / 1000000; // Convert to milliseconds
 
-    // Add response time header
-    res.setHeader('X-Response-Time', `${duration.toFixed(2)}ms`);
+    // Add response time header BEFORE ending response
+    try {
+      if (!res.headersSent) {
+        res.setHeader('X-Response-Time', `${duration.toFixed(2)}ms`);
+      }
+    } catch (error) {
+      // Ignore header errors if already sent
+    }
 
     // Log performance metrics
     if (duration > 5000) {
@@ -99,7 +109,10 @@ export const performanceMonitor = (req: Request, res: Response, next: NextFuncti
         req.ip
       );
     }
-  });
+
+    // Call original end
+    return originalEnd(chunk, encoding, callback);
+  };
 
   next();
 };
