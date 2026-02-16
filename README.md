@@ -258,6 +258,33 @@ npm run test:integration # Integration tests
 npm run test:coverage    # With coverage
 ```
 
+### **Type Safety**
+
+Strict TypeScript configuration enforced across the entire codebase:
+
+- **Strict Mode**: All strict TypeScript checks enabled
+- **No Implicit Any**: Explicit types required everywhere
+- **Strict Null Checks**: Null and undefined must be handled explicitly
+- **Type Guards**: Runtime type validation
+- **Comprehensive Types**: Full type definitions for all APIs and models
+
+See [Type Safety Guide](docs/TYPE_SAFETY.md) for detailed information.
+
+#### Type Check Commands
+
+```bash
+# Check types
+npm run type-check       # All workspaces
+
+# Frontend
+cd frontend
+npm run type-check
+
+# Backend
+cd backend
+npm run type-check
+```
+
 ### **Security**
 
 Security is a top priority. See our comprehensive security documentation:

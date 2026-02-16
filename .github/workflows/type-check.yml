@@ -1,0 +1,184 @@
+name: 🔍 Type Check
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+env:
+  NODE_VERSION: '18'
+
+jobs:
+  type-check:
+    name: 🔍 TypeScript Type Check
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        workspace: [frontend, backend]
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ${{ matrix.workspace }}/package-lock.json
+
+      - name: 📦 Install dependencies
+        run: |
+          cd ${{ matrix.workspace }}
+          npm ci
+
+      - name: 🔍 Run TypeScript type check
+        run: |
+          cd ${{ matrix.workspace }}
+          npm run type-check
+
+      - name: 📊 Generate type check report
+        if: failure()
+        run: |
+          cd ${{ matrix.workspace }}
+          npm run type-check 2>&1 | tee type-check-errors.txt || true
+
+      - name: 📤 Upload type check errors
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.workspace }}-type-errors
+          path: ${{ matrix.workspace }}/type-check-errors.txt
+          retention-days: 7
+
+  eslint-type-check:
+    name: 🔍 ESLint Type-Aware Rules
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        workspace: [frontend, backend]
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ${{ matrix.workspace }}/package-lock.json
+
+      - name: 📦 Install dependencies
+        run: |
+          cd ${{ matrix.workspace }}
+          npm ci
+
+      - name: 🔍 Run ESLint with type-aware rules
+        run: |
+          cd ${{ matrix.workspace }}
+          npm run lint
+
+  type-coverage:
+    name: 📊 Type Coverage Report
+    runs-on: ubuntu-latest
+    needs: [type-check]
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 📦 Install type-coverage
+        run: npm install -g type-coverage
+
+      - name: 📦 Install frontend dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: 📊 Check frontend type coverage
+        run: |
+          cd frontend
+          npx type-coverage --at-least 95 --detail || true
+
+      - name: 📦 Install backend dependencies
+        run: |
+          cd backend
+          npm ci
+
+      - name: 📊 Check backend type coverage
+        run: |
+          cd backend
+          npx type-coverage --at-least 95 --detail || true
+
+  summary:
+    name: 📋 Type Check Summary
+    runs-on: ubuntu-latest
+    needs: [type-check, eslint-type-check]
+    if: always()
+    
+    steps:
+      - name: 📊 Generate summary
+        run: |
+          echo "## 🔍 Type Check Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Workspace | Type Check | ESLint |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|------------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend | ${{ needs.type-check.result == 'success' && '✅ Passed' || '❌ Failed' }} | ${{ needs.eslint-type-check.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend | ${{ needs.type-check.result == 'success' && '✅ Passed' || '❌ Failed' }} | ${{ needs.eslint-type-check.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ needs.type-check.result }}" != "success" ] || [ "${{ needs.eslint-type-check.result }}" != "success" ]; then
+            echo "⚠️ **Type checking failed!** Please fix type errors before merging." >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Common Fixes" >> $GITHUB_STEP_SUMMARY
+            echo "- Remove \`any\` types and use proper types" >> $GITHUB_STEP_SUMMARY
+            echo "- Handle \`null\` and \`undefined\` explicitly" >> $GITHUB_STEP_SUMMARY
+            echo "- Add explicit return types to functions" >> $GITHUB_STEP_SUMMARY
+            echo "- Use type guards for runtime checks" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "See [Type Safety Guide](docs/TYPE_SAFETY.md) for more information." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ All type checks passed!" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: 💬 Comment on PR
+        if: github.event_name == 'pull_request' && (needs.type-check.result != 'success' || needs.eslint-type-check.result != 'success')
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const comment = `## 🔍 Type Check Failed
+            
+            Type checking has failed for this PR. Please fix the following:
+            
+            | Workspace | Type Check | ESLint |
+            |-----------|------------|--------|
+            | Frontend | ${{ needs.type-check.result == 'success' ? '✅' : '❌' }} | ${{ needs.eslint-type-check.result == 'success' ? '✅' : '❌' }} |
+            | Backend | ${{ needs.type-check.result == 'success' ? '✅' : '❌' }} | ${{ needs.eslint-type-check.result == 'success' ? '✅' : '❌' }} |
+            
+            ### Common Fixes
+            - Remove \`any\` types and use proper types
+            - Handle \`null\` and \`undefined\` explicitly
+            - Add explicit return types to functions
+            - Use type guards for runtime checks
+            
+            ### Run Locally
+            \`\`\`bash
+            npm run type-check
+            npm run lint
+            \`\`\`
+            
+            See [Type Safety Guide](docs/TYPE_SAFETY.md) for more information.`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
