@@ -40,6 +40,7 @@ AI for Health is a modern, production-ready healthcare platform that combines ar
 - **Real-time Updates**: Live notifications for important health events
 
 ### 🛡️ **Production-Ready Features**
+- **Security**: OWASP Top 10 compliance, HTTPS enforcement, comprehensive security measures
 - **Accessibility**: WCAG-compliant with full screen reader support
 - **Error Handling**: Comprehensive error boundaries and recovery mechanisms
 - **Loading States**: Smooth loading experiences with skeleton screens
@@ -167,6 +168,23 @@ npm run test         # Run tests
 npm run test:watch   # Run tests in watch mode
 npm run test:coverage # Generate coverage report
 ```
+
+### **Security**
+
+Security is a top priority. See our comprehensive security documentation:
+
+- **[Security Guidelines](docs/SECURITY.md)** - OWASP Top 10 compliance, secrets management, HTTPS enforcement
+- **[Security Quick Reference](docs/SECURITY_QUICK_REFERENCE.md)** - Developer quick reference for secure coding
+- **[Security Checklist](docs/deployment/SECURITY_CHECKLIST.md)** - Pre-production security audit checklist
+
+Key security features:
+- JWT-based authentication with bcrypt password hashing
+- Role-based access control (RBAC)
+- Rate limiting and DDoS protection
+- Helmet.js security headers
+- Input validation and sanitization
+- HTTPS/TLS enforcement in production
+- Comprehensive logging and monitoring
 
 ### **Environment Variables**
 

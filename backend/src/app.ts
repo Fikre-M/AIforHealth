@@ -2,6 +2,7 @@ import express, { Express, Request, Response, NextFunction, RequestHandler } fro
 import { env, validateRequiredServices } from '@/config/env';
 import { database } from '@/config/database';
 import { initializeSentry } from '@/config/sentry';
+import setupSecurity from './middleware/security';
 import aiAssistantRoutes from './routes/aiAssistantRoutes';
 import patientRoutes from './routes/patientRoutes';
 import authRoutes from './routes/authRoutes';
@@ -17,7 +18,6 @@ import { initializeErrorMonitoring } from './utils/errorMonitoring';
 import swaggerUi from 'swagger-ui-express';
 import { specs } from './config/swagger';
 import { HttpError } from 'http-errors';
-import cors, { CorsOptions, CorsRequest } from 'cors';
 import { logApp, logError, logInfo } from './utils/logger';
 
 type CustomRequest = Request & {
@@ -53,52 +53,12 @@ class App {
     // Request logging
     this.app.use(requestLogger);
 
-    // Define allowed origins
-    const allowedOrigins = [
-      'http://localhost:5173', // Vite default port
-      'http://localhost:3000', // Common React port
-      'http://127.0.0.1:5173', // Alternative localhost
-      'http://127.0.0.1:3000', // Alternative localhost
-    ];
-
-    // CORS configuration
-    const corsOptions: CorsOptions = {
-      origin: (origin, callback) => {
-        // Allow requests with no origin (like mobile apps or curl requests)
-        if (!origin || allowedOrigins.includes(origin) || origin.includes('localhost')) {
-          callback(null, true);
-        } else {
-          callback(new Error('Not allowed by CORS'));
-        }
-      },
-      credentials: true,
-      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
-      exposedHeaders: ['Set-Cookie'],
-      optionsSuccessStatus: 200 // Some legacy browsers choke on 204
-    };
-
-    // Enable CORS for all routes
-    this.app.use(cors(corsOptions));
-    
-    // Handle preflight requests
-    this.app.options('*', cors(corsOptions));
-    
-    // Add CORS headers to all responses
-    this.app.use((req: CustomRequest, res: Response, next: NextFunction) => {
-      const origin = req.headers.origin;
-      if (origin && (allowedOrigins.includes(origin) || origin.includes('localhost'))) {
-        res.header('Access-Control-Allow-Origin', origin);
-        res.header('Access-Control-Allow-Credentials', 'true');
-        res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-        res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
-      }
-      next();
-    });
+    // Enhanced security middleware (Helmet, CORS, HTTPS enforcement)
+    setupSecurity(this.app);
     
     // Parse JSON and URL-encoded bodies
-    this.app.use(express.json());
-    this.app.use(express.urlencoded({ extended: true }));
+    this.app.use(express.json({ limit: '10mb' }));
+    this.app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
     // Swagger UI
     const swaggerOptions = {
