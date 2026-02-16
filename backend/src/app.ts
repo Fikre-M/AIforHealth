@@ -10,7 +10,10 @@ import healthRoutes from './routes/healthRoutes';
 import notificationRoutes from './routes/notificationRoutes';
 import doctorRoutes from './routes/doctorRoutes';
 import adminRoutes from './routes/adminRoutes';
+import monitoringRoutes from './routes/monitoringRoutes';
 import { errorHandler, notFound } from './middleware/errorHandler';
+import { requestLogger, performanceMonitor, requestId, securityLogger } from './middleware/requestLogger';
+import { initializeErrorMonitoring } from './utils/errorMonitoring';
 import swaggerUi from 'swagger-ui-express';
 import { specs } from './config/swagger';
 import { HttpError } from 'http-errors';
@@ -30,6 +33,7 @@ class App {
     // Initialize services
     validateRequiredServices();
     initializeSentry();
+    initializeErrorMonitoring();
     
     this.initializeMiddleware();
     this.initializeRoutes();
@@ -37,6 +41,18 @@ class App {
   }
 
   private initializeMiddleware(): void {
+    // Request ID for tracing
+    this.app.use(requestId);
+
+    // Performance monitoring
+    this.app.use(performanceMonitor);
+
+    // Security logging
+    this.app.use(securityLogger);
+
+    // Request logging
+    this.app.use(requestLogger);
+
     // Define allowed origins
     const allowedOrigins = [
       'http://localhost:5173', // Vite default port
@@ -116,6 +132,7 @@ class App {
     this.app.use("/api/v1/appointments", appointmentRoutes);
     this.app.use("/api/v1/health", healthRoutes);
     this.app.use("/api/v1/notifications", notificationRoutes);
+    this.app.use("/api/v1/monitoring", monitoringRoutes);
 
     // 404 handler
     this.app.use((req: Request, res: Response, next: NextFunction) => {
