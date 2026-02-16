@@ -1,0 +1,118 @@
+{
+  "budgets": [
+    {
+      "path": "/*",
+      "timings": [
+        {
+          "metric": "first-contentful-paint",
+          "budget": 1800,
+          "tolerance": 200
+        },
+        {
+          "metric": "largest-contentful-paint",
+          "budget": 2500,
+          "tolerance": 500
+        },
+        {
+          "metric": "cumulative-layout-shift",
+          "budget": 0.1,
+          "tolerance": 0.05
+        },
+        {
+          "metric": "total-blocking-time",
+          "budget": 200,
+          "tolerance": 100
+        },
+        {
+          "metric": "speed-index",
+          "budget": 3400,
+          "tolerance": 600
+        },
+        {
+          "metric": "interactive",
+          "budget": 3800,
+          "tolerance": 700
+        }
+      ],
+      "resourceSizes": [
+        {
+          "resourceType": "script",
+          "budget": 300,
+          "tolerance": 50
+        },
+        {
+          "resourceType": "stylesheet",
+          "budget": 50,
+          "tolerance": 10
+        },
+        {
+          "resourceType": "image",
+          "budget": 200,
+          "tolerance": 50
+        },
+        {
+          "resourceType": "font",
+          "budget": 100,
+          "tolerance": 20
+        },
+        {
+          "resourceType": "document",
+          "budget": 50,
+          "tolerance": 10
+        },
+        {
+          "resourceType": "total",
+          "budget": 700,
+          "tolerance": 100
+        }
+      ],
+      "resourceCounts": [
+        {
+          "resourceType": "script",
+          "budget": 15,
+          "tolerance": 5
+        },
+        {
+          "resourceType": "stylesheet",
+          "budget": 5,
+          "tolerance": 2
+        },
+        {
+          "resourceType": "image",
+          "budget": 20,
+          "tolerance": 5
+        },
+        {
+          "resourceType": "font",
+          "budget": 4,
+          "tolerance": 1
+        },
+        {
+          "resourceType": "third-party",
+          "budget": 10,
+          "tolerance": 3
+        },
+        {
+          "resourceType": "total",
+          "budget": 50,
+          "tolerance": 10
+        }
+      ]
+    }
+  ],
+  "description": "Performance budgets for AI Healthcare application",
+  "notes": {
+    "timings": "All timing budgets are in milliseconds",
+    "resourceSizes": "All size budgets are in kilobytes (KB)",
+    "resourceCounts": "Maximum number of resources per type",
+    "tolerance": "Acceptable deviation from budget before failing",
+    "targets": {
+      "FCP": "< 1.8s (good), < 3s (needs improvement)",
+      "LCP": "< 2.5s (good), < 4s (needs improvement)",
+      "CLS": "< 0.1 (good), < 0.25 (needs improvement)",
+      "TBT": "< 200ms (good), < 600ms (needs improvement)",
+      "SI": "< 3.4s (good), < 5.8s (needs improvement)",
+      "TTI": "< 3.8s (good), < 7.3s (needs improvement)"
+    }
+  }
+}
