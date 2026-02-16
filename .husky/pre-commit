@@ -1,0 +1,28 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🔍 Running pre-commit checks..."
+
+# Run lint-staged
+npx lint-staged
+
+# Check for merge conflict markers
+if git diff --cached --name-only | xargs grep -l "^<<<<<<< \|^=======$\|^>>>>>>> " 2>/dev/null; then
+  echo "❌ Error: Merge conflict markers found. Please resolve conflicts before committing."
+  exit 1
+fi
+
+# Check for large files (>5MB)
+MAX_SIZE=5242880 # 5MB in bytes
+for file in $(git diff --cached --name-only); do
+  if [ -f "$file" ]; then
+    size=$(wc -c < "$file")
+    if [ $size -gt $MAX_SIZE ]; then
+      echo "❌ Error: File $file is larger than 5MB ($size bytes)"
+      echo "Please use Git LFS for large files or reduce file size"
+      exit 1
+    fi
+  fi
+done
+
+echo "✅ Pre-commit checks passed!"

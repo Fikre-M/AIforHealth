@@ -1,0 +1,282 @@
+name: 🎨 Code Quality
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+jobs:
+  # Enforce code formatting with Prettier
+  prettier:
+    name: 💅 Prettier Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: 📦 Install root dependencies
+        run: npm ci
+
+      - name: 💅 Check formatting
+        run: npm run format:check
+
+      - name: 📝 Comment on PR (if formatting issues found)
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '❌ **Prettier formatting check failed!**\n\nPlease run `npm run format` to fix formatting issues.\n\n```bash\nnpm run format\n```'
+            })
+
+  # ESLint for Frontend
+  eslint-frontend:
+    name: 🔍 ESLint (Frontend)
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: 📦 Install dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: 🔍 Run ESLint
+        run: |
+          cd frontend
+          npm run lint
+
+      - name: 📝 Annotate code with ESLint results
+        if: always()
+        uses: ataylorme/eslint-annotate-action@v2
+        with:
+          repo-token: "${{ secrets.GITHUB_TOKEN }}"
+          report-json: "frontend/eslint-report.json"
+          check-name: "ESLint Frontend"
+          only-pr-files: true
+
+  # ESLint for Backend
+  eslint-backend:
+    name: 🔍 ESLint (Backend)
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: 📦 Install dependencies
+        run: |
+          cd backend
+          npm ci
+
+      - name: 🔍 Run ESLint
+        run: |
+          cd backend
+          npm run lint
+
+      - name: 🔒 Run security linting
+        run: |
+          cd backend
+          npm run lint -- --plugin security
+
+  # TypeScript type checking
+  typescript:
+    name: 🏗️ TypeScript Check
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        workspace: [frontend, backend]
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: ${{ matrix.workspace }}/package-lock.json
+
+      - name: 📦 Install dependencies
+        run: |
+          cd ${{ matrix.workspace }}
+          npm ci
+
+      - name: 🏗️ TypeScript type check
+        run: |
+          cd ${{ matrix.workspace }}
+          npm run type-check
+
+  # Dependency audit
+  dependency-audit:
+    name: 🔒 Dependency Audit
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        workspace: [frontend, backend]
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: 🔍 Run npm audit
+        run: |
+          cd ${{ matrix.workspace }}
+          npm audit --audit-level=moderate || true
+
+      - name: 📊 Generate audit report
+        run: |
+          cd ${{ matrix.workspace }}
+          npm audit --json > audit-report.json || true
+
+      - name: 📤 Upload audit report
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.workspace }}-audit-report
+          path: ${{ matrix.workspace }}/audit-report.json
+
+  # Code complexity analysis
+  complexity:
+    name: 📊 Code Complexity
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: 📊 Analyze code complexity
+        run: |
+          npx complexity-report-html \
+            --output complexity-report.html \
+            --format html \
+            frontend/src/**/*.{ts,tsx} backend/src/**/*.ts
+
+      - name: 📤 Upload complexity report
+        uses: actions/upload-artifact@v3
+        with:
+          name: complexity-report
+          path: complexity-report.html
+
+  # Check for TODO/FIXME comments
+  todo-check:
+    name: 📝 TODO/FIXME Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔍 Check for TODO/FIXME
+        run: |
+          echo "Checking for TODO/FIXME comments..."
+          TODO_COUNT=$(grep -r "TODO\|FIXME" --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" frontend/src backend/src | wc -l || true)
+          echo "Found $TODO_COUNT TODO/FIXME comments"
+          
+          if [ $TODO_COUNT -gt 50 ]; then
+            echo "⚠️ Warning: Too many TODO/FIXME comments ($TODO_COUNT). Consider addressing some of them."
+          fi
+
+  # Check for console.log statements
+  console-check:
+    name: 🚫 Console.log Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔍 Check for console.log
+        run: |
+          echo "Checking for console.log statements..."
+          CONSOLE_COUNT=$(grep -r "console\.log" --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" frontend/src backend/src | grep -v "// eslint-disable" | wc -l || true)
+          
+          if [ $CONSOLE_COUNT -gt 0 ]; then
+            echo "❌ Found $CONSOLE_COUNT console.log statements"
+            echo "Please remove console.log statements or use proper logging utilities"
+            grep -rn "console\.log" --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" frontend/src backend/src | grep -v "// eslint-disable" || true
+            exit 1
+          else
+            echo "✅ No console.log statements found"
+          fi
+
+  # Summary
+  quality-summary:
+    name: 📋 Quality Summary
+    runs-on: ubuntu-latest
+    needs: [prettier, eslint-frontend, eslint-backend, typescript, dependency-audit]
+    if: always()
+    
+    steps:
+      - name: 📊 Generate summary
+        run: |
+          echo "## Code Quality Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Prettier | ${{ needs.prettier.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ESLint (Frontend) | ${{ needs.eslint-frontend.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| ESLint (Backend) | ${{ needs.eslint-backend.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| TypeScript | ${{ needs.typescript.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Dependency Audit | ${{ needs.dependency-audit.result == 'success' && '✅ Passed' || '⚠️ Review Required' }} |" >> $GITHUB_STEP_SUMMARY
+
+      - name: 📝 Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const summary = `## 📊 Code Quality Report
+            
+            | Check | Status |
+            |-------|--------|
+            | Prettier | ${{ needs.prettier.result == 'success' ? '✅ Passed' : '❌ Failed' }} |
+            | ESLint (Frontend) | ${{ needs.eslint-frontend.result == 'success' ? '✅ Passed' : '❌ Failed' }} |
+            | ESLint (Backend) | ${{ needs.eslint-backend.result == 'success' ? '✅ Passed' : '❌ Failed' }} |
+            | TypeScript | ${{ needs.typescript.result == 'success' ? '✅ Passed' : '❌ Failed' }} |
+            | Dependency Audit | ${{ needs.dependency-audit.result == 'success' ? '✅ Passed' : '⚠️ Review Required' }} |
+            
+            ${{ needs.prettier.result != 'success' || needs.eslint-frontend.result != 'success' || needs.eslint-backend.result != 'success' || needs.typescript.result != 'success' ? '⚠️ Please fix the failing checks before merging.' : '✅ All code quality checks passed!' }}`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: summary
+            });

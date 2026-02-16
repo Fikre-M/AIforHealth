@@ -154,6 +154,64 @@ AIforHealth/
 
 ## 🔧 Development
 
+### **Quick Setup**
+
+```bash
+# Clone and setup
+git clone https://github.com/Fikre-M/AIforHealth.git
+cd AIforHealth
+
+# Run automated setup (installs dependencies and configures tools)
+# Unix/Mac:
+bash scripts/setup-code-quality.sh
+
+# Windows:
+powershell scripts/setup-code-quality.ps1
+```
+
+### **Code Quality**
+
+We enforce code quality through automated tools and CI/CD:
+
+- **ESLint**: Catches bugs and enforces code standards
+- **Prettier**: Ensures consistent code formatting
+- **TypeScript**: Static type checking
+- **Husky**: Pre-commit hooks for automated checks
+- **GitHub Actions**: CI/CD pipeline with comprehensive testing
+
+See [Code Quality Documentation](docs/CODE_QUALITY.md) for detailed information.
+
+#### Quick Commands
+
+```bash
+# Lint code
+npm run lint          # Check all workspaces
+npm run lint:fix      # Auto-fix issues
+
+# Format code
+npm run format        # Format all files
+npm run format:check  # Check formatting
+
+# Type check
+npm run type-check    # Check all workspaces
+
+# Run all checks
+npm run validate      # Lint + Type check + Format check + Tests
+```
+
+#### Commit Message Format
+
+We use [Conventional Commits](https://www.conventionalcommits.org/):
+
+```bash
+type(scope): subject
+
+# Examples:
+git commit -m "feat(auth): add login functionality"
+git commit -m "fix(api): resolve user endpoint error"
+git commit -m "docs(readme): update installation"
+```
+
 ### **Available Scripts**
 
 ```bash

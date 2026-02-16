@@ -63,6 +63,11 @@ jobs:
           cd frontend
           npm run format:check
 
+      - name: 🔒 Security linting (Backend)
+        run: |
+          cd backend
+          npm run lint
+
   # Security Scanning
   security:
     name: 🔒 Security Scan

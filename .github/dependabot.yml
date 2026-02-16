@@ -1,0 +1,173 @@
+version: 2
+updates:
+  # Frontend dependencies
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "Fikre-M"
+    assignees:
+      - "Fikre-M"
+    labels:
+      - "dependencies"
+      - "frontend"
+    commit-message:
+      prefix: "chore(frontend)"
+      include: "scope"
+    versioning-strategy: increase
+    groups:
+      # Group React ecosystem updates
+      react:
+        patterns:
+          - "react*"
+          - "@types/react*"
+      # Group build tools
+      build-tools:
+        patterns:
+          - "vite*"
+          - "typescript"
+          - "eslint*"
+          - "prettier"
+      # Group testing tools
+      testing:
+        patterns:
+          - "vitest*"
+          - "playwright*"
+          - "@testing-library/*"
+      # Group security updates (always separate)
+      security:
+        patterns:
+          - "*"
+        update-types:
+          - "security"
+
+  # Backend dependencies
+  - package-ecosystem: "npm"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "Fikre-M"
+    assignees:
+      - "Fikre-M"
+    labels:
+      - "dependencies"
+      - "backend"
+    commit-message:
+      prefix: "chore(backend)"
+      include: "scope"
+    versioning-strategy: increase
+    groups:
+      # Group Express ecosystem
+      express:
+        patterns:
+          - "express*"
+          - "@types/express*"
+      # Group security packages
+      security-packages:
+        patterns:
+          - "helmet"
+          - "cors"
+          - "bcryptjs"
+          - "jsonwebtoken"
+      # Group database packages
+      database:
+        patterns:
+          - "mongoose*"
+          - "@types/mongoose*"
+      # Group monitoring packages
+      monitoring:
+        patterns:
+          - "@sentry/*"
+          - "winston*"
+      # Group security updates (always separate)
+      security:
+        patterns:
+          - "*"
+        update-types:
+          - "security"
+
+  # Root dependencies
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "Fikre-M"
+    assignees:
+      - "Fikre-M"
+    labels:
+      - "dependencies"
+      - "root"
+    commit-message:
+      prefix: "chore(root)"
+      include: "scope"
+    groups:
+      # Group code quality tools
+      code-quality:
+        patterns:
+          - "husky"
+          - "lint-staged"
+          - "prettier"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "Fikre-M"
+    assignees:
+      - "Fikre-M"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "chore(ci)"
+      include: "scope"
+
+  # Docker
+  - package-ecosystem: "docker"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "Fikre-M"
+    labels:
+      - "dependencies"
+      - "docker"
+      - "backend"
+    commit-message:
+      prefix: "chore(docker)"
+
+  - package-ecosystem: "docker"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "Fikre-M"
+    labels:
+      - "dependencies"
+      - "docker"
+      - "frontend"
+    commit-message:
+      prefix: "chore(docker)"

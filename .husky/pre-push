@@ -1,0 +1,32 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🚀 Running pre-push checks..."
+
+# Run type checking
+echo "🏗️ Type checking..."
+npm run type-check --workspaces || {
+  echo "❌ Type checking failed. Please fix type errors before pushing."
+  exit 1
+}
+
+# Run tests
+echo "🧪 Running tests..."
+npm run test --workspaces || {
+  echo "❌ Tests failed. Please fix failing tests before pushing."
+  exit 1
+}
+
+# Check for secrets in code
+echo "🔒 Checking for secrets..."
+if git diff --cached --name-only | xargs grep -i "api[_-]key\|secret\|password\|token" --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" 2>/dev/null | grep -v "process.env" | grep -v "// " | grep -v "/\*"; then
+  echo "⚠️ Warning: Potential secrets found in code. Please review before pushing."
+  echo "Make sure all secrets are in environment variables."
+  read -p "Continue anyway? (y/N) " -n 1 -r
+  echo
+  if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    exit 1
+  fi
+fi
+
+echo "✅ Pre-push checks passed!"
