@@ -227,6 +227,37 @@ npm run test:watch   # Run tests in watch mode
 npm run test:coverage # Generate coverage report
 ```
 
+### **Testing**
+
+Comprehensive testing infrastructure with >80% coverage target:
+
+- **Unit Tests**: Vitest (frontend), Jest (backend)
+- **Component Tests**: React Testing Library
+- **Integration Tests**: Supertest with MongoDB Memory Server
+- **E2E Tests**: Playwright across multiple browsers
+- **Coverage**: Automated reporting with Codecov
+
+See [Testing Guide](docs/TESTING.md) for detailed information.
+
+#### Test Commands
+
+```bash
+# Frontend
+cd frontend
+npm test                 # Run all tests
+npm run test:watch       # Watch mode
+npm run test:ui          # Visual UI
+npm run test:coverage    # With coverage
+npm run test:e2e         # E2E tests
+
+# Backend
+cd backend
+npm test                 # Run all tests
+npm run test:unit        # Unit tests only
+npm run test:integration # Integration tests
+npm run test:coverage    # With coverage
+```
+
 ### **Security**
 
 Security is a top priority. See our comprehensive security documentation:

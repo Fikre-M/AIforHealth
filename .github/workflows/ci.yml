@@ -150,7 +150,7 @@ jobs:
       - name: 🧪 Run unit tests
         run: |
           cd backend
-          npm run test:unit
+          npm run test:unit -- --coverage
         env:
           NODE_ENV: test
           MONGODB_URI: mongodb://localhost:27017/aiforhealth-test
@@ -160,7 +160,7 @@ jobs:
       - name: 🧪 Run integration tests
         run: |
           cd backend
-          npm run test:integration
+          npm run test:integration -- --coverage
         env:
           NODE_ENV: test
           MONGODB_URI: mongodb://localhost:27017/aiforhealth-test
@@ -173,6 +173,7 @@ jobs:
           file: ./backend/coverage/lcov.info
           flags: backend
           name: backend-coverage
+          fail_ci_if_error: false
 
   # Frontend Tests
   frontend-tests:
@@ -204,12 +205,12 @@ jobs:
       - name: 🧪 Run unit tests
         run: |
           cd frontend
-          npm run test:unit
+          npm run test:unit -- --coverage
 
       - name: 🧪 Run component tests
         run: |
           cd frontend
-          npm run test:component
+          npm run test:component -- --coverage
 
       - name: 📊 Upload frontend coverage to Codecov
         uses: codecov/codecov-action@v3
@@ -217,6 +218,7 @@ jobs:
           file: ./frontend/coverage/lcov.info
           flags: frontend
           name: frontend-coverage
+          fail_ci_if_error: false
 
   # End-to-End Tests
   e2e-tests:

@@ -1,0 +1,185 @@
+name: 📊 Coverage Report
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+env:
+  NODE_VERSION: '18'
+
+jobs:
+  coverage:
+    name: 📊 Generate Coverage
+    runs-on: ubuntu-latest
+    
+    services:
+      mongodb:
+        image: mongo:5.0
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.adminCommand(\"ping\")'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      # Frontend Coverage
+      - name: 📦 Install frontend dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: 🧪 Run frontend tests with coverage
+        run: |
+          cd frontend
+          npm run test:coverage
+
+      - name: 📊 Upload frontend coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./frontend/coverage/lcov.info
+          flags: frontend
+          name: frontend-coverage
+          fail_ci_if_error: false
+          verbose: true
+
+      # Backend Coverage
+      - name: 📦 Install backend dependencies
+        run: |
+          cd backend
+          npm ci
+
+      - name: 🧪 Run backend tests with coverage
+        run: |
+          cd backend
+          npm run test:coverage
+        env:
+          NODE_ENV: test
+          MONGODB_URI: mongodb://localhost:27017/aiforhealth-test
+          JWT_SECRET: test-jwt-secret-for-ci-pipeline-only
+          JWT_REFRESH_SECRET: test-refresh-secret-for-ci-pipeline-only
+
+      - name: 📊 Upload backend coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./backend/coverage/lcov.info
+          flags: backend
+          name: backend-coverage
+          fail_ci_if_error: false
+          verbose: true
+
+      # Coverage Summary
+      - name: 📊 Generate coverage summary
+        run: |
+          echo "## 📊 Coverage Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -f frontend/coverage/coverage-summary.json ]; then
+            echo "### Frontend Coverage" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            cat frontend/coverage/coverage-summary.json | jq '.total' >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ -f backend/coverage/coverage-summary.json ]; then
+            echo "### Backend Coverage" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            cat backend/coverage/coverage-summary.json | jq '.total' >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      # Upload coverage artifacts
+      - name: 📤 Upload frontend coverage artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: frontend-coverage
+          path: frontend/coverage/
+          retention-days: 30
+
+      - name: 📤 Upload backend coverage artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: backend-coverage
+          path: backend/coverage/
+          retention-days: 30
+
+      # Check coverage thresholds
+      - name: ✅ Check coverage thresholds
+        run: |
+          echo "Checking coverage thresholds..."
+          
+          # Frontend
+          cd frontend
+          npm run test:coverage -- --reporter=json --reporter=text
+          
+          # Backend
+          cd ../backend
+          npm run test:coverage -- --coverageReporters=json --coverageReporters=text
+        continue-on-error: true
+
+      # Comment on PR
+      - name: 💬 Comment coverage on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            let comment = '## 📊 Coverage Report\n\n';
+            
+            // Frontend coverage
+            if (fs.existsSync('frontend/coverage/coverage-summary.json')) {
+              const frontendCoverage = JSON.parse(
+                fs.readFileSync('frontend/coverage/coverage-summary.json', 'utf8')
+              );
+              const total = frontendCoverage.total;
+              
+              comment += '### Frontend Coverage\n\n';
+              comment += '| Metric | Coverage | Status |\n';
+              comment += '|--------|----------|--------|\n';
+              comment += `| Lines | ${total.lines.pct}% | ${total.lines.pct >= 80 ? '✅' : '❌'} |\n`;
+              comment += `| Statements | ${total.statements.pct}% | ${total.statements.pct >= 80 ? '✅' : '❌'} |\n`;
+              comment += `| Functions | ${total.functions.pct}% | ${total.functions.pct >= 80 ? '✅' : '❌'} |\n`;
+              comment += `| Branches | ${total.branches.pct}% | ${total.branches.pct >= 80 ? '✅' : '❌'} |\n\n`;
+            }
+            
+            // Backend coverage
+            if (fs.existsSync('backend/coverage/coverage-summary.json')) {
+              const backendCoverage = JSON.parse(
+                fs.readFileSync('backend/coverage/coverage-summary.json', 'utf8')
+              );
+              const total = backendCoverage.total;
+              
+              comment += '### Backend Coverage\n\n';
+              comment += '| Metric | Coverage | Status |\n';
+              comment += '|--------|----------|--------|\n';
+              comment += `| Lines | ${total.lines.pct}% | ${total.lines.pct >= 80 ? '✅' : '❌'} |\n`;
+              comment += `| Statements | ${total.statements.pct}% | ${total.statements.pct >= 80 ? '✅' : '❌'} |\n`;
+              comment += `| Functions | ${total.functions.pct}% | ${total.functions.pct >= 80 ? '✅' : '❌'} |\n`;
+              comment += `| Branches | ${total.branches.pct}% | ${total.branches.pct >= 80 ? '✅' : '❌'} |\n\n`;
+            }
+            
+            comment += '**Target**: 80% coverage for all metrics\n';
+            comment += '\n📊 [View detailed coverage report on Codecov](https://codecov.io/gh/${{ github.repository }})';
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
