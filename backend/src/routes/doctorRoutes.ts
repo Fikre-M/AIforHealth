@@ -12,22 +12,18 @@ router.use(authenticate);
 // Restrict to doctor role
 router.use(authorize(UserRole.DOCTOR));
 
+// Doctor statistics
+router.get("/stats", doctorController.getDoctorStats);
+
 // Doctor appointment endpoints
 router.get("/appointments/daily", doctorController.getDailyAppointments);
 router.get("/appointments/upcoming", doctorController.getUpcomingAppointments);
 
-// Doctor notification endpoints
-// router.get("/notifications", doctorController.getNotifications);
-
-// Doctor patient endpoints
+// Doctor patient endpoints (specific routes before parameterized routes)
+router.get("/patients/summaries", doctorController.getPatientSummaries);
 router.get("/patients", doctorController.getPatientList);
-// router.post("/patients", doctorController.createPatient);
-// router.get("/patients/summaries", doctorController.getPatientSummaries); // Move this before the parameterized route
-// router.get("/patients/:patientId", doctorController.getPatient);
-// router.patch("/patients/:patientId", doctorController.updatePatient);
-// Appointment requests and analytics
-// router.get("/appointment-requests", doctorController.getAppointmentRequests);
-// router.post("/appointment-requests/:requestId/approve", doctorController.approveAppointmentRequest);
-// router.post("/appointment-requests/:requestId/reject", doctorController.rejectAppointmentRequest);
+router.post("/patients", doctorController.createPatient);
+router.get("/patients/:patientId", doctorController.getPatient);
+router.patch("/patients/:patientId", doctorController.updatePatient);
 
 export default router;

@@ -10,6 +10,9 @@ export type {
   CancelAppointmentData, 
   RescheduleAppointmentData 
 } from './AppointmentService';
-
-// Future service exports will be added here:
-// export { DoctorService } from './DoctorService';
+export { DoctorService } from './DoctorService';
+export type {
+  DoctorPatientQuery,
+  CreatePatientData,
+  UpdatePatientData
+} from './DoctorService';
