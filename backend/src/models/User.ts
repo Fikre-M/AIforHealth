@@ -1,13 +1,14 @@
 import mongoose, { Document, Schema } from 'mongoose';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
-import { UserRole } from '@/types';
+import { UserRole } from '@/types/enums';
+import type { UserRole as UserRoleType } from '@/types';
 
 export interface IUser extends Document {
   name: string;
   email: string;
   password: string;
-  role: UserRole;
+  role: UserRoleType;
   isActive: boolean;
   isEmailVerified: boolean;
   emailVerificationToken?: string;

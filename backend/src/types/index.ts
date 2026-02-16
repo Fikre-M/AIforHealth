@@ -8,6 +8,9 @@
 import { Request } from 'express';
 import { Document, Types } from 'mongoose';
 
+// Re-export enums
+export * from './enums';
+
 // ============================================================================
 // User & Authentication Types
 // ============================================================================
