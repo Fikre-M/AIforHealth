@@ -307,33 +307,27 @@ npm run test:coverage # Generate coverage report
 
 ### **Testing**
 
-Comprehensive testing infrastructure with >80% coverage target:
+Test infrastructure is fully configured with Jest and MongoDB Memory Server:
 
-- **Unit Tests**: Vitest (frontend), Jest (backend)
-- **Component Tests**: React Testing Library
-- **Integration Tests**: Supertest with MongoDB Memory Server
-- **E2E Tests**: Playwright across multiple browsers
-- **Coverage**: Automated reporting with Codecov
+- **Unit Tests**: Jest with ts-jest
+- **Integration Tests**: Supertest with in-memory MongoDB
+- **Test Helpers**: Mock factories for all entities
+- **Coverage**: Configured for 80% threshold
 
-See [Testing Guide](docs/TESTING.md) for detailed information.
+**Current Status**: Infrastructure complete, initial tests written (auth middleware, validation utils)
+
+See [Testing Status](docs/TESTING_STATUS.md) for details.
 
 #### Test Commands
 
 ```bash
-# Frontend
-cd frontend
-npm test                 # Run all tests
-npm run test:watch       # Watch mode
-npm run test:ui          # Visual UI
-npm run test:coverage    # With coverage
-npm run test:e2e         # E2E tests
-
 # Backend
 cd backend
 npm test                 # Run all tests
 npm run test:unit        # Unit tests only
 npm run test:integration # Integration tests
 npm run test:coverage    # With coverage
+npm run test:watch       # Watch mode
 ```
 
 ### **Type Safety**
