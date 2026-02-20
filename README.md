@@ -54,8 +54,9 @@ AI for Health is a modern, production-ready healthcare platform that combines ar
 - **Node.js** (v18 or higher)
 - **npm** or **yarn**
 - **Git**
+- **MongoDB** (local or MongoDB Atlas)
 
-### Installation
+### Frontend Installation
 
 1. **Clone the repository**
    ```bash
@@ -85,6 +86,49 @@ AI for Health is a modern, production-ready healthcare platform that combines ar
    http://localhost:5173
    ```
 
+### Backend Installation
+
+1. **Navigate to backend directory**
+   ```bash
+   cd backend
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Set up environment variables**
+   ```bash
+   cp .env.example .env
+   # Edit .env with MongoDB URI and JWT secrets (min 32 chars)
+   ```
+
+4. **Start MongoDB** (if using local)
+   ```bash
+   # macOS
+   brew services start mongodb-community
+   
+   # Linux
+   sudo systemctl start mongod
+   
+   # Windows
+   net start MongoDB
+   
+   # OR use MongoDB Atlas (cloud) - update MONGODB_URI in .env
+   ```
+
+5. **Start the backend server**
+   ```bash
+   npm run dev
+   ```
+
+6. **Verify installation**
+   - Health check: http://localhost:5000/health
+   - API docs: http://localhost:5000/api-docs
+
+**See [Backend Quick Start](backend/QUICK_START.md) for detailed instructions.**
+
 ## 📁 Project Structure
 
 ```
@@ -108,8 +152,28 @@ AIforHealth/
 │   │   └── 📁 config/          # Configuration files
 │   ├── 📁 public/              # Static assets
 │   └── 📄 package.json         # Dependencies and scripts
-├── 📁 backend/                 # Backend API (Future)
-│   └── 📄 README.md           # Backend documentation
+├── 📁 backend/                 # Backend API ✅ READY
+│   ├── 📁 src/
+│   │   ├── 📁 features/        # Feature-based modules
+│   │   │   ├── 📁 auth/        # Authentication routes
+│   │   │   ├── 📁 users/       # User management
+│   │   │   ├── 📁 appointments/# Appointment booking
+│   │   │   └── 📁 doctors/     # Doctor management
+│   │   ├── 📁 models/          # Mongoose schemas
+│   │   ├── 📁 services/        # Business logic
+│   │   ├── 📁 controllers/     # Request handlers
+│   │   ├── 📁 middleware/      # Express middleware
+│   │   ├── 📁 utils/           # Utility functions
+│   │   ├── 📁 config/          # Configuration
+│   │   ├── 📄 app.ts           # Express app setup
+│   │   └── 📄 server.ts        # Server entry point
+│   ├── 📁 logs/                # Application logs
+│   ├── 📄 QUICK_START.md       # 5-minute setup guide
+│   ├── 📄 SETUP.md             # Complete documentation
+│   └── 📄 package.json         # Dependencies and scripts
+├── 📁 docs/                    # Documentation
+│   ├── 📄 BACKEND_IMPLEMENTATION_STATUS.md
+│   └── 📄 [other docs]
 ├── 📄 README.md               # This file
 └── 📄 LICENSE                 # MIT License
 ```
@@ -125,11 +189,24 @@ AIforHealth/
 - **Date Handling**: date-fns for date manipulation
 - **Utilities**: clsx for conditional class names
 
+### **Backend** ✅
+- **Runtime**: Node.js 18+
+- **Framework**: Express.js with TypeScript
+- **Database**: MongoDB with Mongoose ODM
+- **Authentication**: JWT (jsonwebtoken) with refresh tokens
+- **Validation**: express-validator + Zod
+- **Logging**: Winston with file rotation
+- **Security**: Helmet.js, CORS, bcrypt, rate limiting
+- **Documentation**: Swagger/OpenAPI
+- **Testing**: Jest + Supertest + MongoDB Memory Server
+- **Monitoring**: Sentry integration ready
+
 ### **Development Tools**
 - **Linting**: ESLint with TypeScript support
-- **Type Checking**: TypeScript 5.9.3
-- **Code Formatting**: Prettier (recommended)
-- **Git Hooks**: Husky (recommended for pre-commit hooks)
+- **Type Checking**: TypeScript 5.9.3 (strict mode)
+- **Code Formatting**: Prettier
+- **Git Hooks**: Husky for pre-commit hooks
+- **Commit Linting**: Commitlint for conventional commits
 
 ### **Production Features**
 - **Error Boundaries**: Comprehensive error handling
@@ -137,6 +214,7 @@ AIforHealth/
 - **Accessibility**: WCAG 2.1 AA compliance
 - **Performance**: Code splitting and lazy loading
 - **SEO**: Meta tags and semantic HTML
+- **Security**: OWASP Top 10 compliance
 
 ## 🎨 UI/UX Features
 
@@ -351,14 +429,37 @@ npm run build
 - **GitHub Pages**
 - **AWS S3 + CloudFront**
 
-### **Backend Deployment** (Future)
+### **Backend Deployment** ✅
 
-The backend will support deployment to:
-- **Railway**
-- **Heroku**
-- **AWS EC2/ECS**
-- **Google Cloud Run**
-- **DigitalOcean App Platform**
+The backend is production-ready and can be deployed to:
+
+```bash
+# Build for production
+cd backend
+npm run build
+
+# Start production server
+npm start
+```
+
+**Recommended Platforms:**
+- **Railway** (Easy deployment with MongoDB)
+- **Heroku** (Classic PaaS)
+- **AWS EC2/ECS** (Full control)
+- **Google Cloud Run** (Serverless containers)
+- **DigitalOcean App Platform** (Simple deployment)
+
+**Production Checklist:**
+- Set `NODE_ENV=production`
+- Configure production MongoDB URI
+- Set strong JWT secrets (64+ characters)
+- Configure Sentry for error monitoring
+- Set up email service (SendGrid)
+- Enable HTTPS/TLS
+- Configure CORS for production frontend URL
+- Set up logging and monitoring
+
+See [Backend Setup Guide](backend/SETUP.md) for detailed deployment instructions.
 
 ## 🤝 Contributing
 
@@ -391,14 +492,19 @@ We welcome contributions! Please follow these steps:
 - [x] Notification system
 - [x] Production-ready error handling and loading states
 
-### **Phase 2: Backend Development** 🚧
-- [ ] Node.js/Express API server
-- [ ] Database integration (PostgreSQL)
-- [ ] Authentication and authorization
-- [ ] RESTful API endpoints
-- [ ] Real-time notifications (WebSocket)
-- [ ] File upload handling
-- [ ] API documentation (OpenAPI/Swagger)
+### **Phase 2: Backend Development** ✅
+- [x] Node.js/Express API server with TypeScript
+- [x] Database integration (MongoDB with Mongoose)
+- [x] Authentication and authorization (JWT + RBAC)
+- [x] RESTful API endpoints (Auth, Users, Appointments, Doctors)
+- [x] Centralized logging (Winston)
+- [x] Error handling and monitoring (Sentry-ready)
+- [x] API documentation (Swagger/OpenAPI)
+- [x] Security best practices (Helmet, CORS, rate limiting)
+- [x] Input validation (express-validator)
+- [x] Code quality tools (ESLint, Prettier, commitlint)
+- [ ] Real-time notifications (WebSocket) - Future
+- [ ] File upload handling (AWS S3) - Future
 
 ### **Phase 3: AI Integration** 🔮
 - [ ] OpenAI GPT integration for health assistance
