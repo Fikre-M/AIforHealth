@@ -154,34 +154,6 @@ export function AppointmentBooking() {
     { value: 'emergency', label: 'Emergency (same day)' }
   ];
 
-  if (currentStep === 'confirmation' && confirmationState.data) {
-    return (
-      <AppointmentConfirmation
-        confirmation={confirmationState.data}
-        onClose={() => {
-          // Reset form and go back to start
-          setCurrentStep('clinic');
-          setFormData({
-            clinicId: '',
-            doctorId: '',
-            date: '',
-            time: '',
-            appointmentType: 'consultation',
-            reason: '',
-            notes: '',
-            urgency: 'routine',
-            preferredLanguage: 'English'
-          });
-          confirmationState.reset();
-        }}
-        onAddToCalendar={() => {
-          // In real app, would generate calendar event
-          alert('Calendar integration would be implemented here');
-        }}
-      />
-    );
-  }
-
   return (
     <div className="max-w-7xl mx-auto" role="main" aria-label="Appointment Booking">
       {/* Progress Steps */}

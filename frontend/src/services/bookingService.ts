@@ -140,7 +140,7 @@ const mockDoctors: Doctor[] = [
 ];
 
 // Generate mock availability data
-const generateTimeSlots = (date: string, doctorId: string): TimeSlot[] => {
+const generateTimeSlots = (dateStr: string, doctorIdParam: string): TimeSlot[] => {
   const slots: TimeSlot[] = [];
   const startHour = 9;
   const endHour = 17;
@@ -282,7 +282,7 @@ export const bookingService = {
         time: formData.time,
         type: formData.appointmentType,
         reason: formData.reason,
-        notes: formData.notes,
+        notes: formData.notes || undefined,
         urgency: formData.urgency
       };
 
@@ -290,14 +290,14 @@ export const bookingService = {
       
       // Backend returns: { appointment, confirmationNumber, message }
       const appointment = response.appointment || response;
-      const confirmationNumber = response.confirmationNumber || appointment.confirmationNumber;
+      const confirmationNumber = response.confirmationNumber || appointment.confirmationNumber || 'UNKNOWN';
       
       // Get doctor and clinic info
       const doctor = await this.getDoctor(formData.doctorId);
       const clinic = mockClinics.find(c => c.id === formData.clinicId);
       
       return {
-        appointmentId: appointment._id || appointment.id,
+        appointmentId: appointment._id || appointment.id || 'unknown',
         patientName: appointment.patient?.name || 'Patient',
         doctorName: doctor?.name || appointment.doctor?.name || 'Doctor',
         clinicName: clinic?.name || 'Clinic',
