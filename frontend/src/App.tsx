@@ -8,6 +8,7 @@ import { AIChat } from '@/features/chat/components/AIChat';
 import { AISymptomChecker } from '@/features/symptomChecker/components/AISymptomChecker';
 import { AppointmentBooking } from '@/features/booking/components/AppointmentBooking';
 import { AppointmentsPage } from '@/features/appointments';
+import { AppointmentConfirmationPage } from '@/pages/AppointmentConfirmationPage';
 import { PatientsPage, AddPatientPage } from '@/features/patients';
 import { AnalyticsPage } from '@/features/analytics';
 import { NotificationsPage } from '@/features/notifications/components/NotificationsPage';
@@ -68,6 +69,11 @@ function App() {
           <Route path="appointments/book" element={
             <ProtectedRoute>
               <AppointmentBooking />
+            </ProtectedRoute>
+          } />
+          <Route path="appointments/:id/confirmation" element={
+            <ProtectedRoute>
+              <AppointmentConfirmationPage />
             </ProtectedRoute>
           } />
           <Route path="patients" element={

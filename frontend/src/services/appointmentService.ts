@@ -333,12 +333,24 @@ export const appointmentService = {
   /**
    * Create a new appointment
    */
-  async createAppointment(request: AppointmentRequest): Promise<Appointment> {
+  async createAppointment(request: AppointmentRequest): Promise<{
+    appointment: Appointment;
+    confirmationNumber: string;
+    message: string;
+  }> {
     try {
+      console.log('🔄 Creating appointment via API...');
       const response = await apiAdapter.appointments.createAppointment(request);
-      return response.appointment || response;
+      console.log('✅ Appointment created successfully:', response);
+      
+      // Backend returns: { appointment, confirmationNumber, message }
+      return {
+        appointment: response.appointment || response,
+        confirmationNumber: response.confirmationNumber || response.appointment?.confirmationNumber,
+        message: response.message || 'Appointment created successfully'
+      };
     } catch (error) {
-      console.error('Failed to create appointment:', error);
+      console.error('❌ Failed to create appointment:', error);
       throw error;
     }
   },

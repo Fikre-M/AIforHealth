@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -27,6 +28,7 @@ import { addDays } from 'date-fns';
 type BookingStep = 'clinic' | 'doctor' | 'datetime' | 'details' | 'confirmation';
 
 export function AppointmentBooking() {
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState<BookingStep>('clinic');
   
   // UI states for different data
@@ -114,8 +116,8 @@ export function AppointmentBooking() {
     });
 
     if (result) {
-      confirmationState.setData(result);
-      setCurrentStep('confirmation');
+      // Redirect to confirmation page instead of showing inline confirmation
+      navigate(`/app/appointments/${result.appointmentId}/confirmation`);
     }
   };
 
@@ -135,7 +137,6 @@ export function AppointmentBooking() {
       case 'doctor': return 'Choose Doctor';
       case 'datetime': return 'Pick Date & Time';
       case 'details': return 'Appointment Details';
-      case 'confirmation': return 'Confirmation';
       default: return '';
     }
   };

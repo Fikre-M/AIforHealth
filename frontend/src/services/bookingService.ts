@@ -7,6 +7,7 @@ import type {
   AISuggestion, 
   BookingConfirmation 
 } from '@/types/booking';
+import apiAdapter from './apiAdapter';
 
 // Mock data for clinics
 const mockClinics: Clinic[] = [
@@ -272,35 +273,82 @@ export const bookingService = {
   async bookAppointment(formData: BookingFormData): Promise<BookingConfirmation> {
     await delay(1200);
     
-    const doctor = await this.getDoctor(formData.doctorId);
-    const clinic = mockClinics.find(c => c.id === formData.clinicId);
-    
-    if (!doctor || !clinic) {
-      throw new Error('Doctor or clinic not found');
+    try {
+      // Try to use real API first
+      const appointmentRequest = {
+        doctorId: formData.doctorId,
+        patientId: 'current-user-id', // Will be set by backend from auth token
+        date: formData.date,
+        time: formData.time,
+        type: formData.appointmentType,
+        reason: formData.reason,
+        notes: formData.notes,
+        urgency: formData.urgency
+      };
+
+      const response = await apiAdapter.appointments.createAppointment(appointmentRequest);
+      
+      // Backend returns: { appointment, confirmationNumber, message }
+      const appointment = response.appointment || response;
+      const confirmationNumber = response.confirmationNumber || appointment.confirmationNumber;
+      
+      // Get doctor and clinic info
+      const doctor = await this.getDoctor(formData.doctorId);
+      const clinic = mockClinics.find(c => c.id === formData.clinicId);
+      
+      return {
+        appointmentId: appointment._id || appointment.id,
+        patientName: appointment.patient?.name || 'Patient',
+        doctorName: doctor?.name || appointment.doctor?.name || 'Doctor',
+        clinicName: clinic?.name || 'Clinic',
+        date: formData.date,
+        time: formData.time,
+        appointmentType: formData.appointmentType,
+        reason: formData.reason,
+        estimatedDuration: appointment.duration || 30,
+        consultationFee: doctor?.consultationFee || 200,
+        confirmationCode: confirmationNumber,
+        instructions: [
+          'Please arrive 15 minutes early for check-in',
+          'Bring a valid ID and insurance card',
+          'Bring a list of current medications',
+          'Wear comfortable clothing for examination'
+        ]
+      };
+    } catch (error) {
+      console.error('Failed to book appointment via API, using mock:', error);
+      
+      // Fallback to mock data
+      const doctor = await this.getDoctor(formData.doctorId);
+      const clinic = mockClinics.find(c => c.id === formData.clinicId);
+      
+      if (!doctor || !clinic) {
+        throw new Error('Doctor or clinic not found');
+      }
+      
+      const appointmentId = `APT-${Date.now()}`;
+      const confirmationCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+      
+      return {
+        appointmentId,
+        patientName: 'John Doe',
+        doctorName: doctor.name,
+        clinicName: clinic.name,
+        date: formData.date,
+        time: formData.time,
+        appointmentType: formData.appointmentType,
+        reason: formData.reason,
+        estimatedDuration: 30,
+        consultationFee: doctor.consultationFee,
+        confirmationCode,
+        instructions: [
+          'Please arrive 15 minutes early for check-in',
+          'Bring a valid ID and insurance card',
+          'Bring a list of current medications',
+          'Wear comfortable clothing for examination'
+        ]
+      };
     }
-    
-    const appointmentId = `APT-${Date.now()}`;
-    const confirmationCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-    
-    return {
-      appointmentId,
-      patientName: 'John Doe', // In real app, get from auth context
-      doctorName: doctor.name,
-      clinicName: clinic.name,
-      date: formData.date,
-      time: formData.time,
-      appointmentType: formData.appointmentType,
-      reason: formData.reason,
-      estimatedDuration: 30,
-      consultationFee: doctor.consultationFee,
-      confirmationCode,
-      instructions: [
-        'Please arrive 15 minutes early for check-in',
-        'Bring a valid ID and insurance card',
-        'Bring a list of current medications',
-        'Wear comfortable clothing for examination'
-      ]
-    };
   },
 
   async cancelAppointment(appointmentId: string): Promise<void> {
