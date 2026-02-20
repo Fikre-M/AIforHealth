@@ -6,9 +6,12 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/server.js",
+    "start:prod": "NODE_ENV=production node dist/server.js",
     "dev": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/server.ts",
+    "dev:watch": "nodemon --watch src --ext ts --exec ts-node -r tsconfig-paths/register src/server.ts",
     "clean": "rimraf dist",
     "prebuild": "npm run clean",
+    "postbuild": "echo 'Build completed successfully'",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
     "format": "prettier --write \"src/**/*.{ts,js,json}\"",
@@ -19,10 +22,14 @@
     "test:integration": "jest --testPathPattern=integration",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "test:ci": "jest --ci --coverage --maxWorkers=2",
     "db:seed": "ts-node -r tsconfig-paths/register src/scripts/database.ts seed",
     "db:clear": "ts-node -r tsconfig-paths/register src/scripts/database.ts clear",
     "db:reset": "ts-node -r tsconfig-paths/register src/scripts/database.ts reset",
-    "db:status": "ts-node -r tsconfig-paths/register src/scripts/database.ts status"
+    "db:status": "ts-node -r tsconfig-paths/register src/scripts/database.ts status",
+    "prepare": "npm run build",
+    "prestart": "npm run build",
+    "validate": "npm run type-check && npm run lint && npm run test:ci"
   },
   "keywords": [
     "healthcare",
