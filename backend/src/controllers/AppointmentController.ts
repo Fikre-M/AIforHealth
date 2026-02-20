@@ -1,11 +1,13 @@
 import { Request, Response } from 'express';
 import { Types } from 'mongoose';
 import asyncHandler from '../middleware/asyncHandler';
-import { Appointment, User, IAppointment } from '../models';
+import { Appointment, User, IAppointment, IUser } from '../models';
 import { AppointmentStatus, AppointmentType } from '../models/Appointment';
 import { UserRole } from '@/types';
 import { ResponseUtil } from '@/utils/response';
 import { AppError } from '@/utils/errors';
+import { EmailService } from '@/services/EmailService';
+import { SMSService } from '@/services/SMSService';
 
 /**
  * @swagger
@@ -202,10 +204,33 @@ export const createAppointment = asyncHandler(async (req: Request, res: Response
   });
 
   const populatedAppointment = await Appointment.findById(appointment._id)
-    .populate('patient', 'name email')
+    .populate('patient', 'name email phone')
     .populate('doctor', 'name email specialty');
 
-  ResponseUtil.success(res, populatedAppointment, 'Appointment created successfully', 201);
+  // Send confirmations (async, don't block response)
+  if (populatedAppointment) {
+    Promise.all([
+      EmailService.sendAppointmentConfirmation(
+        populatedAppointment,
+        populatedAppointment.patient as unknown as IUser,
+        populatedAppointment.doctor as unknown as IUser
+      ),
+      SMSService.sendAppointmentConfirmation(
+        populatedAppointment,
+        populatedAppointment.patient as unknown as IUser,
+        populatedAppointment.doctor as unknown as IUser
+      ),
+    ]).catch(err => {
+      console.error('Failed to send confirmations:', err);
+      // Don't fail the request if notifications fail
+    });
+  }
+
+  ResponseUtil.success(res, {
+    appointment: populatedAppointment,
+    confirmationNumber: appointment.confirmationNumber,
+    message: 'Appointment created successfully. Confirmation sent to your email and phone.',
+  }, 'Appointment created successfully', 201);
 });
 
 /**

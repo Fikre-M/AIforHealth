@@ -48,6 +48,8 @@ export interface IAppointment extends Document {
   isEmergency?: boolean;
   paymentStatus?: 'pending' | 'paid' | 'refunded';
   amount?: number;
+  confirmationNumber: string;
+  qrCode?: string;
   createdAt: Date;
   updatedAt: Date;
 
@@ -222,6 +224,15 @@ const appointmentSchema = new Schema<IAppointment>(
       type: Number,
       min: [0, 'Amount cannot be negative'],
       default: 0
+    },
+    confirmationNumber: {
+      type: String,
+      required: true,
+      unique: true,
+      index: true
+    },
+    qrCode: {
+      type: String
     }
   },
   {
@@ -300,6 +311,11 @@ appointmentSchema.methods.canBeRescheduled = function(this: IAppointment): boole
 
 // Pre-save middleware to validate appointment conflicts
 appointmentSchema.pre('save', async function(next) {
+  // Generate confirmation number for new appointments
+  if (this.isNew && !this.confirmationNumber) {
+    this.confirmationNumber = generateConfirmationNumber();
+  }
+
   if (this.isNew || this.isModified('appointmentDate') || this.isModified('doctor')) {
     const conflictingAppointment = await mongoose.model('Appointment').findOne({
       doctor: this.doctor,
@@ -409,5 +425,13 @@ appointmentSchema.statics.getStats = function(doctorId?: string) {
 };
 
 const Appointment = mongoose.model<IAppointment>('Appointment', appointmentSchema);
+
+// Helper function to generate confirmation number
+function generateConfirmationNumber(): string {
+  const prefix = 'APT';
+  const timestamp = Date.now().toString(36).toUpperCase();
+  const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+  return `${prefix}-${timestamp}-${random}`;
+}
 
 export default Appointment;
