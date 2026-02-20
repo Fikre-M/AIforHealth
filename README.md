@@ -503,8 +503,10 @@ We welcome contributions! Please follow these steps:
 - [x] Security best practices (Helmet, CORS, rate limiting)
 - [x] Input validation (express-validator)
 - [x] Code quality tools (ESLint, Prettier, commitlint)
+- [x] Performance optimizations (connection pooling, indexes, query optimization)
 - [ ] Real-time notifications (WebSocket) - Future
 - [ ] File upload handling (AWS S3) - Future
+- [ ] Redis caching - Recommended
 
 ### **Phase 3: AI Integration** 🔮
 - [ ] OpenAI GPT integration for health assistance

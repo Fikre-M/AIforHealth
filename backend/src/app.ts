@@ -3,6 +3,7 @@ import { env, validateRequiredServices } from '@/config/env';
 import { database } from '@/config/database';
 import { initializeSentry } from '@/config/sentry';
 import setupSecurity from './middleware/security';
+import rateLimiter from './middleware/rateLimiter';
 import aiAssistantRoutes from './routes/aiAssistantRoutes';
 import patientRoutes from './routes/patientRoutes';
 import authRoutes from './routes/authRoutes';
@@ -83,9 +84,9 @@ class App {
       });
     });
 
-    // API routes
-    this.app.use("/api/v1/auth", authRoutes);
-    this.app.use("/api/v1/ai-assistant", aiAssistantRoutes);
+    // API routes with rate limiting on sensitive endpoints
+    this.app.use("/api/v1/auth", rateLimiter, authRoutes);
+    this.app.use("/api/v1/ai-assistant", rateLimiter, aiAssistantRoutes);
     this.app.use("/api/v1/patients", patientRoutes);
     this.app.use("/api/v1/doctors", doctorRoutes);
     this.app.use("/api/v1/admin", adminRoutes);
