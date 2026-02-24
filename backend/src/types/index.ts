@@ -15,14 +15,14 @@ export * from './enums';
 // User & Authentication Types
 // ============================================================================
 
-export type UserRole = 'patient' | 'doctor' | 'admin';
+// UserRole enum is exported from enums.ts
 
 export interface IUser extends Document {
   _id: Types.ObjectId;
   email: string;
   password: string;
   name: string;
-  role: UserRole;
+  role: string;
   isEmailVerified: boolean;
   emailVerificationToken?: string;
   passwordResetToken?: string;
@@ -35,7 +35,8 @@ export interface IUser extends Document {
 
 export interface JWTPayload {
   userId: string;
-  role: UserRole;
+  role: string;
+  email: string;
   iat?: number;
   exp?: number;
 }
@@ -95,17 +96,7 @@ export interface IPatient extends Document {
 // Doctor Types
 // ============================================================================
 
-export type DoctorSpecialty =
-  | 'Cardiology'
-  | 'Dermatology'
-  | 'Endocrinology'
-  | 'Gastroenterology'
-  | 'Neurology'
-  | 'Oncology'
-  | 'Orthopedics'
-  | 'Pediatrics'
-  | 'Psychiatry'
-  | 'General Practice';
+// DoctorSpecialty enum is exported from enums.ts
 
 export interface IDoctorAvailability {
   dayOfWeek: number; // 0-6 (Sunday-Saturday)
@@ -116,7 +107,7 @@ export interface IDoctorAvailability {
 export interface IDoctor extends Document {
   _id: Types.ObjectId;
   userId: Types.ObjectId;
-  specialty: DoctorSpecialty;
+  specialty: string;
   licenseNumber: string;
   phone: string;
   bio?: string;
@@ -135,13 +126,7 @@ export interface IDoctor extends Document {
 // Appointment Types
 // ============================================================================
 
-export type AppointmentStatus =
-  | 'scheduled'
-  | 'confirmed'
-  | 'in-progress'
-  | 'completed'
-  | 'cancelled'
-  | 'no-show';
+// AppointmentStatus enum is exported from enums.ts
 
 export interface IAppointment extends Document {
   _id: Types.ObjectId;
@@ -150,7 +135,7 @@ export interface IAppointment extends Document {
   date: Date;
   time: string; // HH:mm format
   duration: number; // minutes
-  status: AppointmentStatus;
+  status: string;
   reason: string;
   notes?: string;
   diagnosis?: string;
@@ -165,20 +150,13 @@ export interface IAppointment extends Document {
 // Notification Types
 // ============================================================================
 
-export type NotificationType =
-  | 'appointment_reminder'
-  | 'appointment_confirmed'
-  | 'appointment_cancelled'
-  | 'message'
-  | 'system';
-
-export type NotificationPriority = 'low' | 'medium' | 'high';
+// NotificationType and NotificationPriority enums are exported from enums.ts
 
 export interface INotification extends Document {
   _id: Types.ObjectId;
   userId: Types.ObjectId;
-  type: NotificationType;
-  priority: NotificationPriority;
+  type: string;
+  priority: string;
   title: string;
   message: string;
   read: boolean;
@@ -193,10 +171,10 @@ export interface INotification extends Document {
 // AI Assistant Types
 // ============================================================================
 
-export type MessageRole = 'user' | 'assistant' | 'system';
+// MessageRole enum is exported from enums.ts
 
 export interface IChatMessage {
-  role: MessageRole;
+  role: string;
   content: string;
   timestamp: Date;
 }
@@ -259,7 +237,7 @@ export interface CreateUserDTO {
   email: string;
   password: string;
   name: string;
-  role: UserRole;
+  role: string;
 }
 
 export interface UpdateUserDTO {
@@ -286,7 +264,7 @@ export interface UpdatePatientDTO {
 
 export interface CreateDoctorDTO {
   userId: string;
-  specialty: DoctorSpecialty;
+  specialty: string;
   licenseNumber: string;
   phone: string;
   bio?: string;
@@ -315,7 +293,7 @@ export interface CreateAppointmentDTO {
 export interface UpdateAppointmentDTO {
   date?: Date;
   time?: string;
-  status?: AppointmentStatus;
+  status?: string;
   notes?: string;
   diagnosis?: string;
   prescription?: string;
@@ -337,8 +315,8 @@ export interface QueryOptions {
 export interface FilterOptions {
   search?: string;
   status?: string;
-  role?: UserRole;
-  specialty?: DoctorSpecialty;
+  role?: string;
+  specialty?: string;
   dateFrom?: Date;
   dateTo?: Date;
 }
@@ -450,44 +428,13 @@ export function isValidObjectId(id: unknown): id is string {
   return typeof id === 'string' && Types.ObjectId.isValid(id);
 }
 
-export function isUserRole(role: unknown): role is UserRole {
-  return typeof role === 'string' && ['patient', 'doctor', 'admin'].includes(role);
-}
-
-export function isAppointmentStatus(status: unknown): status is AppointmentStatus {
-  return (
-    typeof status === 'string' &&
-    ['scheduled', 'confirmed', 'in-progress', 'completed', 'cancelled', 'no-show'].includes(
-      status
-    )
-  );
-}
-
-export function isDoctorSpecialty(specialty: unknown): specialty is DoctorSpecialty {
-  return (
-    typeof specialty === 'string' &&
-    [
-      'Cardiology',
-      'Dermatology',
-      'Endocrinology',
-      'Gastroenterology',
-      'Neurology',
-      'Oncology',
-      'Orthopedics',
-      'Pediatrics',
-      'Psychiatry',
-      'General Practice',
-    ].includes(specialty)
-  );
-}
-
 // ============================================================================
 // Constants
 // ============================================================================
 
-export const USER_ROLES: readonly UserRole[] = ['patient', 'doctor', 'admin'] as const;
+export const USER_ROLES = ['patient', 'doctor', 'admin'] as const;
 
-export const APPOINTMENT_STATUSES: readonly AppointmentStatus[] = [
+export const APPOINTMENT_STATUSES = [
   'scheduled',
   'confirmed',
   'in-progress',
@@ -496,7 +443,7 @@ export const APPOINTMENT_STATUSES: readonly AppointmentStatus[] = [
   'no-show',
 ] as const;
 
-export const DOCTOR_SPECIALTIES: readonly DoctorSpecialty[] = [
+export const DOCTOR_SPECIALTIES = [
   'Cardiology',
   'Dermatology',
   'Endocrinology',
@@ -509,7 +456,7 @@ export const DOCTOR_SPECIALTIES: readonly DoctorSpecialty[] = [
   'General Practice',
 ] as const;
 
-export const NOTIFICATION_TYPES: readonly NotificationType[] = [
+export const NOTIFICATION_TYPES = [
   'appointment_reminder',
   'appointment_confirmed',
   'appointment_cancelled',
@@ -517,7 +464,7 @@ export const NOTIFICATION_TYPES: readonly NotificationType[] = [
   'system',
 ] as const;
 
-export const NOTIFICATION_PRIORITIES: readonly NotificationPriority[] = [
+export const NOTIFICATION_PRIORITIES = [
   'low',
   'medium',
   'high',

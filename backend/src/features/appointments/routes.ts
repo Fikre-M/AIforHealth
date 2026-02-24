@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { AppointmentController } from '@/controllers/AppointmentController';
+import * as AppointmentController from '@/controllers/AppointmentController';
 import { ValidationUtil } from '@/utils';
 import { authenticate, authorize, ownerOrRoles } from '@/middleware/auth';
 import { UserRole } from '@/types';

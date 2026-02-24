@@ -6,17 +6,6 @@ import authRoutes from '@/features/auth/routes';
 import protectedRoutes from '@/features/protected/routes';
 import appointmentRoutes from '@/features/appointments/routes';
 
-// Import individual route files for backwards compatibility
-import authRoutesDirect from './authRoutes';
-import appointmentRoutesDirect from './appointmentRoutes';
-import doctorRoutesDirect from './doctorRoutes';
-import patientRoutesDirect from './patientRoutes';
-import adminRoutesDirect from './adminRoutes';
-import healthRoutesDirect from './healthRoutes';
-import notificationRoutesDirect from './notificationRoutes';
-import monitoringRoutesDirect from './monitoringRoutes';
-import aiAssistantRoutesDirect from './aiAssistantRoutes';
-
 const router = Router();
 
 // Feature-based routes (new structure)
@@ -24,13 +13,6 @@ router.use('/auth', authRoutes);
 router.use('/users', userRoutes);
 router.use('/appointments', appointmentRoutes);
 router.use('/protected', protectedRoutes);
-
-// Direct routes (for backwards compatibility and existing implementations)
-router.use('/auth', authRoutesDirect);
-router.use('/appointments', appointmentRoutesDirect);
-router.use('/doctors', doctorRoutesDirect);
-router.use('/patients', patientRoutesDirect);
-router.use('/admin', adminRoutesDirect);
 
 // Health check endpoint
 router.get('/health', async (_req, res) => {
