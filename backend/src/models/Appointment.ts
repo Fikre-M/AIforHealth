@@ -50,6 +50,7 @@ export interface IAppointment extends Document {
   amount?: number;
   confirmationNumber: string;
   qrCode?: string;
+  isArchived?: boolean;
   createdAt: Date;
   updatedAt: Date;
 
@@ -233,6 +234,11 @@ const appointmentSchema = new Schema<IAppointment>(
     },
     qrCode: {
       type: String
+    },
+    isArchived: {
+      type: Boolean,
+      default: false,
+      index: true
     }
   },
   {

@@ -143,11 +143,31 @@ export class UserService {
         throw new Error('Invalid user ID format');
       }
 
+      // Check for active appointments before deletion
+      const Appointment = (await import('@/models')).Appointment;
+      const activeAppointments = await Appointment.countDocuments({
+        $or: [{ patient: userId }, { doctor: userId }],
+        status: { $in: ['scheduled', 'confirmed', 'in_progress'] }
+      });
+
+      if (activeAppointments > 0) {
+        throw new Error('Cannot delete user with active appointments. Please cancel or complete all appointments first.');
+      }
+
+      // Soft delete the user
       const result = await User.findByIdAndUpdate(
         userId,
         { isActive: false },
         { new: true }
       );
+
+      // Archive all past appointments for this user
+      if (result) {
+        await Appointment.updateMany(
+          { $or: [{ patient: userId }, { doctor: userId }] },
+          { $set: { isArchived: true } }
+        );
+      }
 
       return !!result;
     } catch (error) {

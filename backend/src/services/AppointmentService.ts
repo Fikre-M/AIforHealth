@@ -82,32 +82,36 @@ export class AppointmentService {
         throw new Error('Appointment date must be in the future');
       }
 
-      // Check for doctor availability (no overlapping appointments)
-      const isAvailable = await this.checkDoctorAvailability(
-        appointmentData.doctorId,
-        appointmentData.appointmentDate,
-        appointmentData.duration || 30
-      );
+      // Use transaction to prevent race conditions
+      const appointment = await DatabaseUtil.withTransaction(async (session) => {
+        // Check for doctor availability within transaction
+        const isAvailable = await this.checkDoctorAvailability(
+          appointmentData.doctorId,
+          appointmentData.appointmentDate,
+          appointmentData.duration || 30
+        );
 
-      if (!isAvailable) {
-        throw new Error('Doctor is not available at the requested time');
-      }
+        if (!isAvailable) {
+          throw new Error('Doctor is not available at the requested time');
+        }
 
-      // Create appointment
-      const appointment = new Appointment({
-        patient: appointmentData.patientId,
-        doctor: appointmentData.doctorId,
-        appointmentDate: appointmentData.appointmentDate,
-        duration: appointmentData.duration || 30,
-        type: appointmentData.type || AppointmentType.CONSULTATION,
-        reason: appointmentData.reason,
-        symptoms: appointmentData.symptoms || [],
-        notes: appointmentData.notes,
-        isEmergency: appointmentData.isEmergency || false,
-        status: appointmentData.isEmergency ? AppointmentStatus.CONFIRMED : AppointmentStatus.SCHEDULED,
+        // Create appointment
+        const newAppointment = new Appointment({
+          patient: appointmentData.patientId,
+          doctor: appointmentData.doctorId,
+          appointmentDate: appointmentData.appointmentDate,
+          duration: appointmentData.duration || 30,
+          type: appointmentData.type || AppointmentType.CONSULTATION,
+          reason: appointmentData.reason,
+          symptoms: appointmentData.symptoms || [],
+          notes: appointmentData.notes,
+          isEmergency: appointmentData.isEmergency || false,
+          status: appointmentData.isEmergency ? AppointmentStatus.CONFIRMED : AppointmentStatus.SCHEDULED,
+        });
+
+        await newAppointment.save({ session });
+        return newAppointment;
       });
-
-      await appointment.save();
 
       // Populate references before returning
       await appointment.populate([
@@ -284,30 +288,33 @@ export class AppointmentService {
         throw new Error('Doctor is not available at the requested time');
       }
 
-      // Create new appointment with rescheduled data
-      const newAppointment = new Appointment({
-        patient: appointment.patient,
-        doctor: appointment.doctor,
-        appointmentDate: rescheduleData.newDate,
-        duration: appointment.duration,
-        type: appointment.type,
-        reason: appointment.reason,
-        symptoms: appointment.symptoms,
-        notes: rescheduleData.reason ? 
-          `${appointment.notes || ''}\n\nRescheduled: ${rescheduleData.reason}`.trim() : 
-          appointment.notes,
-        isEmergency: appointment.isEmergency,
-        rescheduledFrom: appointment._id,
-      });
+      // Use transaction to ensure both appointments are saved atomically
+      const newAppointment = await DatabaseUtil.withTransaction(async (session) => {
+        // Create new appointment with rescheduled data
+        const newAppt = new Appointment({
+          patient: appointment.patient,
+          doctor: appointment.doctor,
+          appointmentDate: rescheduleData.newDate,
+          duration: appointment.duration,
+          type: appointment.type,
+          reason: appointment.reason,
+          symptoms: appointment.symptoms,
+          notes: rescheduleData.reason ? 
+            `${appointment.notes || ''}\n\nRescheduled: ${rescheduleData.reason}`.trim() : 
+            appointment.notes,
+          isEmergency: appointment.isEmergency,
+          rescheduledFrom: appointment._id,
+        });
 
-      // Mark original appointment as rescheduled
-      appointment.status = AppointmentStatus.RESCHEDULED;
-      
-      // Save both appointments
-      await Promise.all([
-        appointment.save(),
-        newAppointment.save()
-      ]);
+        // Mark original appointment as rescheduled
+        appointment.status = AppointmentStatus.RESCHEDULED;
+        
+        // Save both appointments within transaction
+        await appointment.save({ session });
+        await newAppt.save({ session });
+
+        return newAppt;
+      });
 
       // Populate references for new appointment
       await newAppointment.populate([
@@ -436,29 +443,36 @@ export class AppointmentService {
       const startTime = appointmentDate;
       const endTime = new Date(appointmentDate.getTime() + (duration * 60000));
 
+      // Find any appointments that overlap with the requested time slot
+      // An appointment overlaps if:
+      // 1. It starts before our end time AND
+      // 2. It ends after our start time
       const filter: any = {
         doctor: doctorId,
-        status: { $in: [AppointmentStatus.SCHEDULED, AppointmentStatus.CONFIRMED, AppointmentStatus.IN_PROGRESS] },
-        $or: [
-          {
-            appointmentDate: { $lt: endTime },
-            $expr: {
-              $gt: [
-                { $add: ['$appointmentDate', { $multiply: ['$duration', 60000] }] },
-                startTime
-              ]
-            }
-          }
-        ]
+        status: { $in: [AppointmentStatus.SCHEDULED, AppointmentStatus.CONFIRMED, AppointmentStatus.IN_PROGRESS] }
       };
 
       if (excludeAppointmentId) {
         filter._id = { $ne: excludeAppointmentId };
       }
 
-      const conflictingAppointment = await Appointment.findOne(filter);
-      return !conflictingAppointment;
+      // Get all active appointments for this doctor
+      const appointments = await Appointment.find(filter).select('appointmentDate duration').lean();
+
+      // Check for overlaps manually for better reliability
+      for (const appt of appointments) {
+        const apptStart = new Date(appt.appointmentDate);
+        const apptEnd = new Date(apptStart.getTime() + (appt.duration * 60000));
+
+        // Check if time slots overlap
+        if (apptStart < endTime && apptEnd > startTime) {
+          return false; // Conflict found
+        }
+      }
+
+      return true; // No conflicts
     } catch (error) {
+      console.error('Error checking doctor availability:', error);
       return false;
     }
   }

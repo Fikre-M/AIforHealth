@@ -296,6 +296,64 @@ userSchema.statics.unlockAccount = function (userId: string) {
   );
 };
 
+// Pre-remove middleware to handle cascade deletion
+userSchema.pre('findOneAndDelete', async function(next) {
+  try {
+    const userId = this.getQuery()._id;
+    
+    if (userId) {
+      // Check if user has any active appointments
+      const Appointment = mongoose.model('Appointment');
+      const activeAppointments = await Appointment.countDocuments({
+        $or: [{ patient: userId }, { doctor: userId }],
+        status: { $in: ['scheduled', 'confirmed', 'in_progress'] }
+      });
+
+      if (activeAppointments > 0) {
+        throw new Error('Cannot delete user with active appointments. Please cancel or complete all appointments first.');
+      }
+
+      // Soft delete: mark past appointments as archived instead of deleting
+      await Appointment.updateMany(
+        { $or: [{ patient: userId }, { doctor: userId }] },
+        { $set: { isArchived: true } }
+      );
+    }
+    
+    next();
+  } catch (error) {
+    next(error as Error);
+  }
+});
+
+// Pre-remove middleware for deleteOne
+userSchema.pre('deleteOne', { document: true, query: false }, async function(next) {
+  try {
+    const userId = this._id;
+    
+    // Check if user has any active appointments
+    const Appointment = mongoose.model('Appointment');
+    const activeAppointments = await Appointment.countDocuments({
+      $or: [{ patient: userId }, { doctor: userId }],
+      status: { $in: ['scheduled', 'confirmed', 'in_progress'] }
+    });
+
+    if (activeAppointments > 0) {
+      throw new Error('Cannot delete user with active appointments. Please cancel or complete all appointments first.');
+    }
+
+    // Soft delete: mark past appointments as archived
+    await Appointment.updateMany(
+      { $or: [{ patient: userId }, { doctor: userId }] },
+      { $set: { isArchived: true } }
+    );
+    
+    next();
+  } catch (error) {
+    next(error as Error);
+  }
+});
+
 const User = mongoose.model<IUser>('User', userSchema);
 
 export default User;
