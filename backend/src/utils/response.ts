@@ -14,13 +14,13 @@ export class ResponseUtil {
     message?: string,
     statusCode: number = 200
   ): Response {
-    const response: ApiResponse<T> = {
+    const response: any = {
       success: true,
       data,
     };
 
     if (message) {
-      response.error = { message };
+      response.message = message;
     }
 
     return res.status(statusCode).json(response);
@@ -35,7 +35,7 @@ export class ResponseUtil {
     statusCode: number = 400,
     details?: any
   ): Response {
-    const response: ApiResponse = {
+    const response: any = {
       success: false,
       error: {
         message,
@@ -59,7 +59,7 @@ export class ResponseUtil {
   ): Response {
     const pages = Math.ceil(total / limit);
 
-    const response: ApiResponse<T[]> = {
+    const response: any = {
       success: true,
       data,
       pagination: {
