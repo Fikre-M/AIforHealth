@@ -84,7 +84,8 @@ export class AuthService {
 
       // Check if account is locked
       if (user.isLocked()) {
-        throw new Error('Account is temporarily locked due to too many failed login attempts');
+        const lockTimeRemaining = user.lockUntil ? Math.ceil((user.lockUntil.getTime() - Date.now()) / 60000) : 0;
+        throw new Error(`Account is temporarily locked. Please try again in ${lockTimeRemaining} minutes.`);
       }
 
       // Check if account is active
@@ -97,6 +98,10 @@ export class AuthService {
       if (!isPasswordValid) {
         // Increment login attempts
         await user.incrementLoginAttempts();
+        const remainingAttempts = 5 - (user.loginAttempts + 1);
+        if (remainingAttempts > 0) {
+          throw new Error(`Invalid email or password. ${remainingAttempts} attempts remaining.`);
+        }
         throw new Error('Invalid email or password');
       }
 
@@ -193,6 +198,17 @@ export class AuthService {
       const isCurrentPasswordValid = await user.comparePassword(currentPassword);
       if (!isCurrentPasswordValid) {
         throw new Error('Current password is incorrect');
+      }
+
+      // Validate new password strength
+      if (newPassword.length < 8) {
+        throw new Error('New password must be at least 8 characters long');
+      }
+
+      // Check if new password is same as current
+      const isSamePassword = await user.comparePassword(newPassword);
+      if (isSamePassword) {
+        throw new Error('New password must be different from current password');
       }
 
       // Update password

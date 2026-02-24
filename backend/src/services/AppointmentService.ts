@@ -154,8 +154,7 @@ export class AppointmentService {
    */
   static async updateAppointment(
     appointmentId: string,
-    updateData: UpdateAppointmentData,
-    updatedBy: string
+    updateData: UpdateAppointmentData
   ): Promise<IAppointment | null> {
     try {
       if (!DatabaseUtil.isValidObjectId(appointmentId)) {

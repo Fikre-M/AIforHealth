@@ -105,7 +105,6 @@ describe('AppointmentService', () => {
 
       const updated = await AppointmentService.updateAppointment(
         appointment._id.toString(),
-        patientId,
         { notes: 'Updated notes' }
       );
 

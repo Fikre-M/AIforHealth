@@ -1,4 +1,4 @@
-import { User, IUser, Appointment, IAppointment, AppointmentStatus } from '@/models';
+import { User, IUser, Appointment, IAppointment, AppointmentStatus, AppointmentType } from '@/models';
 import { UserRole } from '@/types';
 import { DatabaseUtil } from '@/utils/database';
 import mongoose from 'mongoose';
@@ -445,6 +445,102 @@ export class DoctorService {
   }
 
   /**
+   * Get patient appointment history
+   */
+  static async getPatientHistory(doctorId: string, patientId: string) {
+    try {
+      if (!DatabaseUtil.isValidObjectId(doctorId) || !DatabaseUtil.isValidObjectId(patientId)) {
+        throw new Error('Invalid ID format');
+      }
+
+      // Verify doctor has access to this patient
+      const hasAppointment = await Appointment.exists({
+        doctor: doctorId,
+        patient: patientId
+      });
+
+      if (!hasAppointment) {
+        throw new Error('Access denied: No appointment history with this patient');
+      }
+
+      const appointments = await Appointment.find({
+        doctor: doctorId,
+        patient: patientId
+      })
+        .select('appointmentDate type status diagnosis prescription doctorNotes followUpRequired followUpDate')
+        .sort({ appointmentDate: -1 })
+        .limit(50)
+        .lean();
+
+      return appointments;
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new Error(`Failed to get patient history: ${error.message}`);
+      }
+      throw new Error('Failed to get patient history: Unknown error');
+    }
+  }
+
+  /**
+   * Search doctors by specialization
+   */
+  static async searchDoctors(query: {
+    specialization?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+  }) {
+    try {
+      const { specialization, search, page = 1, limit = 20 } = query;
+      
+      const maxLimit = 100;
+      const effectiveLimit = Math.min(limit, maxLimit);
+      const skip = (page - 1) * effectiveLimit;
+
+      const filter: any = {
+        role: UserRole.DOCTOR,
+        isActive: true
+      };
+
+      if (specialization) {
+        filter.specialization = { $regex: specialization, $options: 'i' };
+      }
+
+      if (search) {
+        filter.$or = [
+          { name: { $regex: search, $options: 'i' } },
+          { specialization: { $regex: search, $options: 'i' } }
+        ];
+      }
+
+      const [doctors, total] = await Promise.all([
+        User.find(filter)
+          .select('name email specialization licenseNumber')
+          .sort({ name: 1 })
+          .skip(skip)
+          .limit(effectiveLimit)
+          .lean(),
+        User.countDocuments(filter)
+      ]);
+
+      return {
+        doctors,
+        pagination: {
+          page,
+          limit: effectiveLimit,
+          total,
+          pages: Math.ceil(total / effectiveLimit)
+        }
+      };
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new Error(`Failed to search doctors: ${error.message}`);
+      }
+      throw new Error('Failed to search doctors: Unknown error');
+    }
+  }
+
+  /**
    * Get doctor's appointment statistics
    */
   static async getDoctorStats(doctorId: string) {
@@ -516,6 +612,144 @@ export class DoctorService {
         throw new Error(`Failed to get doctor stats: ${error.message}`);
       }
       throw new Error('Failed to get doctor stats: Unknown error');
+    }
+  }
+
+  /**
+   * Get doctor performance metrics
+   */
+  static async getDoctorPerformance(doctorId: string, startDate?: Date, endDate?: Date) {
+    try {
+      if (!DatabaseUtil.isValidObjectId(doctorId)) {
+        throw new Error('Invalid doctor ID format');
+      }
+
+      const dateFilter: any = { doctor: new mongoose.Types.ObjectId(doctorId) };
+      
+      if (startDate || endDate) {
+        dateFilter.appointmentDate = {};
+        if (startDate) dateFilter.appointmentDate.$gte = startDate;
+        if (endDate) dateFilter.appointmentDate.$lte = endDate;
+      }
+
+      const [metrics] = await Appointment.aggregate([
+        { $match: dateFilter },
+        {
+          $group: {
+            _id: null,
+            totalAppointments: { $sum: 1 },
+            completedAppointments: {
+              $sum: { $cond: [{ $eq: ['$status', AppointmentStatus.COMPLETED] }, 1, 0] }
+            },
+            cancelledAppointments: {
+              $sum: { $cond: [{ $eq: ['$status', AppointmentStatus.CANCELLED] }, 1, 0] }
+            },
+            missedAppointments: {
+              $sum: { $cond: [{ $eq: ['$status', AppointmentStatus.MISSED] }, 1, 0] }
+            },
+            averageDuration: { $avg: '$duration' },
+            followUpRate: {
+              $avg: { $cond: ['$followUpRequired', 1, 0] }
+            }
+          }
+        }
+      ]);
+
+      if (!metrics) {
+        return {
+          totalAppointments: 0,
+          completedAppointments: 0,
+          cancelledAppointments: 0,
+          missedAppointments: 0,
+          completionRate: 0,
+          cancellationRate: 0,
+          averageDuration: 0,
+          followUpRate: 0
+        };
+      }
+
+      const completionRate = metrics.totalAppointments > 0 
+        ? (metrics.completedAppointments / metrics.totalAppointments) * 100 
+        : 0;
+      
+      const cancellationRate = metrics.totalAppointments > 0
+        ? (metrics.cancelledAppointments / metrics.totalAppointments) * 100
+        : 0;
+
+      return {
+        ...metrics,
+        completionRate: Math.round(completionRate * 100) / 100,
+        cancellationRate: Math.round(cancellationRate * 100) / 100,
+        followUpRate: Math.round((metrics.followUpRate || 0) * 100 * 100) / 100
+      };
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new Error(`Failed to get doctor performance: ${error.message}`);
+      }
+      throw new Error('Failed to get doctor performance: Unknown error');
+    }
+  }
+
+  /**
+   * Get average patient waiting times
+   */
+  static async getWaitingTimes(doctorId: string, date?: Date) {
+    try {
+      if (!DatabaseUtil.isValidObjectId(doctorId)) {
+        throw new Error('Invalid doctor ID format');
+      }
+
+      const targetDate = date || new Date();
+      const startOfDay = new Date(targetDate);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(targetDate);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      const appointments = await Appointment.find({
+        doctor: doctorId,
+        appointmentDate: { $gte: startOfDay, $lte: endOfDay },
+        status: { $in: [AppointmentStatus.COMPLETED, AppointmentStatus.IN_PROGRESS] }
+      })
+        .select('appointmentDate duration status')
+        .sort({ appointmentDate: 1 })
+        .lean();
+
+      if (appointments.length === 0) {
+        return {
+          averageWaitTime: 0,
+          totalAppointments: 0,
+          onTimeAppointments: 0,
+          delayedAppointments: 0
+        };
+      }
+
+      let totalDelay = 0;
+      let delayedCount = 0;
+      let expectedTime = new Date(appointments[0].appointmentDate);
+
+      for (const appt of appointments) {
+        const actualStart = new Date(appt.appointmentDate);
+        const delay = Math.max(0, (actualStart.getTime() - expectedTime.getTime()) / 60000);
+        
+        if (delay > 5) { // More than 5 minutes late
+          totalDelay += delay;
+          delayedCount++;
+        }
+
+        expectedTime = new Date(actualStart.getTime() + (appt.duration * 60000));
+      }
+
+      return {
+        averageWaitTime: delayedCount > 0 ? Math.round(totalDelay / delayedCount) : 0,
+        totalAppointments: appointments.length,
+        onTimeAppointments: appointments.length - delayedCount,
+        delayedAppointments: delayedCount
+      };
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new Error(`Failed to get waiting times: ${error.message}`);
+      }
+      throw new Error('Failed to get waiting times: Unknown error');
     }
   }
 }
