@@ -96,8 +96,12 @@ export class DoctorService {
         throw new Error('Invalid doctor ID format');
       }
 
-      const { page = 1, limit = 10 } = query;
-      const skip = (page - 1) * limit;
+      const { page = 1, limit = 20 } = query;
+      
+      // Enforce maximum limit
+      const maxLimit = 100;
+      const effectiveLimit = Math.min(limit, maxLimit);
+      const skip = (page - 1) * effectiveLimit;
 
       const now = new Date();
 
@@ -110,7 +114,8 @@ export class DoctorService {
           .populate('patient', 'name email phone dateOfBirth gender')
           .sort({ appointmentDate: 1 })
           .skip(skip)
-          .limit(limit),
+          .limit(effectiveLimit)
+          .lean(),
         Appointment.countDocuments({
           doctor: doctorId,
           appointmentDate: { $gte: now },
@@ -122,9 +127,9 @@ export class DoctorService {
         appointments,
         pagination: {
           page,
-          limit,
+          limit: effectiveLimit,
           total,
-          pages: Math.ceil(total / limit)
+          pages: Math.ceil(total / effectiveLimit)
         }
       };
     } catch (error) {
@@ -146,11 +151,15 @@ export class DoctorService {
 
       const {
         page = 1,
-        limit = 10,
+        limit = 20, // Default limit
         search,
         sortBy = 'name',
         sortOrder = 'asc'
       } = query;
+
+      // Enforce maximum limit
+      const maxLimit = 100;
+      const effectiveLimit = Math.min(limit, maxLimit);
 
       // Find all unique patient IDs from appointments with this doctor
       const patientIds = await Appointment.distinct('patient', { doctor: doctorId });
@@ -174,14 +183,14 @@ export class DoctorService {
       const sort: any = {};
       sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
-      const skip = (page - 1) * limit;
+      const skip = (page - 1) * effectiveLimit;
 
       const [patients, total] = await Promise.all([
         User.find(filter)
           .select('name email phone dateOfBirth gender address emergencyContact medicalHistory allergies currentMedications createdAt')
           .sort(sort)
           .skip(skip)
-          .limit(limit)
+          .limit(effectiveLimit)
           .lean(),
         User.countDocuments(filter)
       ]);
@@ -205,9 +214,9 @@ export class DoctorService {
         patients: patientsWithAge,
         pagination: {
           page,
-          limit,
+          limit: effectiveLimit,
           total,
-          pages: Math.ceil(total / limit)
+          pages: Math.ceil(total / effectiveLimit)
         }
       };
     } catch (error) {
@@ -347,52 +356,84 @@ export class DoctorService {
         .select('name email phone dateOfBirth gender')
         .lean();
 
-      // Get last appointment for each patient
-      const summaries = await Promise.all(
-        patients.map(async (patient) => {
-          const lastAppointment = await Appointment.findOne({
-            doctor: doctorId,
-            patient: patient._id,
-            status: AppointmentStatus.COMPLETED
-          })
-            .sort({ appointmentDate: -1 })
-            .select('appointmentDate diagnosis')
-            .lean();
-
-          const upcomingAppointment = await Appointment.findOne({
-            doctor: doctorId,
-            patient: patient._id,
-            appointmentDate: { $gte: new Date() },
-            status: { $in: [AppointmentStatus.SCHEDULED, AppointmentStatus.CONFIRMED] }
-          })
-            .sort({ appointmentDate: 1 })
-            .select('appointmentDate type')
-            .lean();
-
-          let age = null;
-          if (patient.dateOfBirth) {
-            const today = new Date();
-            const birthDate = new Date(patient.dateOfBirth);
-            age = today.getFullYear() - birthDate.getFullYear();
-            const monthDiff = today.getMonth() - birthDate.getMonth();
-            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-              age--;
+      // Optimize: Fetch all appointments in bulk instead of per-patient queries
+      const [lastAppointments, upcomingAppointments] = await Promise.all([
+        // Get last completed appointment for each patient
+        Appointment.aggregate([
+          {
+            $match: {
+              doctor: new mongoose.Types.ObjectId(doctorId),
+              patient: { $in: patientIds.map(id => new mongoose.Types.ObjectId(id)) },
+              status: AppointmentStatus.COMPLETED
+            }
+          },
+          { $sort: { appointmentDate: -1 } },
+          {
+            $group: {
+              _id: '$patient',
+              appointmentDate: { $first: '$appointmentDate' },
+              diagnosis: { $first: '$diagnosis' }
             }
           }
+        ]),
+        // Get upcoming appointment for each patient
+        Appointment.aggregate([
+          {
+            $match: {
+              doctor: new mongoose.Types.ObjectId(doctorId),
+              patient: { $in: patientIds.map(id => new mongoose.Types.ObjectId(id)) },
+              appointmentDate: { $gte: new Date() },
+              status: { $in: [AppointmentStatus.SCHEDULED, AppointmentStatus.CONFIRMED] }
+            }
+          },
+          { $sort: { appointmentDate: 1 } },
+          {
+            $group: {
+              _id: '$patient',
+              appointmentDate: { $first: '$appointmentDate' },
+              type: { $first: '$type' }
+            }
+          }
+        ])
+      ]);
 
-          return {
-            id: patient._id,
-            name: patient.name,
-            email: patient.email,
-            phone: patient.phone,
-            age,
-            gender: patient.gender,
-            lastVisit: lastAppointment?.appointmentDate || null,
-            lastDiagnosis: lastAppointment?.diagnosis || null,
-            upcomingAppointment: upcomingAppointment?.appointmentDate || null
-          };
-        })
+      // Create lookup maps for O(1) access
+      const lastApptMap = new Map(
+        lastAppointments.map(appt => [appt._id.toString(), appt])
       );
+      const upcomingApptMap = new Map(
+        upcomingAppointments.map(appt => [appt._id.toString(), appt])
+      );
+
+      // Build summaries without additional queries
+      const summaries = patients.map(patient => {
+        const patientIdStr = patient._id.toString();
+        const lastAppt = lastApptMap.get(patientIdStr);
+        const upcomingAppt = upcomingApptMap.get(patientIdStr);
+
+        let age = null;
+        if (patient.dateOfBirth) {
+          const today = new Date();
+          const birthDate = new Date(patient.dateOfBirth);
+          age = today.getFullYear() - birthDate.getFullYear();
+          const monthDiff = today.getMonth() - birthDate.getMonth();
+          if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+          }
+        }
+
+        return {
+          id: patient._id,
+          name: patient.name,
+          email: patient.email,
+          phone: patient.phone,
+          age,
+          gender: patient.gender,
+          lastVisit: lastAppt?.appointmentDate || null,
+          lastDiagnosis: lastAppt?.diagnosis || null,
+          upcomingAppointment: upcomingAppt?.appointmentDate || null
+        };
+      });
 
       return summaries;
     } catch (error) {

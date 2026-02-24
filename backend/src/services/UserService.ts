@@ -185,13 +185,17 @@ export class UserService {
     try {
       const {
         page = 1,
-        limit = 10,
+        limit = 20, // Default limit to prevent unbounded queries
         role,
         isActive,
         search,
         sortBy = 'createdAt',
         sortOrder = 'desc'
       } = query;
+
+      // Enforce maximum limit to prevent performance issues
+      const maxLimit = 100;
+      const effectiveLimit = Math.min(limit, maxLimit);
 
       // Build filter object
       const filter: any = {};
@@ -211,14 +215,15 @@ export class UserService {
       sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
 
       // Calculate pagination
-      const skip = (page - 1) * limit;
+      const skip = (page - 1) * effectiveLimit;
 
       // Execute queries
       const [users, total] = await Promise.all([
         User.find(filter)
+          .select('-password -passwordResetToken -emailVerificationToken') // Exclude sensitive fields
           .sort(sort)
           .skip(skip)
-          .limit(limit)
+          .limit(effectiveLimit)
           .lean(),
         User.countDocuments(filter)
       ]);
@@ -227,9 +232,9 @@ export class UserService {
         users,
         pagination: {
           page,
-          limit,
+          limit: effectiveLimit,
           total,
-          pages: Math.ceil(total / limit)
+          pages: Math.ceil(total / effectiveLimit)
         }
       };
     } catch (error) {
