@@ -23,7 +23,7 @@ export const initializeSentry = (): void => {
     return;
   }
 
-  if (!env.SENTRY_DSN) {
+  if (!env.SENTRY_DSN || env.SENTRY_DSN.includes('test_sentry_dsn')) {
     if (env.NODE_ENV === 'production') {
       logger.warn('⚠️  Sentry DSN not configured in production environment');
     } else {
@@ -33,13 +33,17 @@ export const initializeSentry = (): void => {
   }
 
   try {
-    const integrations = [
-      // HTTP integration for tracing
-      new Sentry.Integrations.Http({ tracing: true }),
-      
-      // Express integration
-      new Sentry.Integrations.Express({ app: undefined }),
-    ];
+    const integrations: any[] = [];
+
+    // Add HTTP integration if available
+    if (Sentry.Integrations && Sentry.Integrations.Http) {
+      integrations.push(new Sentry.Integrations.Http({ tracing: true }));
+    }
+    
+    // Add Express integration if available
+    if (Sentry.Integrations && Sentry.Integrations.Express) {
+      integrations.push(new Sentry.Integrations.Express({ app: undefined }));
+    }
 
     // Add profiling integration if available
     if (nodeProfilingIntegration) {
