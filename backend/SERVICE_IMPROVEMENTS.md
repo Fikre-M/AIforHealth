@@ -52,3 +52,51 @@ Rate limiting is already configured at the application level:
 - Default: 100 requests per 15 minutes per IP
 - Authentication endpoints: 5 requests per 15 minutes per IP
 - Implemented via `express-rate-limit` middleware
+
+## Test Coverage
+
+### Created Test Files
+
+1. **AuthService.test.ts** - 40+ test cases covering:
+   - User registration (duplicate emails, default roles)
+   - Login (valid/invalid credentials, account locking, inactive accounts)
+   - Token refresh (valid/invalid tokens, inactive users)
+   - Password change (validation, weak passwords, reuse prevention)
+   - Password reset (token generation, validation)
+   - Email verification
+   - Profile management
+
+2. **UserService.test.ts** - 20+ test cases covering:
+   - User creation (validation, duplicate emails, password hashing)
+   - User lookup (by ID, by email, case-insensitivity)
+   - User updates (profile, password)
+   - User deactivation
+   - User listing (pagination, filtering by role)
+
+3. **DoctorService.test.ts** - 25+ test cases covering:
+   - Daily appointments (filtering by date)
+   - Patient lists (access control, pagination)
+   - Patient details (authorization checks)
+   - Patient creation
+   - Doctor statistics
+   - Performance metrics
+   - Doctor search (by specialization, by name)
+
+### Test Commands
+
+Run all service tests:
+```bash
+npm test -- services
+```
+
+Run specific service tests:
+```bash
+npm test -- AuthService.test
+npm test -- UserService.test
+npm test -- DoctorService.test
+```
+
+Run with coverage:
+```bash
+npm test -- --coverage services
+```

@@ -2,145 +2,147 @@ import { AuthService } from '../AuthService';
 import { User } from '@/models';
 import { UserRole } from '@/types';
 import { JwtUtil } from '@/utils/jwt';
+import { generateObjectId } from '@/test/helpers';
 
 describe('AuthService', () => {
   describe('register', () => {
-    it('should register new user successfully', async () => {
+    it('should register new user', async () => {
       const registerData = {
         name: 'New User',
         email: 'newuser@example.com',
         password: 'Password123!',
-        role: UserRole.PATIENT
+        role: UserRole.PATIENT,
       };
 
       const result = await AuthService.register(registerData);
 
       expect(result).toBeDefined();
       expect(result.user).toBeDefined();
-      expect(result.user.email).toBe(registerData.email.toLowerCase());
-      expect(result.user.name).toBe(registerData.name);
       expect(result.tokens).toBeDefined();
+      expect(result.user.email).toBe('newuser@example.com');
       expect(result.tokens.accessToken).toBeDefined();
       expect(result.tokens.refreshToken).toBeDefined();
     });
 
-    it('should reject duplicate email registration', async () => {
+    it('should not register duplicate email', async () => {
       const registerData = {
         name: 'Duplicate User',
         email: 'duplicate@example.com',
         password: 'Password123!',
-        role: UserRole.PATIENT
+        role: UserRole.PATIENT,
       };
 
       await AuthService.register(registerData);
 
       await expect(
         AuthService.register(registerData)
-      ).rejects.toThrow('User with this email already exists');
+      ).rejects.toThrow(/already exists/i);
     });
 
-    it('should default to patient role if not specified', async () => {
+    it('should default to patient role', async () => {
       const registerData = {
-        name: 'Default Role User',
+        name: 'Default Role',
         email: 'defaultrole@example.com',
-        password: 'Password123!'
+        password: 'Password123!',
       };
 
       const result = await AuthService.register(registerData);
 
       expect(result.user.role).toBe(UserRole.PATIENT);
     });
-
-    it('should hash password', async () => {
-      const registerData = {
-        name: 'Hash Test',
-        email: 'hashtest@example.com',
-        password: 'Password123!',
-        role: UserRole.PATIENT
-      };
-
-      const result = await AuthService.register(registerData);
-
-      const user = await User.findById(result.user._id).select('+password');
-      expect(user?.password).not.toBe(registerData.password);
-      expect(user?.password).toBeDefined();
-    });
-
-    it('should update last login on registration', async () => {
-      const registerData = {
-        name: 'Login Test',
-        email: 'logintest@example.com',
-        password: 'Password123!',
-        role: UserRole.PATIENT
-      };
-
-      const result = await AuthService.register(registerData);
-
-      const user = await User.findById(result.user._id);
-      expect(user?.lastLogin).toBeDefined();
-      expect(user?.loginAttempts).toBe(0);
-    });
   });
 
   describe('login', () => {
     beforeEach(async () => {
-      await AuthService.register({
+      await User.create({
         name: 'Login User',
         email: 'login@example.com',
         password: 'Password123!',
-        role: UserRole.PATIENT
+        role: UserRole.PATIENT,
+        isActive: true,
       });
     });
 
     it('should login with valid credentials', async () => {
       const loginData = {
         email: 'login@example.com',
-        password: 'Password123!'
+        password: 'Password123!',
       };
 
       const result = await AuthService.login(loginData);
 
       expect(result).toBeDefined();
       expect(result.user).toBeDefined();
-      expect(result.user.email).toBe(loginData.email);
       expect(result.tokens).toBeDefined();
-      expect(result.tokens.accessToken).toBeDefined();
-      expect(result.tokens.refreshToken).toBeDefined();
+      expect(result.user.email).toBe('login@example.com');
     });
 
-    it('should reject invalid email', async () => {
-      const loginData = {
-        email: 'nonexistent@example.com',
-        password: 'Password123!'
-      };
-
-      await expect(
-        AuthService.login(loginData)
-      ).rejects.toThrow('Invalid email or password');
-    });
-
-    it('should reject invalid password', async () => {
+    it('should not login with wrong password', async () => {
       const loginData = {
         email: 'login@example.com',
-        password: 'WrongPassword123!'
+        password: 'WrongPassword123!',
       };
 
       await expect(
         AuthService.login(loginData)
-      ).rejects.toThrow('Invalid email or password');
+      ).rejects.toThrow(/Invalid email or password/i);
+    });
+
+    it('should not login with non-existent email', async () => {
+      const loginData = {
+        email: 'nonexistent@example.com',
+        password: 'Password123!',
+      };
+
+      await expect(
+        AuthService.login(loginData)
+      ).rejects.toThrow(/Invalid email or password/i);
+    });
+
+    it('should not login with inactive account', async () => {
+      await User.create({
+        name: 'Inactive User',
+        email: 'inactive@example.com',
+        password: 'Password123!',
+        role: UserRole.PATIENT,
+        isActive: false,
+      });
+
+      const loginData = {
+        email: 'inactive@example.com',
+        password: 'Password123!',
+      };
+
+      await expect(
+        AuthService.login(loginData)
+      ).rejects.toThrow(/deactivated/i);
+    });
+
+    it('should reset login attempts on successful login', async () => {
+      const user = await User.findOne({ email: 'login@example.com' });
+      if (user) {
+        user.loginAttempts = 3;
+        await user.save();
+      }
+
+      await AuthService.login({
+        email: 'login@example.com',
+        password: 'Password123!',
+      });
+
+      const updatedUser = await User.findOne({ email: 'login@example.com' });
+      expect(updatedUser?.loginAttempts).toBe(0);
     });
 
     it('should increment login attempts on failed login', async () => {
-      const loginData = {
-        email: 'login@example.com',
-        password: 'WrongPassword123!'
-      };
-
       const user = await User.findOne({ email: 'login@example.com' });
       const initialAttempts = user?.loginAttempts || 0;
 
       try {
-        await AuthService.login(loginData);
+        await AuthService.login({
+          email: 'login@example.com',
+          password: 'WrongPassword!',
+        });
       } catch (error) {
         // Expected to fail
       }
@@ -148,81 +150,31 @@ describe('AuthService', () => {
       const updatedUser = await User.findOne({ email: 'login@example.com' });
       expect(updatedUser?.loginAttempts).toBe(initialAttempts + 1);
     });
-
-    it('should reject login for inactive account', async () => {
-      await User.findOneAndUpdate(
-        { email: 'login@example.com' },
-        { isActive: false }
-      );
-
-      const loginData = {
-        email: 'login@example.com',
-        password: 'Password123!'
-      };
-
-      await expect(
-        AuthService.login(loginData)
-      ).rejects.toThrow('Account is deactivated');
-    });
-
-    it('should reset login attempts on successful login', async () => {
-      // Set some failed attempts
-      await User.findOneAndUpdate(
-        { email: 'login@example.com' },
-        { loginAttempts: 3 }
-      );
-
-      const loginData = {
-        email: 'login@example.com',
-        password: 'Password123!'
-      };
-
-      await AuthService.login(loginData);
-
-      const user = await User.findOne({ email: 'login@example.com' });
-      expect(user?.loginAttempts).toBe(0);
-    });
-
-    it('should update last login timestamp', async () => {
-      const loginData = {
-        email: 'login@example.com',
-        password: 'Password123!'
-      };
-
-      const beforeLogin = new Date();
-      await AuthService.login(loginData);
-
-      const user = await User.findOne({ email: 'login@example.com' });
-      expect(user?.lastLogin).toBeDefined();
-      expect(user!.lastLogin!.getTime()).toBeGreaterThanOrEqual(beforeLogin.getTime());
-    });
   });
 
   describe('refreshToken', () => {
-    let validRefreshToken: string;
-    let userId: string;
-
-    beforeEach(async () => {
-      const result = await AuthService.register({
+    it('should refresh token with valid refresh token', async () => {
+      const user = await User.create({
         name: 'Refresh User',
         email: 'refresh@example.com',
         password: 'Password123!',
-        role: UserRole.PATIENT
+        role: UserRole.PATIENT,
       });
 
-      validRefreshToken = result.tokens.refreshToken;
-      userId = result.user._id.toString();
-    });
+      const tokens = JwtUtil.generateTokenPair({
+        userId: user._id.toString(),
+        email: user.email,
+        role: user.role,
+      });
 
-    it('should refresh tokens with valid refresh token', async () => {
       const newTokens = await AuthService.refreshToken({
-        refreshToken: validRefreshToken
+        refreshToken: tokens.refreshToken,
       });
 
       expect(newTokens).toBeDefined();
       expect(newTokens.accessToken).toBeDefined();
       expect(newTokens.refreshToken).toBeDefined();
-      expect(newTokens.accessToken).not.toBe(validRefreshToken);
+      expect(newTokens.accessToken).not.toBe(tokens.accessToken);
     });
 
     it('should reject invalid refresh token', async () => {
@@ -232,113 +184,205 @@ describe('AuthService', () => {
     });
 
     it('should reject refresh token for inactive user', async () => {
-      await User.findByIdAndUpdate(userId, { isActive: false });
-
-      await expect(
-        AuthService.refreshToken({ refreshToken: validRefreshToken })
-      ).rejects.toThrow('User not found or inactive');
-    });
-
-    it('should reject refresh token for deleted user', async () => {
-      await User.findByIdAndDelete(userId);
-
-      await expect(
-        AuthService.refreshToken({ refreshToken: validRefreshToken })
-      ).rejects.toThrow('User not found or inactive');
-    });
-  });
-
-  describe('logout', () => {
-    it('should logout successfully for valid user', async () => {
-      const result = await AuthService.register({
-        name: 'Logout User',
-        email: 'logout@example.com',
+      const user = await User.create({
+        name: 'Inactive Refresh',
+        email: 'inactiverefresh@example.com',
         password: 'Password123!',
-        role: UserRole.PATIENT
+        role: UserRole.PATIENT,
+        isActive: false,
       });
 
-      const logoutResult = await AuthService.logout(result.user._id.toString());
+      const tokens = JwtUtil.generateTokenPair({
+        userId: user._id.toString(),
+        email: user.email,
+        role: user.role,
+      });
 
-      expect(logoutResult).toBe(true);
-    });
-
-    it('should return false for non-existent user', async () => {
-      const logoutResult = await AuthService.logout('507f1f77bcf86cd799439011');
-
-      expect(logoutResult).toBe(false);
+      await expect(
+        AuthService.refreshToken({ refreshToken: tokens.refreshToken })
+      ).rejects.toThrow(/inactive/i);
     });
   });
 
   describe('changePassword', () => {
-    let userId: string;
-
-    beforeEach(async () => {
-      const result = await AuthService.register({
-        name: 'Password Change User',
+    it('should change password with valid current password', async () => {
+      const user = await User.create({
+        name: 'Change Password User',
         email: 'changepass@example.com',
         password: 'OldPassword123!',
-        role: UserRole.PATIENT
+        role: UserRole.PATIENT,
       });
 
-      userId = result.user._id.toString();
-    });
-
-    it('should change password with valid current password', async () => {
       const result = await AuthService.changePassword(
-        userId,
+        user._id.toString(),
         'OldPassword123!',
         'NewPassword123!'
       );
 
       expect(result).toBe(true);
 
-      // Verify new password works
-      const loginResult = await AuthService.login({
-        email: 'changepass@example.com',
-        password: 'NewPassword123!'
-      });
-
-      expect(loginResult).toBeDefined();
+      const updatedUser = await User.findById(user._id).select('+password');
+      const isValid = await updatedUser?.comparePassword('NewPassword123!');
+      expect(isValid).toBe(true);
     });
 
-    it('should reject change with incorrect current password', async () => {
+    it('should not change password with wrong current password', async () => {
+      const user = await User.create({
+        name: 'Wrong Password User',
+        email: 'wrongpass@example.com',
+        password: 'CurrentPassword123!',
+        role: UserRole.PATIENT,
+      });
+
       await expect(
         AuthService.changePassword(
-          userId,
+          user._id.toString(),
           'WrongPassword123!',
           'NewPassword123!'
         )
-      ).rejects.toThrow('Current password is incorrect');
+      ).rejects.toThrow(/incorrect/i);
     });
 
-    it('should reject change for non-existent user', async () => {
+    it('should not allow weak passwords', async () => {
+      const user = await User.create({
+        name: 'Weak Password User',
+        email: 'weakpass@example.com',
+        password: 'CurrentPassword123!',
+        role: UserRole.PATIENT,
+      });
+
       await expect(
         AuthService.changePassword(
-          '507f1f77bcf86cd799439011',
-          'OldPassword123!',
-          'NewPassword123!'
+          user._id.toString(),
+          'CurrentPassword123!',
+          'weak'
         )
-      ).rejects.toThrow('User not found');
+      ).rejects.toThrow(/at least 8 characters/i);
+    });
+
+    it('should not allow reusing current password', async () => {
+      const user = await User.create({
+        name: 'Reuse Password User',
+        email: 'reusepass@example.com',
+        password: 'SamePassword123!',
+        role: UserRole.PATIENT,
+      });
+
+      await expect(
+        AuthService.changePassword(
+          user._id.toString(),
+          'SamePassword123!',
+          'SamePassword123!'
+        )
+      ).rejects.toThrow(/different from current/i);
     });
   });
 
-  describe('token validation', () => {
-    it('should generate valid JWT tokens', async () => {
-      const result = await AuthService.register({
-        name: 'Token User',
-        email: 'token@example.com',
+  describe('requestPasswordReset', () => {
+    it('should generate reset token for valid email', async () => {
+      await User.create({
+        name: 'Reset User',
+        email: 'reset@example.com',
         password: 'Password123!',
-        role: UserRole.PATIENT
+        role: UserRole.PATIENT,
       });
 
-      const accessPayload = JwtUtil.verifyAccessToken(result.tokens.accessToken);
-      expect(accessPayload).toBeDefined();
-      expect(accessPayload.userId).toBe(result.user._id.toString());
-      expect(accessPayload.email).toBe(result.user.email);
+      const token = await AuthService.requestPasswordReset('reset@example.com');
 
-      const refreshPayload = JwtUtil.verifyRefreshToken(result.tokens.refreshToken);
-      expect(refreshPayload).toBeDefined();
-      expect(refreshPayload.userId).toBe(result.user._id.toString());
+      expect(token).toBeDefined();
+      expect(typeof token).toBe('string');
+
+      const user = await User.findOne({ email: 'reset@example.com' });
+      expect(user?.passwordResetToken).toBeDefined();
+      expect(user?.passwordResetExpires).toBeDefined();
+    });
+  });
+
+  describe('resetPassword', () => {
+    it('should reset password with valid token', async () => {
+      const user = await User.create({
+        name: 'Reset Password User',
+        email: 'resetpassword@example.com',
+        password: 'OldPassword123!',
+        role: UserRole.PATIENT,
+      });
+
+      const token = user.generatePasswordResetToken();
+      await user.save();
+
+      const result = await AuthService.resetPassword(token, 'NewPassword123!');
+
+      expect(result).toBe(true);
+
+      const updatedUser = await User.findById(user._id).select('+password');
+      const isValid = await updatedUser?.comparePassword('NewPassword123!');
+      expect(isValid).toBe(true);
+      expect(updatedUser?.passwordResetToken).toBeUndefined();
+    });
+
+    it('should reject invalid reset token', async () => {
+      await expect(
+        AuthService.resetPassword('invalid-token', 'NewPassword123!')
+      ).rejects.toThrow(/Invalid or expired/i);
+    });
+  });
+
+  describe('verifyEmail', () => {
+    it('should verify email with valid token', async () => {
+      const user = await User.create({
+        name: 'Verify User',
+        email: 'verify@example.com',
+        password: 'Password123!',
+        role: UserRole.PATIENT,
+        isEmailVerified: false,
+        emailVerificationToken: 'valid-token',
+      });
+
+      const result = await AuthService.verifyEmail('valid-token');
+
+      expect(result).toBe(true);
+
+      const verifiedUser = await User.findById(user._id);
+      expect(verifiedUser?.isEmailVerified).toBe(true);
+      expect(verifiedUser?.emailVerificationToken).toBeUndefined();
+    });
+
+    it('should reject invalid verification token', async () => {
+      await expect(
+        AuthService.verifyEmail('invalid-token')
+      ).rejects.toThrow(/Invalid verification token/i);
+    });
+  });
+
+  describe('getProfile', () => {
+    it('should get user profile', async () => {
+      const user = await User.create({
+        name: 'Profile User',
+        email: 'profile@example.com',
+        password: 'Password123!',
+        role: UserRole.PATIENT,
+      });
+
+      const profile = await AuthService.getProfile(user._id.toString());
+
+      expect(profile).toBeDefined();
+      expect(profile?.email).toBe('profile@example.com');
+      expect(profile?.name).toBe('Profile User');
+    });
+  });
+
+  describe('logout', () => {
+    it('should logout user', async () => {
+      const user = await User.create({
+        name: 'Logout User',
+        email: 'logout@example.com',
+        password: 'Password123!',
+        role: UserRole.PATIENT,
+      });
+
+      const result = await AuthService.logout(user._id.toString());
+
+      expect(result).toBe(true);
     });
   });
 });

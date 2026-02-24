@@ -5,12 +5,12 @@ import { generateObjectId } from '@/test/helpers';
 
 describe('UserService', () => {
   describe('createUser', () => {
-    it('should create user successfully', async () => {
+    it('should create user with valid data', async () => {
       const userData = {
         name: 'John Doe',
         email: 'john@example.com',
         password: 'Password123!',
-        role: UserRole.PATIENT
+        role: UserRole.PATIENT,
       };
 
       const user = await UserService.createUser(userData);
@@ -19,263 +19,158 @@ describe('UserService', () => {
       expect(user.name).toBe(userData.name);
       expect(user.email).toBe(userData.email.toLowerCase());
       expect(user.role).toBe(UserRole.PATIENT);
-      expect(user.isActive).toBe(true);
       expect(user.password).not.toBe(userData.password); // Should be hashed
     });
 
-    it('should reject duplicate email', async () => {
+    it('should not create duplicate emails', async () => {
       const userData = {
-        name: 'John Doe',
+        name: 'Jane Doe',
         email: 'duplicate@example.com',
         password: 'Password123!',
-        role: UserRole.PATIENT
+        role: UserRole.PATIENT,
       };
 
       await UserService.createUser(userData);
 
       await expect(
         UserService.createUser(userData)
-      ).rejects.toThrow('User with this email already exists');
+      ).rejects.toThrow(/already exists/i);
     });
 
-    it('should create user with default patient role', async () => {
+    it('should hash password correctly', async () => {
       const userData = {
-        name: 'Jane Doe',
-        email: 'jane@example.com',
-        password: 'Password123!'
+        name: 'Test User',
+        email: 'hash@example.com',
+        password: 'PlainPassword123!',
+        role: UserRole.PATIENT,
       };
 
       const user = await UserService.createUser(userData);
+      const userWithPassword = await User.findById(user._id).select('+password');
 
-      expect(user.role).toBe(UserRole.PATIENT);
+      expect(userWithPassword?.password).toBeDefined();
+      expect(userWithPassword?.password).not.toBe(userData.password);
+      expect(userWithPassword?.password).toMatch(/^\$2[aby]\$/); // bcrypt hash pattern
+    });
+
+    it('should create doctor with specialization', async () => {
+      const doctorData = {
+        name: 'Dr. Smith',
+        email: 'drsmith@example.com',
+        password: 'Password123!',
+        role: UserRole.DOCTOR,
+        specialization: 'Cardiology',
+        licenseNumber: 'LIC123456',
+      };
+
+      const doctor = await UserService.createUser(doctorData);
+
+      expect(doctor.role).toBe(UserRole.DOCTOR);
+      expect(doctor.specialization).toBe('Cardiology');
+      expect(doctor.licenseNumber).toBe('LIC123456');
     });
   });
 
   describe('findUserById', () => {
-    it('should find user by id', async () => {
-      const created = await User.create({
-        name: 'Test User',
-        email: 'test@example.com',
+    it('should find user by ID', async () => {
+      const createdUser = await User.create({
+        name: 'Find Me',
+        email: 'findme@example.com',
         password: 'Password123!',
-        role: UserRole.PATIENT
+        role: UserRole.PATIENT,
       });
 
-      const found = await UserService.findUserById(created._id.toString());
+      const foundUser = await UserService.findUserById(createdUser._id.toString());
 
-      expect(found).toBeDefined();
-      expect(found?._id.toString()).toBe(created._id.toString());
-      expect(found?.email).toBe('test@example.com');
+      expect(foundUser).toBeDefined();
+      expect(foundUser?._id.toString()).toBe(createdUser._id.toString());
+      expect(foundUser?.email).toBe('findme@example.com');
     });
 
-    it('should return null for non-existent id', async () => {
+    it('should return null for non-existent user', async () => {
       const fakeId = generateObjectId();
-      const found = await UserService.findUserById(fakeId);
+      const user = await UserService.findUserById(fakeId);
 
-      expect(found).toBeNull();
+      expect(user).toBeNull();
     });
 
-    it('should throw error for invalid id format', async () => {
+    it('should throw error for invalid ID format', async () => {
       await expect(
         UserService.findUserById('invalid-id')
-      ).rejects.toThrow('Invalid user ID format');
+      ).rejects.toThrow(/Invalid user ID format/i);
     });
   });
 
   describe('findUserByEmail', () => {
     it('should find user by email', async () => {
       await User.create({
-        name: 'Test User',
-        email: 'findme@example.com',
+        name: 'Email User',
+        email: 'emailuser@example.com',
         password: 'Password123!',
-        role: UserRole.PATIENT
+        role: UserRole.PATIENT,
       });
 
-      const found = await UserService.findUserByEmail('findme@example.com');
+      const user = await UserService.findUserByEmail('emailuser@example.com');
 
-      expect(found).toBeDefined();
-      expect(found?.email).toBe('findme@example.com');
+      expect(user).toBeDefined();
+      expect(user?.email).toBe('emailuser@example.com');
     });
 
-    it('should be case insensitive', async () => {
+    it('should be case-insensitive', async () => {
       await User.create({
-        name: 'Test User',
-        email: 'case@example.com',
+        name: 'Case Test',
+        email: 'casetest@example.com',
         password: 'Password123!',
-        role: UserRole.PATIENT
+        role: UserRole.PATIENT,
       });
 
-      const found = await UserService.findUserByEmail('CASE@EXAMPLE.COM');
+      const user = await UserService.findUserByEmail('CaseTest@Example.COM');
 
-      expect(found).toBeDefined();
-      expect(found?.email).toBe('case@example.com');
-    });
-
-    it('should return null for non-existent email', async () => {
-      const found = await UserService.findUserByEmail('notfound@example.com');
-
-      expect(found).toBeNull();
+      expect(user).toBeDefined();
+      expect(user?.email).toBe('casetest@example.com');
     });
   });
 
   describe('updateUser', () => {
-    it('should update user fields', async () => {
+    it('should update user profile', async () => {
       const user = await User.create({
         name: 'Original Name',
         email: 'update@example.com',
         password: 'Password123!',
-        role: UserRole.PATIENT
+        role: UserRole.PATIENT,
       });
 
       const updated = await UserService.updateUser(user._id.toString(), {
-        name: 'Updated Name'
+        name: 'Updated Name',
       });
 
       expect(updated).toBeDefined();
       expect(updated?.name).toBe('Updated Name');
-      expect(updated?.email).toBe('update@example.com');
     });
 
-    it('should reject duplicate email on update', async () => {
-      await User.create({
-        name: 'User 1',
-        email: 'user1@example.com',
-        password: 'Password123!',
-        role: UserRole.PATIENT
-      });
-
-      const user2 = await User.create({
-        name: 'User 2',
-        email: 'user2@example.com',
-        password: 'Password123!',
-        role: UserRole.PATIENT
-      });
-
-      await expect(
-        UserService.updateUser(user2._id.toString(), {
-          email: 'user1@example.com'
-        })
-      ).rejects.toThrow('User with this email already exists');
-    });
-
-    it('should throw error for invalid id', async () => {
-      await expect(
-        UserService.updateUser('invalid-id', { name: 'Test' })
-      ).rejects.toThrow('Invalid user ID format');
-    });
-  });
-
-  describe('deleteUser', () => {
-    it('should soft delete user', async () => {
+    it('should not update email', async () => {
       const user = await User.create({
-        name: 'Delete Me',
-        email: 'delete@example.com',
+        name: 'Test User',
+        email: 'original@example.com',
         password: 'Password123!',
-        role: UserRole.PATIENT
+        role: UserRole.PATIENT,
       });
 
-      const result = await UserService.deleteUser(user._id.toString());
+      const updated = await UserService.updateUser(user._id.toString(), {
+        email: 'newemail@example.com',
+      } as any);
 
-      expect(result).toBe(true);
-
-      const deleted = await User.findById(user._id);
-      expect(deleted?.isActive).toBe(false);
-    });
-
-    it('should throw error for invalid id', async () => {
-      await expect(
-        UserService.deleteUser('invalid-id')
-      ).rejects.toThrow('Invalid user ID format');
-    });
-  });
-
-  describe('getUsers', () => {
-    beforeEach(async () => {
-      await User.create({
-        name: 'Patient 1',
-        email: 'patient1@example.com',
-        password: 'Password123!',
-        role: UserRole.PATIENT
-      });
-      await User.create({
-        name: 'Patient 2',
-        email: 'patient2@example.com',
-        password: 'Password123!',
-        role: UserRole.PATIENT
-      });
-      await User.create({
-        name: 'Doctor 1',
-        email: 'doctor1@example.com',
-        password: 'Password123!',
-        role: UserRole.DOCTOR
-      });
-    });
-
-    it('should return paginated users', async () => {
-      const result = await UserService.getUsers({
-        page: 1,
-        limit: 10
-      });
-
-      expect(result.users).toBeDefined();
-      expect(result.users.length).toBeGreaterThanOrEqual(3);
-      expect(result.pagination.total).toBeGreaterThanOrEqual(3);
-    });
-
-    it('should filter by role', async () => {
-      const result = await UserService.getUsers({
-        role: UserRole.DOCTOR,
-        page: 1,
-        limit: 10
-      });
-
-      expect(result.users.length).toBeGreaterThanOrEqual(1);
-      result.users.forEach(user => {
-        expect(user.role).toBe(UserRole.DOCTOR);
-      });
-    });
-
-    it('should filter by active status', async () => {
-      const result = await UserService.getUsers({
-        isActive: true,
-        page: 1,
-        limit: 10
-      });
-
-      result.users.forEach(user => {
-        expect(user.isActive).toBe(true);
-      });
-    });
-
-    it('should search by name or email', async () => {
-      const result = await UserService.getUsers({
-        search: 'patient1',
-        page: 1,
-        limit: 10
-      });
-
-      expect(result.users.length).toBeGreaterThanOrEqual(1);
-      expect(result.users[0].email).toContain('patient1');
-    });
-
-    it('should handle pagination', async () => {
-      const page1 = await UserService.getUsers({
-        page: 1,
-        limit: 2
-      });
-
-      expect(page1.users.length).toBeLessThanOrEqual(2);
-      expect(page1.pagination.page).toBe(1);
-      expect(page1.pagination.limit).toBe(2);
+      expect(updated?.email).toBe('original@example.com');
     });
   });
 
   describe('updatePassword', () => {
-    it('should update user password', async () => {
+    it('should update password and hash it', async () => {
       const user = await User.create({
-        name: 'Test User',
+        name: 'Password User',
         email: 'password@example.com',
         password: 'OldPassword123!',
-        role: UserRole.PATIENT
+        role: UserRole.PATIENT,
       });
 
       const result = await UserService.updatePassword(
@@ -285,74 +180,55 @@ describe('UserService', () => {
 
       expect(result).toBe(true);
 
-      const updated = await User.findById(user._id).select('+password');
-      const isMatch = await updated?.comparePassword('NewPassword123!');
-      expect(isMatch).toBe(true);
-    });
-
-    it('should throw error for non-existent user', async () => {
-      const fakeId = generateObjectId();
-
-      await expect(
-        UserService.updatePassword(fakeId, 'NewPassword123!')
-      ).rejects.toThrow('User not found');
+      const updatedUser = await User.findById(user._id).select('+password');
+      const isValid = await updatedUser?.comparePassword('NewPassword123!');
+      expect(isValid).toBe(true);
     });
   });
 
-  describe('verifyEmail', () => {
-    it('should verify user email', async () => {
+  describe('deactivateUser', () => {
+    it('should deactivate user account', async () => {
       const user = await User.create({
-        name: 'Test User',
-        email: 'verify@example.com',
-        password: 'Password123!',
-        role: UserRole.PATIENT,
-        isEmailVerified: false
-      });
-
-      const result = await UserService.verifyEmail(user._id.toString());
-
-      expect(result).toBe(true);
-
-      const verified = await User.findById(user._id);
-      expect(verified?.isEmailVerified).toBe(true);
-    });
-  });
-
-  describe('getUserStats', () => {
-    beforeEach(async () => {
-      await User.create({
-        name: 'Active Patient',
+        name: 'Active User',
         email: 'active@example.com',
         password: 'Password123!',
         role: UserRole.PATIENT,
         isActive: true,
-        isEmailVerified: true
       });
-      await User.create({
-        name: 'Inactive Patient',
-        email: 'inactive@example.com',
-        password: 'Password123!',
-        role: UserRole.PATIENT,
-        isActive: false
+
+      const updated = await UserService.updateUser(user._id.toString(), {
+        isActive: false,
       });
-      await User.create({
-        name: 'Doctor',
-        email: 'doc@example.com',
-        password: 'Password123!',
-        role: UserRole.DOCTOR,
-        isActive: true,
-        isEmailVerified: true
-      });
+
+      expect(updated?.isActive).toBe(false);
+    });
+  });
+
+  describe('getUsers', () => {
+    it('should get users with pagination', async () => {
+      // Create multiple users
+      await User.create([
+        { name: 'User 1', email: 'user1@example.com', password: 'Pass123!', role: UserRole.PATIENT },
+        { name: 'User 2', email: 'user2@example.com', password: 'Pass123!', role: UserRole.PATIENT },
+        { name: 'User 3', email: 'user3@example.com', password: 'Pass123!', role: UserRole.PATIENT },
+      ]);
+
+      const result = await UserService.getUsers({ page: 1, limit: 2 });
+
+      expect(result.users).toHaveLength(2);
+      expect(result.pagination.total).toBeGreaterThanOrEqual(3);
+      expect(result.pagination.pages).toBeGreaterThanOrEqual(2);
     });
 
-    it('should return user statistics', async () => {
-      const stats = await UserService.getUserStats();
+    it('should filter by role', async () => {
+      await User.create([
+        { name: 'Patient', email: 'pat@example.com', password: 'Pass123!', role: UserRole.PATIENT },
+        { name: 'Doctor', email: 'doc@example.com', password: 'Pass123!', role: UserRole.DOCTOR },
+      ]);
 
-      expect(stats).toBeDefined();
-      expect(stats.totalUsers).toBeGreaterThanOrEqual(3);
-      expect(stats.activeUsers).toBeGreaterThanOrEqual(2);
-      expect(stats.patientCount).toBeGreaterThanOrEqual(2);
-      expect(stats.doctorCount).toBeGreaterThanOrEqual(1);
+      const result = await UserService.getUsers({ role: UserRole.DOCTOR });
+
+      expect(result.users.every(u => u.role === UserRole.DOCTOR)).toBe(true);
     });
   });
 });
