@@ -100,3 +100,55 @@ Run with coverage:
 ```bash
 npm test -- --coverage services
 ```
+
+## Input Validation Enhancements
+
+### Added Generic Validation Helper
+
+```typescript
+// Generic validation middleware factory
+export const validate = (validations: ValidationChain[]) => {
+  return [...validations, handleValidationErrors];
+};
+
+// Usage example:
+router.post('/custom', 
+  validate([
+    body('field').isEmail(),
+    body('name').notEmpty()
+  ]),
+  controller.method
+);
+```
+
+### New Validation Utilities
+
+1. **validateObjectId(fieldName)** - Validates MongoDB ObjectId format
+2. **validateDateRange()** - Validates start/end date with range checking
+3. **validatePagination()** - Validates page and limit parameters (1-100)
+4. **validatePhone(fieldName)** - Validates phone number format
+5. **validatePatientCreation()** - Comprehensive patient data validation
+6. **validateSearch()** - Validates search queries with sort parameters
+
+### Already Implemented Validations
+
+✓ User registration (name, email, password strength, role)
+✓ User login (email, password)
+✓ Password update (current, new, confirmation)
+✓ Password reset (token, new password)
+✓ User profile update
+✓ Appointment creation (doctor, date, duration, type, reason)
+✓ Appointment update (all fields with proper constraints)
+✓ Appointment cancellation (reason required)
+✓ Appointment rescheduling (new date validation)
+✓ Appointment completion (notes, prescription, diagnosis)
+
+### Validation Features
+
+- Input sanitization (trim, normalize)
+- Type checking (email, date, boolean, array)
+- Length constraints (min/max)
+- Custom validators (date ranges, password strength)
+- Conditional validation (doctor-specific fields)
+- Array validation (symptoms, medications)
+- Comprehensive error messages

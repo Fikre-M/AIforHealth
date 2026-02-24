@@ -359,4 +359,155 @@ export class ValidationUtil {
         .withMessage('Invalid follow-up date format'),
     ];
   }
+
+  /**
+   * Validate MongoDB ObjectId
+   */
+  static validateObjectId(fieldName: string): ValidationChain {
+    return body(fieldName)
+      .notEmpty()
+      .withMessage(`${fieldName} is required`)
+      .isMongoId()
+      .withMessage(`Invalid ${fieldName} format`);
+  }
+
+  /**
+   * Validate date range
+   */
+  static validateDateRange(): ValidationChain[] {
+    return [
+      body('startDate')
+        .optional()
+        .isISO8601()
+        .withMessage('Invalid start date format'),
+
+      body('endDate')
+        .optional()
+        .isISO8601()
+        .withMessage('Invalid end date format')
+        .custom((value, { req }) => {
+          if (value && req.body.startDate) {
+            const start = new Date(req.body.startDate);
+            const end = new Date(value);
+            if (end < start) {
+              throw new Error('End date must be after start date');
+            }
+          }
+          return true;
+        }),
+    ];
+  }
+
+  /**
+   * Validate pagination parameters
+   */
+  static validatePagination(): ValidationChain[] {
+    return [
+      body('page')
+        .optional()
+        .isInt({ min: 1 })
+        .withMessage('Page must be a positive integer'),
+
+      body('limit')
+        .optional()
+        .isInt({ min: 1, max: 100 })
+        .withMessage('Limit must be between 1 and 100'),
+    ];
+  }
+
+  /**
+   * Validate phone number
+   */
+  static validatePhone(fieldName: string = 'phone'): ValidationChain {
+    return body(fieldName)
+      .optional()
+      .matches(/^[\d\s\-\+\(\)]+$/)
+      .withMessage('Invalid phone number format')
+      .isLength({ min: 10, max: 20 })
+      .withMessage('Phone number must be between 10 and 20 characters');
+  }
+
+  /**
+   * Validate patient creation by doctor
+   */
+  static validatePatientCreation(): ValidationChain[] {
+    return [
+      body('name')
+        .trim()
+        .isLength({ min: 2, max: 50 })
+        .withMessage('Name must be between 2 and 50 characters'),
+
+      body('email')
+        .isEmail()
+        .withMessage('Please provide a valid email address')
+        .normalizeEmail(),
+
+      body('password')
+        .isLength({ min: 8, max: 128 })
+        .withMessage('Password must be between 8 and 128 characters'),
+
+      body('phone')
+        .optional()
+        .matches(/^[\d\s\-\+\(\)]+$/)
+        .withMessage('Invalid phone number format'),
+
+      body('dateOfBirth')
+        .optional()
+        .isISO8601()
+        .withMessage('Invalid date of birth format')
+        .custom((value) => {
+          if (value) {
+            const dob = new Date(value);
+            const now = new Date();
+            if (dob >= now) {
+              throw new Error('Date of birth must be in the past');
+            }
+          }
+          return true;
+        }),
+
+      body('gender')
+        .optional()
+        .isIn(['male', 'female', 'other'])
+        .withMessage('Gender must be male, female, or other'),
+
+      body('medicalHistory')
+        .optional()
+        .isArray()
+        .withMessage('Medical history must be an array'),
+
+      body('allergies')
+        .optional()
+        .isArray()
+        .withMessage('Allergies must be an array'),
+
+      body('currentMedications')
+        .optional()
+        .isArray()
+        .withMessage('Current medications must be an array'),
+    ];
+  }
+
+  /**
+   * Validate search query
+   */
+  static validateSearch(): ValidationChain[] {
+    return [
+      body('search')
+        .optional()
+        .trim()
+        .isLength({ min: 1, max: 100 })
+        .withMessage('Search query must be between 1 and 100 characters'),
+
+      body('sortBy')
+        .optional()
+        .isString()
+        .withMessage('Sort by must be a string'),
+
+      body('sortOrder')
+        .optional()
+        .isIn(['asc', 'desc'])
+        .withMessage('Sort order must be asc or desc'),
+    ];
+  }
 }

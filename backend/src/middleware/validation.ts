@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { validationResult } from 'express-validator';
+import { validationResult, ValidationChain } from 'express-validator';
 import { ValidationUtil } from '@/utils/validation';
 import { ResponseUtil } from '@/utils/response';
 
@@ -24,6 +24,17 @@ export const handleValidationErrors = (req: Request, res: Response, next: NextFu
   }
   
   next();
+};
+
+/**
+ * Generic validation middleware factory
+ * Usage: validate([body('field').isEmail(), body('name').notEmpty()])
+ */
+export const validate = (validations: ValidationChain[]) => {
+  return [
+    ...validations,
+    handleValidationErrors
+  ];
 };
 
 /**
@@ -111,5 +122,38 @@ export const validateAppointmentReschedule = [
  */
 export const validateAppointmentCompletion = [
   ...ValidationUtil.validateAppointmentCompletion(),
+  handleValidationErrors
+];
+
+
+/**
+ * Validation middleware for patient creation by doctor
+ */
+export const validatePatientCreation = [
+  ...ValidationUtil.validatePatientCreation(),
+  handleValidationErrors
+];
+
+/**
+ * Validation middleware for date range queries
+ */
+export const validateDateRange = [
+  ...ValidationUtil.validateDateRange(),
+  handleValidationErrors
+];
+
+/**
+ * Validation middleware for pagination
+ */
+export const validatePagination = [
+  ...ValidationUtil.validatePagination(),
+  handleValidationErrors
+];
+
+/**
+ * Validation middleware for search queries
+ */
+export const validateSearch = [
+  ...ValidationUtil.validateSearch(),
   handleValidationErrors
 ];
