@@ -2,6 +2,7 @@ import { Appointment, IAppointment, AppointmentStatus, AppointmentType } from '@
 import { UserService } from './UserService';
 import { DatabaseUtil } from '@/utils/database';
 import { UserRole } from '@/types';
+import { logAppointment } from '@/utils/logger';
 import mongoose from 'mongoose';
 
 export interface CreateAppointmentData {
@@ -119,6 +120,14 @@ export class AppointmentService {
         { path: 'doctor', select: 'name email' }
       ]);
 
+      // Log appointment creation
+      logAppointment.created(
+        appointment._id.toString(),
+        appointmentData.doctorId,
+        appointmentData.patientId,
+        appointmentData.appointmentDate
+      );
+
       return appointment;
     } catch (error) {
       if (error instanceof Error) {
@@ -193,6 +202,13 @@ export class AppointmentService {
       Object.assign(appointment, updateData);
       await appointment.save();
 
+      // Log appointment update
+      logAppointment.updated(
+        appointmentId,
+        'system', // In real implementation, pass the actual user ID
+        updateData
+      );
+
       // Populate references
       await appointment.populate([
         { path: 'patient', select: 'name email' },
@@ -236,6 +252,13 @@ export class AppointmentService {
       appointment.cancellationReason = cancelData.cancellationReason;
 
       await appointment.save();
+
+      // Log cancellation
+      logAppointment.cancelled(
+        appointmentId,
+        cancelData.cancelledBy,
+        cancelData.cancellationReason
+      );
 
       // Populate references
       await appointment.populate([
@@ -314,6 +337,14 @@ export class AppointmentService {
 
         return newAppt;
       });
+
+      // Log rescheduling
+      logAppointment.rescheduled(
+        appointmentId,
+        appointment.appointmentDate,
+        rescheduleData.newDate,
+        rescheduleData.reason
+      );
 
       // Populate references for new appointment
       await newAppointment.populate([
@@ -572,6 +603,13 @@ export class AppointmentService {
       appointment.followUpDate = completionData.followUpDate;
 
       await appointment.save();
+
+      // Log completion
+      logAppointment.completed(
+        appointmentId,
+        appointment.doctor.toString(),
+        appointment.duration
+      );
 
       // Populate references
       await appointment.populate([

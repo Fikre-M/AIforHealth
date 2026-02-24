@@ -175,6 +175,44 @@ export const logApp = {
   },
 };
 
+// Appointment logging
+export const logAppointment = {
+  created: (appointmentId: string, doctorId: string, patientId: string, date: Date) => {
+    logger.info('📅 Appointment created', { appointmentId, doctorId, patientId, date });
+  },
+  updated: (appointmentId: string, updatedBy: string, changes: any) => {
+    logger.info('📝 Appointment updated', { appointmentId, updatedBy, changes });
+  },
+  cancelled: (appointmentId: string, cancelledBy: string, reason?: string) => {
+    logger.warn('❌ Appointment cancelled', { appointmentId, cancelledBy, reason });
+  },
+  rescheduled: (appointmentId: string, oldDate: Date, newDate: Date, reason?: string) => {
+    logger.info('🔄 Appointment rescheduled', { appointmentId, oldDate, newDate, reason });
+  },
+  completed: (appointmentId: string, doctorId: string, duration: number) => {
+    logger.info('✅ Appointment completed', { appointmentId, doctorId, duration });
+  },
+  missed: (appointmentId: string, patientId: string) => {
+    logger.warn('⏰ Appointment missed', { appointmentId, patientId });
+  },
+  reminderSent: (appointmentId: string, patientId: string, type: 'email' | 'sms') => {
+    logger.info('🔔 Appointment reminder sent', { appointmentId, patientId, type });
+  },
+};
+
+// Doctor activity logging
+export const logDoctor = {
+  patientAccessed: (doctorId: string, patientId: string, action: string) => {
+    logger.info('👨‍⚕️ Doctor accessed patient data', { doctorId, patientId, action });
+  },
+  patientCreated: (doctorId: string, patientId: string) => {
+    logger.info('👤 Patient created by doctor', { doctorId, patientId });
+  },
+  performanceViewed: (doctorId: string, dateRange?: { start: Date; end: Date }) => {
+    logger.info('📊 Doctor performance viewed', { doctorId, dateRange });
+  },
+};
+
 // Legacy stream for backward compatibility
 export const stream = morganStream;
 

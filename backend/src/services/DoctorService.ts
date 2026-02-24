@@ -1,6 +1,7 @@
 import { User, IUser, Appointment, IAppointment, AppointmentStatus, AppointmentType } from '@/models';
 import { UserRole } from '@/types';
 import { DatabaseUtil } from '@/utils/database';
+import { logDoctor } from '@/utils/logger';
 import mongoose from 'mongoose';
 
 export interface DoctorPatientQuery {
@@ -252,6 +253,11 @@ export class DoctorService {
         isActive: true
       }).select('-password -passwordResetToken -emailVerificationToken');
 
+      // Log access
+      if (patient) {
+        logDoctor.patientAccessed(doctorId, patientId, 'view_details');
+      }
+
       return patient;
     } catch (error) {
       if (error instanceof Error) {
@@ -285,6 +291,9 @@ export class DoctorService {
       });
 
       await patient.save();
+
+      // Log patient creation
+      logDoctor.patientCreated(doctorId, patient._id.toString());
 
       return patient;
     } catch (error: any) {
@@ -616,6 +625,137 @@ export class DoctorService {
   }
 
   /**
+   * Search appointments with advanced filtering
+   */
+  static async searchAppointments(
+    doctorId: string,
+    filters: {
+      dateFrom?: Date;
+      dateTo?: Date;
+      status?: AppointmentStatus;
+      type?: AppointmentType;
+      patientName?: string;
+      isEmergency?: boolean;
+      page?: number;
+      limit?: number;
+      sortBy?: string;
+      sortOrder?: 'asc' | 'desc';
+    } = {}
+  ) {
+    try {
+      if (!DatabaseUtil.isValidObjectId(doctorId)) {
+        throw new Error('Invalid doctor ID format');
+      }
+
+      const {
+        dateFrom,
+        dateTo,
+        status,
+        type,
+        patientName,
+        isEmergency,
+        page = 1,
+        limit = 20,
+        sortBy = 'appointmentDate',
+        sortOrder = 'desc'
+      } = filters;
+
+      // Enforce maximum limit
+      const maxLimit = 100;
+      const effectiveLimit = Math.min(limit, maxLimit);
+
+      // Build query
+      const query: any = { doctor: doctorId };
+
+      // Date range filter
+      if (dateFrom || dateTo) {
+        query.appointmentDate = {};
+        if (dateFrom) query.appointmentDate.$gte = dateFrom;
+        if (dateTo) query.appointmentDate.$lte = dateTo;
+      }
+
+      // Status filter
+      if (status) {
+        query.status = status;
+      }
+
+      // Type filter
+      if (type) {
+        query.type = type;
+      }
+
+      // Emergency filter
+      if (isEmergency !== undefined) {
+        query.isEmergency = isEmergency;
+      }
+
+      // Patient name filter - requires a separate query
+      if (patientName) {
+        const patients = await User.find({
+          name: { $regex: patientName, $options: 'i' },
+          role: UserRole.PATIENT
+        }).select('_id').lean();
+
+        if (patients.length === 0) {
+          // No patients found, return empty result
+          return {
+            appointments: [],
+            pagination: {
+              page,
+              limit: effectiveLimit,
+              total: 0,
+              pages: 0
+            }
+          };
+        }
+
+        query.patient = { $in: patients.map(p => p._id) };
+      }
+
+      // Build sort object
+      const sort: any = {};
+      sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
+
+      const skip = (page - 1) * effectiveLimit;
+
+      // Execute queries
+      const [appointments, total] = await Promise.all([
+        Appointment.find(query)
+          .populate('patient', 'name email phone dateOfBirth gender')
+          .populate('doctor', 'name email specialization')
+          .sort(sort)
+          .skip(skip)
+          .limit(effectiveLimit)
+          .lean(),
+        Appointment.countDocuments(query)
+      ]);
+
+      return {
+        appointments,
+        pagination: {
+          page,
+          limit: effectiveLimit,
+          total,
+          pages: Math.ceil(total / effectiveLimit)
+        },
+        filters: {
+          dateFrom,
+          dateTo,
+          status,
+          type,
+          patientName,
+          isEmergency
+        }
+      };
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new Error(`Failed to search appointments: ${error.message}`);
+      }
+      throw new Error('Failed to search appointments: Unknown error');
+    }
+  }
+
+  /**
    * Get doctor performance metrics
    */
   static async getDoctorPerformance(doctorId: string, startDate?: Date, endDate?: Date) {
@@ -676,12 +816,17 @@ export class DoctorService {
         ? (metrics.cancelledAppointments / metrics.totalAppointments) * 100
         : 0;
 
-      return {
+      const performance = {
         ...metrics,
         completionRate: Math.round(completionRate * 100) / 100,
         cancellationRate: Math.round(cancellationRate * 100) / 100,
         followUpRate: Math.round((metrics.followUpRate || 0) * 100 * 100) / 100
       };
+
+      // Log performance view
+      logDoctor.performanceViewed(doctorId, startDate && endDate ? { start: startDate, end: endDate } : undefined);
+
+      return performance;
     } catch (error) {
       if (error instanceof Error) {
         throw new Error(`Failed to get doctor performance: ${error.message}`);
