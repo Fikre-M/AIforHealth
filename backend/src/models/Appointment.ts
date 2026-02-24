@@ -227,7 +227,7 @@ const appointmentSchema = new Schema<IAppointment>(
     },
     confirmationNumber: {
       type: String,
-      required: true,
+      required: false,
       unique: true,
       index: true
     },
