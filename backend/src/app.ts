@@ -1,29 +1,15 @@
-import express, { Express, Request, Response, NextFunction, RequestHandler } from 'express';
+import express, { Express, Request, Response, NextFunction, ErrorRequestHandler } from 'express';
 import { env, validateRequiredServices } from '@/config/env';
 import { database } from '@/config/database';
 import { initializeSentry } from '@/config/sentry';
 import setupSecurity from './middleware/security';
 import rateLimiter from './middleware/rateLimiter';
-import aiAssistantRoutes from './routes/aiAssistantRoutes';
-import patientRoutes from './routes/patientRoutes';
-import authRoutes from './routes/authRoutes';
-import appointmentRoutes from './routes/appointmentRoutes';
-import healthRoutes from './routes/healthRoutes';
-import notificationRoutes from './routes/notificationRoutes';
-import doctorRoutes from './routes/doctorRoutes';
-import adminRoutes from './routes/adminRoutes';
-import monitoringRoutes from './routes/monitoringRoutes';
 import { errorHandler, notFound } from './middleware/errorHandler';
 import { requestLogger, performanceMonitor, requestId, securityLogger } from './middleware/requestLogger';
 import { initializeErrorMonitoring } from './utils/errorMonitoring';
 import swaggerUi from 'swagger-ui-express';
 import { specs } from './config/swagger';
-import { HttpError } from 'http-errors';
-import { logApp, logError, logInfo } from './utils/logger';
-
-type CustomRequest = Request & {
-  user?: any; // You might want to replace 'any' with your User type
-};
+import { logApp, logInfo, logError } from './utils/logger';
 
 class App {
   public app: Express;
@@ -74,26 +60,18 @@ class App {
 
   private initializeRoutes(): void {
     // Health check endpoint (no auth required)
-    this.app.get('/health', (req: Request, res: Response) => {
+    this.app.get('/health', (_req: Request, res: Response) => {
       res.json({
         status: 'OK',
         timestamp: new Date().toISOString(),
         uptime: process.uptime(),
-        environment: env.NODE_ENV,
+        environment: env['NODE_ENV'],
         version: '1.0.0'
       });
     });
 
     // API routes with rate limiting on sensitive endpoints
-    this.app.use("/api/v1/auth", rateLimiter, authRoutes);
-    this.app.use("/api/v1/ai-assistant", rateLimiter, aiAssistantRoutes);
-    this.app.use("/api/v1/patients", patientRoutes);
-    this.app.use("/api/v1/doctors", doctorRoutes);
-    this.app.use("/api/v1/admin", adminRoutes);
-    this.app.use("/api/v1/appointments", appointmentRoutes);
-    this.app.use("/api/v1/health", healthRoutes);
-    this.app.use("/api/v1/notifications", notificationRoutes);
-    this.app.use("/api/v1/monitoring", monitoringRoutes);
+    this.app.use("/api/v1", rateLimiter, require('./routes').default);
 
     // 404 handler
     this.app.use((req: Request, res: Response, next: NextFunction) => {
@@ -139,7 +117,7 @@ class App {
 
   public start(): void {
     const port = env.PORT || 5000;
-    logApp.starting(port, env.NODE_ENV);
+    logApp.starting(port, env['NODE_ENV']);
     
     this.app.listen(port, () => {
       logApp.started(port);
