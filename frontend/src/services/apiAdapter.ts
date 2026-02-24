@@ -29,19 +29,30 @@ export const apiAdapter = {
   // Appointment methods
   appointments: {
     getAppointments: config.useMockApi ? mockApi.appointments.getAppointments : (params?: any) => 
-      api.get('/appointments', { params }).then(res => res.data.data),
+      api.get('/appointments', { params }).then(res => {
+        // Handle different response formats
+        return res.data.data || res.data;
+      }),
     
     getAppointment: config.useMockApi ? mockApi.appointments.getAppointment : (id: string) => 
-      api.get(`/appointments/${id}`).then(res => res.data.data),
+      api.get(`/appointments/${id}`).then(res => {
+        // Handle different response formats
+        const data = res.data.data || res.data;
+        // If data is wrapped in appointment property, unwrap it
+        return data.appointment || data;
+      }),
     
     createAppointment: config.useMockApi ? mockApi.appointments.createAppointment : (data: any) => 
-      api.post('/appointments', data).then(res => res.data.data),
+      api.post('/appointments', data).then(res => {
+        // Return the full response to preserve confirmationNumber
+        return res.data.data || res.data;
+      }),
     
     updateAppointment: config.useMockApi ? mockApi.appointments.updateAppointment : (id: string, data: any) => 
-      api.put(`/appointments/${id}`, data).then(res => res.data.data),
+      api.put(`/appointments/${id}`, data).then(res => res.data.data || res.data),
     
     cancelAppointment: config.useMockApi ? mockApi.appointments.cancelAppointment : (id: string) => 
-      api.delete(`/appointments/${id}`).then(res => res.data.data)
+      api.delete(`/appointments/${id}`).then(res => res.data.data || res.data)
   },
 
   // Notification methods

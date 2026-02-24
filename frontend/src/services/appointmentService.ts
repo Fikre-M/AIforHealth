@@ -281,10 +281,41 @@ export const appointmentService = {
    * Get a specific appointment by ID
    */
   async getAppointment(appointmentId: string): Promise<Appointment | null> {
-    await delay(300);
-    simulateNetworkError();
-    
-    return mockAppointments.find(apt => apt.id === appointmentId) || null;
+    try {
+      await delay(300);
+      console.log('🔄 Fetching appointment by ID:', appointmentId);
+      
+      const response = await apiAdapter.appointments.getAppointment(appointmentId);
+      console.log('✅ Appointment fetched successfully:', response);
+      
+      // Transform backend format to frontend format if needed
+      if (response._id) {
+        return {
+          id: response._id,
+          patientId: response.patient?._id || response.patient,
+          doctorId: response.doctor?._id || response.doctor,
+          date: response.appointmentDate?.split('T')[0] || response.date,
+          time: new Date(response.appointmentDate).toLocaleTimeString('en-US', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            hour12: false 
+          }),
+          status: response.status,
+          type: response.type,
+          notes: response.notes || response.reason,
+          ...response
+        };
+      }
+      
+      return response;
+    } catch (error) {
+      console.error('❌ Failed to fetch appointment from API:', error);
+      
+      // Fallback to mock data
+      console.log('📝 Using mock appointment data');
+      simulateNetworkError();
+      return mockAppointments.find(apt => apt.id === appointmentId) || null;
+    }
   },
 
   /**
