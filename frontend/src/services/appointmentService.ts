@@ -174,7 +174,9 @@ export const appointmentService = {
       console.log('🔄 Fetching appointments from API...');
       const response = await apiAdapter.appointments.getAppointments(filter);
       console.log('✅ Appointments fetched successfully:', response);
-      return response.appointments || response;
+      
+      // Handle backend response format: response.data.appointments or response.appointments
+      return response.appointments || response.data?.appointments || response;
     } catch (error) {
       console.error('❌ Failed to fetch appointments from API:', error);
       
@@ -343,14 +345,25 @@ export const appointmentService = {
       const response = await apiAdapter.appointments.createAppointment(request);
       console.log('✅ Appointment created successfully:', response);
       
-      // Backend returns: { appointment, confirmationNumber, message }
+      // Handle backend response format consistently
+      const appointment = response.appointment || response.data?.appointment || response;
+      const confirmationNumber = response.confirmationNumber || 
+                                 response.data?.confirmationNumber || 
+                                 appointment.confirmationNumber;
+      const message = response.message || response.data?.message || 'Appointment created successfully';
+      
       return {
-        appointment: response.appointment || response,
-        confirmationNumber: response.confirmationNumber || response.appointment?.confirmationNumber,
-        message: response.message || 'Appointment created successfully'
+        appointment,
+        confirmationNumber,
+        message
       };
     } catch (error) {
       console.error('❌ Failed to create appointment:', error);
+      
+      // Provide detailed error message
+      if (error instanceof Error) {
+        throw new Error(error.message || 'Failed to create appointment');
+      }
       throw error;
     }
   },
