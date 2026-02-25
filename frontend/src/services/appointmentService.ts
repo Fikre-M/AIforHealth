@@ -19,7 +19,7 @@ export interface AppointmentRequest {
   patientId: string;
   date: string;
   time: string;
-  type: 'consultation' | 'follow-up' | 'emergency';
+  type: 'consultation' | 'follow_up' | 'emergency';
   reason: string;
   notes?: string;
   urgency: 'low' | 'medium' | 'high' | 'urgent';
@@ -54,12 +54,12 @@ export interface AppointmentStats {
   averageDuration: number;
 }
 
-// Mock appointment data with enhanced details
+// Mock appointment data with enhanced details - using real doctor IDs
 const mockAppointments: Appointment[] = [
   {
     id: '1',
-    patientId: '1',
-    doctorId: '2',
+    patientId: '699e6340e6be04b7075ff3ea', // Real patient ID - Jane Doe
+    doctorId: '699e633fe6be04b7075ff3e8', // Real doctor ID - Dr. John Smith
     date: addDays(new Date(), 1).toISOString().split('T')[0],
     time: '10:00',
     status: 'scheduled',
@@ -68,18 +68,18 @@ const mockAppointments: Appointment[] = [
   },
   {
     id: '2',
-    patientId: '4',
-    doctorId: '5',
+    patientId: '699e63fc276253b52eaf0657', // Real patient ID - Tesfu
+    doctorId: '699e633fe6be04b7075ff3e8', // Real doctor ID - Dr. John Smith
     date: addDays(new Date(), 2).toISOString().split('T')[0],
     time: '14:00',
     status: 'scheduled',
-    type: 'follow-up',
+    type: 'follow_up',
     notes: 'Follow-up for migraine treatment. Review medication effectiveness.'
   },
   {
     id: '3',
-    patientId: '1',
-    doctorId: '2',
+    patientId: '699e6340e6be04b7075ff3ea', // Real patient ID - Jane Doe
+    doctorId: '699e633fe6be04b7075ff3e8', // Real doctor ID - Dr. John Smith
     date: addDays(new Date(), -3).toISOString().split('T')[0],
     time: '09:00',
     status: 'completed',
@@ -88,8 +88,8 @@ const mockAppointments: Appointment[] = [
   },
   {
     id: '4',
-    patientId: '1',
-    doctorId: '5',
+    patientId: '699e6340e6be04b7075ff3ea', // Real patient ID - Jane Doe
+    doctorId: '699e633fe6be04b7075ff3e8', // Real doctor ID - Dr. John Smith
     date: addDays(new Date(), 5).toISOString().split('T')[0],
     time: '11:30',
     status: 'scheduled',
@@ -98,8 +98,8 @@ const mockAppointments: Appointment[] = [
   },
   {
     id: '5',
-    patientId: '4',
-    doctorId: '2',
+    patientId: '699e22d6a04f8370a8866cd9', // Real patient ID
+    doctorId: '6983a8d4138e06de4ee828d8', // Real doctor ID - Dr. Sarah Wilson
     date: addDays(new Date(), -1).toISOString().split('T')[0],
     time: '15:00',
     status: 'cancelled',

@@ -8,17 +8,17 @@ dotenv.config();
 const envSchema = z.object({
   // Server Configuration
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  PORT: z.string().transform(Number).default(5000),
+  PORT: z.string().transform(Number).default('5000'),
   API_VERSION: z.string().default('v1'),
 
   // Database Configuration
   MONGODB_URI: z.string().min(1, 'MongoDB URI is required'),
   MONGODB_TEST_URI: z.string().optional(),
-  MONGODB_MAX_POOL_SIZE: z.string().transform(Number).default(20),
-  MONGODB_MIN_POOL_SIZE: z.string().transform(Number).default(5),
-  MONGODB_MAX_IDLE_TIME_MS: z.string().transform(Number).default(30000),
-  MONGODB_SERVER_SELECTION_TIMEOUT_MS: z.string().transform(Number).default(10000),
-  MONGODB_RETRY_WRITES: z.string().transform(val => val === 'true').default(true),
+  MONGODB_MAX_POOL_SIZE: z.string().transform(Number).default('20'),
+  MONGODB_MIN_POOL_SIZE: z.string().transform(Number).default('5'),
+  MONGODB_MAX_IDLE_TIME_MS: z.string().transform(Number).default('30000'),
+  MONGODB_SERVER_SELECTION_TIMEOUT_MS: z.string().transform(Number).default('10000'),
+  MONGODB_RETRY_WRITES: z.string().transform(val => val === 'true').default('true'),
   MONGODB_WRITE_CONCERN: z.string().default('majority'),
 
   // JWT Configuration
@@ -28,9 +28,9 @@ const envSchema = z.object({
   JWT_REFRESH_EXPIRES_IN: z.string().default('30d'),
 
   // Security
-  BCRYPT_SALT_ROUNDS: z.string().transform(Number).default(12),
-  RATE_LIMIT_WINDOW_MS: z.string().transform(Number).default(900000),
-  RATE_LIMIT_MAX_REQUESTS: z.string().transform(Number).default(100),
+  BCRYPT_SALT_ROUNDS: z.string().transform(Number).default('12'),
+  RATE_LIMIT_WINDOW_MS: z.string().transform(Number).default('900000'),
+  RATE_LIMIT_MAX_REQUESTS: z.string().transform(Number).default('100'),
 
   // CORS Configuration
   CORS_ORIGIN: z.string().default('http://localhost:5173'),
@@ -55,7 +55,7 @@ const envSchema = z.object({
   // AI Services
   OPENAI_API_KEY: z.string().optional(),
   OPENAI_MODEL: z.string().default('gpt-4'),
-  OPENAI_MAX_TOKENS: z.string().transform(Number).default(1000),
+  OPENAI_MAX_TOKENS: z.string().transform(Number).default('1000'),
 
   // File Storage
   AWS_ACCESS_KEY_ID: z.string().optional(),

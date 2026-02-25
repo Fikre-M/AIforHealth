@@ -6,6 +6,7 @@ import authRoutes from '@/features/auth/routes';
 import protectedRoutes from '@/features/protected/routes';
 import appointmentRoutes from '@/features/appointments/routes';
 import doctorRoutes from '@/routes/doctorRoutes';
+import notificationRoutes from '@/routes/notificationRoutes';
 
 const router = Router();
 
@@ -13,7 +14,9 @@ const router = Router();
 router.use('/auth', authRoutes);
 router.use('/users', userRoutes);
 router.use('/appointments', appointmentRoutes);
-router.use('/doctors', doctorRoutes);
+router.use('/appointment-requests', appointmentRoutes); // Add alias for appointment requests
+router.use('/doctor', doctorRoutes); // Changed from /doctors to /doctor to match frontend
+router.use('/notifications', notificationRoutes); // Added missing notifications
 router.use('/protected', protectedRoutes);
 
 // Health check endpoint

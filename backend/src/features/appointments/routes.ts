@@ -18,7 +18,21 @@ router.post('/',
   AppointmentController.createAppointment
 );
 
-router.get('/', AppointmentController.getAppointments);
+// Appointment requests endpoint (for pending/requested appointments)
+router.get('/requests', 
+  authorize(UserRole.DOCTOR, UserRole.ADMIN), 
+  AppointmentController.getAppointmentRequests
+);
+
+// Handle root path for appointment-requests route alias
+router.get('/', (req, res, next) => {
+  // If this is accessed via /appointment-requests, treat it as requests
+  if (req.baseUrl.includes('appointment-requests')) {
+    return AppointmentController.getAppointmentRequests(req, res, next);
+  }
+  // Otherwise, use the normal getAppointments
+  return AppointmentController.getAppointments(req, res, next);
+});
 
 router.get('/stats', 
   authorize(UserRole.DOCTOR, UserRole.ADMIN), 

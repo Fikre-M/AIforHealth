@@ -1002,3 +1002,71 @@ export const getUserAppointments = asyncHandler(async (req: Request, res: Respon
     }
   });
 });
+
+/**
+ * @swagger
+ * /api/v1/appointments/requests:
+ *   get:
+ *     summary: Get appointment requests (pending appointments)
+ *     tags: [Appointments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Number of items per page
+ *     responses:
+ *       200:
+ *         description: List of appointment requests
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Access denied
+ */
+export const getAppointmentRequests = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user) {
+    throw new AppError('Authentication required', 401);
+  }
+
+  const { page = 1, limit = 10 } = req.query;
+  const skip = (Number(page) - 1) * Number(limit);
+
+  // Build query based on user role
+  let query: any = { status: 'scheduled' }; // Pending/requested appointments
+
+  if (req.user.role === UserRole.DOCTOR) {
+    query.doctor = req.user._id;
+  } else if (req.user.role === UserRole.PATIENT) {
+    query.patient = req.user._id;
+  }
+  // Admin can see all appointment requests
+
+  const appointments = await Appointment.find(query)
+    .populate('patient', 'name email phone')
+    .populate('doctor', 'name email specialization')
+    .sort({ appointmentDate: 1 })
+    .skip(skip)
+    .limit(Number(limit))
+    .lean();
+
+  const total = await Appointment.countDocuments(query);
+
+  ResponseUtil.success(res, {
+    appointments,
+    pagination: {
+      page: Number(page),
+      limit: Number(limit),
+      total,
+      totalPages: Math.ceil(total / Number(limit))
+    }
+  });
+});

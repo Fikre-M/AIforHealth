@@ -47,7 +47,7 @@ export interface BookingFormData {
   doctorId: string;
   date: string;
   time: string;
-  appointmentType: 'consultation' | 'follow-up' | 'check-up' | 'emergency';
+  appointmentType: 'consultation' | 'follow_up' | 'routine_checkup' | 'emergency';
   reason: string;
   notes?: string;
   urgency: 'routine' | 'urgent' | 'emergency';

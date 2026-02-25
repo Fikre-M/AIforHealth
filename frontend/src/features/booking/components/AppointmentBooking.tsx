@@ -143,8 +143,8 @@ export function AppointmentBooking() {
 
   const appointmentTypeOptions = [
     { value: 'consultation', label: 'New Consultation' },
-    { value: 'follow-up', label: 'Follow-up Visit' },
-    { value: 'check-up', label: 'Routine Check-up' },
+    { value: 'follow_up', label: 'Follow-up Visit' },
+    { value: 'routine_checkup', label: 'Routine Check-up' },
     { value: 'emergency', label: 'Emergency Consultation' }
   ];
 

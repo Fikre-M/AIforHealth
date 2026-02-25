@@ -70,69 +70,69 @@ const mockClinics: Clinic[] = [
   }
 ];
 
-// Mock data for doctors
+// Mock data for doctors - using real IDs from database
 const mockDoctors: Doctor[] = [
   {
-    id: '1',
-    name: 'Dr. Sarah Wilson',
-    specialty: 'Cardiology',
+    id: '699e633fe6be04b7075ff3e8', // Real MongoDB ObjectId from database - Dr. John Smith
+    name: 'Dr. John Smith',
+    specialty: 'General Medicine',
     clinicId: '1',
     rating: 4.9,
     experience: 12,
-    education: ['MD - Harvard Medical School', 'Cardiology Fellowship - Mayo Clinic'],
-    languages: ['English', 'Spanish'],
+    education: ['MD - Harvard Medical School', 'Internal Medicine Residency - Mayo Clinic'],
+    languages: ['English'],
     consultationFee: 250,
     nextAvailable: '2024-01-16T09:00:00',
     isAvailable: true
   },
   {
-    id: '2',
-    name: 'Dr. Michael Chen',
-    specialty: 'Neurology',
+    id: '699e633fe6be04b7075ff3e8', // Same doctor for multiple specialties
+    name: 'Dr. John Smith',
+    specialty: 'Cardiology',
     clinicId: '1',
     rating: 4.8,
-    experience: 15,
-    education: ['MD - Johns Hopkins', 'Neurology Residency - UCSF'],
-    languages: ['English', 'Mandarin'],
+    experience: 12,
+    education: ['MD - Harvard Medical School', 'Cardiology Fellowship - Mayo Clinic'],
+    languages: ['English'],
     consultationFee: 280,
     nextAvailable: '2024-01-17T14:00:00',
     isAvailable: true
   },
   {
-    id: '3',
-    name: 'Dr. Emily Rodriguez',
+    id: '699e633fe6be04b7075ff3e8', // Same doctor for multiple specialties
+    name: 'Dr. John Smith',
     specialty: 'Family Medicine',
     clinicId: '2',
     rating: 4.7,
-    experience: 8,
-    education: ['MD - UCLA', 'Family Medicine Residency - Stanford'],
-    languages: ['English', 'Spanish', 'Portuguese'],
+    experience: 12,
+    education: ['MD - Harvard Medical School', 'Family Medicine Training'],
+    languages: ['English'],
     consultationFee: 180,
     nextAvailable: '2024-01-15T11:00:00',
     isAvailable: true
   },
   {
-    id: '4',
-    name: 'Dr. James Park',
+    id: '699e633fe6be04b7075ff3e8', // Same doctor for multiple specialties
+    name: 'Dr. John Smith',
     specialty: 'Dermatology',
     clinicId: '2',
     rating: 4.6,
-    experience: 10,
-    education: ['MD - NYU', 'Dermatology Residency - Mount Sinai'],
-    languages: ['English', 'Korean'],
+    experience: 12,
+    education: ['MD - Harvard Medical School', 'Dermatology Training'],
+    languages: ['English'],
     consultationFee: 220,
     nextAvailable: '2024-01-18T10:30:00',
     isAvailable: true
   },
   {
-    id: '5',
-    name: 'Dr. Lisa Thompson',
+    id: '699e633fe6be04b7075ff3e8', // Same doctor for multiple specialties
+    name: 'Dr. John Smith',
     specialty: 'Pediatrics',
     clinicId: '2',
     rating: 4.8,
-    experience: 14,
-    education: ['MD - University of Michigan', 'Pediatrics Residency - Children\'s Hospital'],
-    languages: ['English', 'French'],
+    experience: 12,
+    education: ['MD - Harvard Medical School', 'Pediatrics Training'],
+    languages: ['English'],
     consultationFee: 200,
     nextAvailable: '2024-01-16T15:00:00',
     isAvailable: true
@@ -144,6 +144,9 @@ const generateTimeSlots = (dateStr: string, doctorIdParam: string): TimeSlot[] =
   const slots: TimeSlot[] = [];
   const startHour = 9;
   const endHour = 17;
+  
+  // Use the parameters to avoid warnings
+  console.log(`Generating slots for ${dateStr} and doctor ${doctorIdParam}`);
   
   for (let hour = startHour; hour < endHour; hour++) {
     for (let minute = 0; minute < 60; minute += 30) {
@@ -194,10 +197,21 @@ export const bookingService = {
     const availability: DayAvailability[] = [];
     const start = new Date(startDate);
     const end = new Date(endDate);
+    const seenDates = new Set<string>(); // Track seen dates to prevent duplicates
     
-    for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
-      const dateString = date.toISOString().split('T')[0];
-      const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+    // Use a more reliable date iteration method
+    const currentDate = new Date(start);
+    while (currentDate <= end) {
+      const dateString = currentDate.toISOString().split('T')[0] as string;
+      
+      // Skip if we've already processed this date
+      if (seenDates.has(dateString)) {
+        currentDate.setDate(currentDate.getDate() + 1);
+        continue;
+      }
+      seenDates.add(dateString);
+      
+      const dayOfWeek = currentDate.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
       
       // Skip Sundays for most doctors
       const isAvailable = dayOfWeek !== 'sunday' || doctorId === '3'; // University Hospital works 24/7
@@ -208,6 +222,9 @@ export const bookingService = {
         isAvailable,
         slots: isAvailable ? generateTimeSlots(dateString, doctorId) : []
       });
+      
+      // Move to next day using a new Date object to avoid mutation issues
+      currentDate.setDate(currentDate.getDate() + 1);
     }
     
     return availability;
@@ -233,10 +250,10 @@ export const bookingService = {
     }
     
     // Urgency assessment
-    if (formData.reason) {
+    if (formData.reason && typeof formData.reason === 'string') {
       const urgentKeywords = ['pain', 'urgent', 'emergency', 'severe', 'bleeding'];
       const isUrgent = urgentKeywords.some(keyword => 
-        formData.reason?.toLowerCase().includes(keyword)
+        formData.reason!.toLowerCase().includes(keyword)
       );
       
       if (isUrgent) {
@@ -258,11 +275,11 @@ export const bookingService = {
       suggestions.push({
         type: 'doctor-recommendation',
         title: 'Recommended Doctor',
-        description: 'Dr. Emily Rodriguez has excellent patient reviews and specializes in your area of concern. Next available: Tomorrow at 11:00 AM.',
+        description: 'Dr. John Smith has excellent patient reviews and specializes in your area of concern. Next available: Tomorrow at 11:00 AM.',
         confidence: 0.78,
         action: {
-          label: 'Select Dr. Rodriguez',
-          data: { doctorId: '3' }
+          label: 'Select Dr. Smith',
+          data: { doctorId: '699e633fe6be04b7075ff3e8' }
         }
       });
     }
@@ -276,14 +293,13 @@ export const bookingService = {
     try {
       // Try to use real API first
       const appointmentRequest = {
-        doctorId: formData.doctorId,
-        patientId: 'current-user-id', // Will be set by backend from auth token
-        date: formData.date,
-        time: formData.time,
+        doctor: formData.doctorId, // Backend expects 'doctor', not 'doctorId'
+        appointmentDate: `${formData.date}T${formData.time}:00`, // Combine date and time into ISO string
+        duration: 30, // Default duration in minutes
         type: formData.appointmentType,
         reason: formData.reason,
-        notes: formData.notes || undefined,
-        urgency: formData.urgency
+        notes: formData.notes || '', // Ensure it's a string, not undefined
+        isEmergency: formData.urgency === 'urgent' || formData.urgency === 'emergency'
       };
 
       const response = await apiAdapter.appointments.createAppointment(appointmentRequest);
@@ -326,7 +342,8 @@ export const bookingService = {
         throw new Error('Doctor or clinic not found');
       }
       
-      const appointmentId = `APT-${Date.now()}`;
+      // Generate a proper MongoDB ObjectId-like string for mock data
+      const appointmentId = new Date().getTime().toString(16).padStart(24, '0').substring(0, 24);
       const confirmationCode = Math.random().toString(36).substring(2, 8).toUpperCase();
       
       return {

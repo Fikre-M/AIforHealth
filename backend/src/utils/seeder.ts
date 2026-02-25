@@ -1,7 +1,7 @@
 import { database } from '@/config/database';
 import { isDevelopment } from '@/config/env';
-import { User, Appointment } from '@/models';
-import { UserRole, AppointmentStatus, AppointmentType } from '@/types';
+import { User, Appointment, AppointmentStatus, AppointmentType } from '@/models';
+import { UserRole } from '@/types';
 
 /**
  * Database seeder for development and testing
