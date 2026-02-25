@@ -104,36 +104,38 @@ export function NotificationItem({
 
   return (
     <div
-      className={`border-l-4 ${getPriorityColor()} bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow ${
+      className={`border-l-4 ${getPriorityColor()} bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4 hover:shadow-md transition-shadow ${
         !notification.read ? 'bg-blue-50' : ''
-      } ${compact ? 'p-3' : ''}`}
+      }`}
     >
-      <div className="flex items-start space-x-3">
-        <div className={`p-2 rounded-lg ${getIconColor()}`}>
+      <div className="flex items-start space-x-2 sm:space-x-3">
+        <div className={`p-1.5 sm:p-2 rounded-lg flex-shrink-0 ${getIconColor()}`}>
           {getIcon()}
         </div>
         
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <div className="flex items-center space-x-2 mb-1">
-                <h4 className={`font-semibold ${compact ? 'text-sm' : 'text-base'} text-gray-900`}>
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2 mb-1">
+                <h4 className={`font-semibold text-sm sm:text-base text-gray-900 truncate`}>
                   {notification.title}
                 </h4>
-                {!notification.read && (
-                  <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-                )}
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  notification.priority === 'urgent' ? 'bg-red-100 text-red-800' :
-                  notification.priority === 'high' ? 'bg-orange-100 text-orange-800' :
-                  notification.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                  'bg-green-100 text-green-800'
-                }`}>
-                  {notification.priority}
-                </span>
+                <div className="flex items-center space-x-2">
+                  {!notification.read && (
+                    <span className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></span>
+                  )}
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium flex-shrink-0 ${
+                    notification.priority === 'urgent' ? 'bg-red-100 text-red-800' :
+                    notification.priority === 'high' ? 'bg-orange-100 text-orange-800' :
+                    notification.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-green-100 text-green-800'
+                  }`}>
+                    {notification.priority}
+                  </span>
+                </div>
               </div>
               
-              <p className={`text-gray-700 mb-2 ${compact ? 'text-sm' : 'text-base'}`}>
+              <p className={`text-gray-700 mb-2 text-sm break-words`}>
                 {notification.message}
               </p>
               

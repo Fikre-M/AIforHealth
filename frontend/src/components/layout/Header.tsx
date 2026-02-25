@@ -142,13 +142,13 @@ export function Header() {
               <div className="flex items-center space-x-4">
                 <Link 
                   to="/login" 
-                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="bg-gray-800 text-white border border-gray-800 hover:bg-gray-900 px-4 py-2 rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
                 >
                   Sign In
                 </Link>
                 <Link 
                   to="/register" 
-                  className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
                 >
                   Get Started
                 </Link>

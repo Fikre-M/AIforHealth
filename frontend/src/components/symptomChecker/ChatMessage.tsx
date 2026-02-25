@@ -57,25 +57,25 @@ export function ChatMessage({ message, onBookAppointment }: ChatMessageProps) {
 
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}>
-      <div className={`flex items-start space-x-3 max-w-3xl ${isUser ? 'flex-row-reverse space-x-reverse' : ''}`}>
-        <div className={`p-2 rounded-full ${getIconStyle()}`}>
+      <div className={`flex items-start space-x-2 sm:space-x-3 max-w-full sm:max-w-3xl ${isUser ? 'flex-row-reverse space-x-reverse' : ''}`}>
+        <div className={`p-2 rounded-full flex-shrink-0 ${getIconStyle()}`}>
           {getMessageIcon()}
         </div>
         
-        <div className={`rounded-lg p-4 ${getMessageStyle()}`}>
+        <div className={`rounded-lg p-3 sm:p-4 min-w-0 flex-1 ${getMessageStyle()}`}>
           <div className="prose prose-sm max-w-none">
             {message.type === 'disclaimer' ? (
               <div className="space-y-2">
                 <div className="flex items-center space-x-2 mb-2">
-                  <AlertTriangle className="h-5 w-5 text-yellow-600" />
-                  <span className="font-semibold text-yellow-800">Medical Disclaimer</span>
+                  <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-600 flex-shrink-0" />
+                  <span className="font-semibold text-yellow-800 text-sm sm:text-base">Medical Disclaimer</span>
                 </div>
-                <p className="text-sm text-yellow-700">
+                <p className="text-xs sm:text-sm text-yellow-700">
                   {message.content.replace('⚠️ **Important Medical Disclaimer**: ', '')}
                 </p>
               </div>
             ) : (
-              <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+              <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
             )}
           </div>
           
@@ -83,9 +83,9 @@ export function ChatMessage({ message, onBookAppointment }: ChatMessageProps) {
           {message.metadata && (
             <div className="mt-3 pt-3 border-t border-gray-200">
               {message.metadata.severity && (
-                <div className="flex items-center space-x-2 mb-2">
+                <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2 mb-2">
                   <span className="text-xs font-medium text-gray-600">Severity:</span>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium inline-block ${
                     message.metadata.severity === 'severe' ? 'bg-red-100 text-red-800' :
                     message.metadata.severity === 'moderate' ? 'bg-yellow-100 text-yellow-800' :
                     'bg-green-100 text-green-800'
@@ -96,7 +96,7 @@ export function ChatMessage({ message, onBookAppointment }: ChatMessageProps) {
               )}
               
               {message.metadata.suggestedSpecialty && (
-                <div className="flex items-center space-x-2 mb-2">
+                <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2 mb-2">
                   <span className="text-xs font-medium text-gray-600">Suggested Specialty:</span>
                   <span className="text-xs text-medical-600 font-medium">
                     {message.metadata.suggestedSpecialty}
@@ -105,7 +105,7 @@ export function ChatMessage({ message, onBookAppointment }: ChatMessageProps) {
               )}
               
               {message.metadata.confidence && (
-                <div className="flex items-center space-x-2">
+                <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2">
                   <span className="text-xs font-medium text-gray-600">Confidence:</span>
                   <span className="text-xs text-gray-700">
                     {Math.round(message.metadata.confidence * 100)}%

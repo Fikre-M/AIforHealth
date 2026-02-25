@@ -27,7 +27,7 @@ export const Footer: React.FC = () => {
       <div className="max-w-7xl mx-auto px-6 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Company Info */}
-          <div className="space-y-4">
+          <div className="space-y-4 md:col-span-2 lg:col-span-1">
             <div className="flex items-center space-x-2">
               <Heart className="w-6 h-6 text-red-500" aria-hidden="true" />
               <h3 className="text-xl font-bold">AIforHealth</h3>
@@ -61,42 +61,45 @@ export const Footer: React.FC = () => {
             </div>
           </div>
 
-          {/* Quick Links */}
-          <div className="space-y-4">
-            <h4 className="text-lg font-semibold">Quick Links</h4>
-            <nav className="space-y-2">
-              <Link to="/app/dashboard" className="block text-gray-300 hover:text-white transition-colors text-sm">
-                Dashboard
-              </Link>
-              <Link to="/app/appointments" className="block text-gray-300 hover:text-white transition-colors text-sm">
-                Appointments
-              </Link>
-              <Link to="/app/ai-chat" className="block text-gray-300 hover:text-white transition-colors text-sm">
-                AI Assistant
-              </Link>
-              <Link to="/app/symptom-checker" className="block text-gray-300 hover:text-white transition-colors text-sm">
-                Symptom Checker
-              </Link>
-            </nav>
-          </div>
+          {/* Quick Links & Support - Side by Side on Mobile */}
+          <div className="grid grid-cols-2 gap-6 md:col-span-2 lg:col-span-2">
+            {/* Quick Links */}
+            <div className="space-y-4">
+              <h4 className="text-lg font-semibold">Quick Links</h4>
+              <nav className="space-y-2">
+                <Link to="/app/dashboard" className="block text-gray-300 hover:text-white transition-colors text-sm">
+                  Dashboard
+                </Link>
+                <Link to="/app/appointments" className="block text-gray-300 hover:text-white transition-colors text-sm">
+                  Appointments
+                </Link>
+                <Link to="/app/ai-chat" className="block text-gray-300 hover:text-white transition-colors text-sm">
+                  AI Assistant
+                </Link>
+                <Link to="/app/symptom-checker" className="block text-gray-300 hover:text-white transition-colors text-sm">
+                  Symptom Checker
+                </Link>
+              </nav>
+            </div>
 
-          {/* Support */}
-          <div className="space-y-4">
-            <h4 className="text-lg font-semibold">Support</h4>
-            <nav className="space-y-2">
-              <a href="/help" className="block text-gray-300 hover:text-white transition-colors text-sm">
-                Help Center
-              </a>
-              <a href="/privacy" className="block text-gray-300 hover:text-white transition-colors text-sm">
-                Privacy Policy
-              </a>
-              <a href="/terms" className="block text-gray-300 hover:text-white transition-colors text-sm">
-                Terms of Service
-              </a>
-              <a href="/accessibility" className="block text-gray-300 hover:text-white transition-colors text-sm">
-                Accessibility
-              </a>
-            </nav>
+            {/* Support */}
+            <div className="space-y-4">
+              <h4 className="text-lg font-semibold">Support</h4>
+              <nav className="space-y-2">
+                <a href="/help" className="block text-gray-300 hover:text-white transition-colors text-sm">
+                  Help Center
+                </a>
+                <a href="/privacy" className="block text-gray-300 hover:text-white transition-colors text-sm">
+                  Privacy Policy
+                </a>
+                <a href="/terms" className="block text-gray-300 hover:text-white transition-colors text-sm">
+                  Terms of Service
+                </a>
+                <a href="/accessibility" className="block text-gray-300 hover:text-white transition-colors text-sm">
+                  Accessibility
+                </a>
+              </nav>
+            </div>
           </div>
 
           {/* Contact */}

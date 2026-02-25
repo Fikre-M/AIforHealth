@@ -108,7 +108,7 @@ export function SymptomInput({ onSubmitSymptoms, isLoading = false }: SymptomInp
                 )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Input
                   label="What are you experiencing?"
                   value={symptom.symptom}
@@ -127,17 +127,17 @@ export function SymptomInput({ onSubmitSymptoms, isLoading = false }: SymptomInp
               </div>
 
               {showDetailedForm && (
-                <div className="space-y-3">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <Select
-                      label="How long have you had this?"
-                      value={symptom.duration}
-                      onChange={(e) => updateSymptom(index, 'duration', e.target.value)}
-                      options={[
-                        { value: '', label: 'Select duration...' },
-                        ...durationOptions
-                      ]}
-                    />
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <Select
+                        label="How long have you had this?"
+                        value={symptom.duration}
+                        onChange={(e) => updateSymptom(index, 'duration', e.target.value)}
+                        options={[
+                          { value: '', label: 'Select duration...' },
+                          ...durationOptions
+                        ]}
+                      />
 
                     <Input
                       label="Where is it located? (Optional)"

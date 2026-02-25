@@ -21,7 +21,6 @@ export const ProfilePage: React.FC = () => {
     name: '',
     phone: '',
     dateOfBirth: '',
-    gender: undefined,
     address: {
       street: '',
       city: '',
@@ -61,7 +60,7 @@ export const ProfilePage: React.FC = () => {
         name: profileData.name || '',
         phone: profileData.phone || '',
         dateOfBirth: profileData.dateOfBirth || '',
-        gender: profileData.gender,
+        ...(profileData.gender && { gender: profileData.gender }),
         address: profileData.address || {
           street: '',
           city: '',
@@ -122,17 +121,6 @@ export const ProfilePage: React.FC = () => {
     }
   };
 
-  const handleArrayInput = (field: 'allergies' | 'medications' | 'conditions', value: string) => {
-    const items = value.split(',').map(item => item.trim()).filter(Boolean);
-    setFormData(prev => ({
-      ...prev,
-      medicalInfo: {
-        ...prev.medicalInfo!,
-        [field]: items
-      }
-    }));
-  };
-
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto p-6 space-y-6">
@@ -167,32 +155,32 @@ export const ProfilePage: React.FC = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-8">
+    <div className="max-w-4xl mx-auto p-4 sm:p-6 space-y-6 sm:space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
           Profile Settings
         </h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-1">
+        <p className="text-gray-600 dark:text-gray-400 mt-1 text-sm sm:text-base">
           Manage your personal information and preferences
         </p>
       </div>
 
       <Card>
-        <form onSubmit={handleSubmit} className="space-y-8">
+        <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
           {/* Avatar Section */}
           <CardContent padding="lg">
-            <div className="flex items-center space-x-6">
+            <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-6">
               <div className="relative">
-                <div className="w-24 h-24 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden border-2 border-gray-200 dark:border-gray-700">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden border-2 border-gray-200 dark:border-gray-700">
                   {profile?.avatar ? (
                     <img src={profile.avatar} alt="Avatar" className="w-full h-full object-cover" />
                   ) : (
-                    <User className="w-12 h-12 text-gray-400 dark:text-gray-500" />
+                    <User className="w-10 h-10 sm:w-12 sm:h-12 text-gray-400 dark:text-gray-500" />
                   )}
                 </div>
-                <label className="absolute bottom-0 right-0 bg-blue-600 hover:bg-blue-700 rounded-full p-2 cursor-pointer transition-colors shadow-lg">
-                  <Camera className="w-4 h-4 text-white" />
+                <label className="absolute bottom-0 right-0 bg-blue-600 hover:bg-blue-700 rounded-full p-1.5 sm:p-2 cursor-pointer transition-colors shadow-lg">
+                  <Camera className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
                   <input
                     type="file"
                     accept="image/*"
@@ -201,19 +189,19 @@ export const ProfilePage: React.FC = () => {
                   />
                 </label>
               </div>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Profile Photo</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Upload a photo to personalize your profile</p>
+              <div className="text-center sm:text-left">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">Profile Photo</h3>
+                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Upload a photo to personalize your profile</p>
               </div>
             </div>
           </CardContent>
 
           {/* Basic Information */}
           <CardContent padding="lg" className="border-t border-gray-200 dark:border-gray-700">
-            <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Basic Information</h3>
+            <div className="space-y-4 sm:space-y-6">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">Basic Information</h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Full Name *
@@ -258,7 +246,7 @@ export const ProfilePage: React.FC = () => {
                     value={formData.gender || ''}
                     onChange={(e) => setFormData(prev => ({ 
                       ...prev, 
-                      gender: e.target.value as any || undefined 
+                      ...(e.target.value && { gender: e.target.value as any })
                     }))}
                     options={[
                       { value: '', label: 'Select gender' },
@@ -272,215 +260,6 @@ export const ProfilePage: React.FC = () => {
               </div>
             </div>
           </CardContent>
-
-          {/* Address */}
-          <CardContent padding="lg" className="border-t border-gray-200 dark:border-gray-700">
-            <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Address</h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Street Address
-                  </label>
-                  <Input
-                    type="text"
-                    value={formData.address?.street || ''}
-                    onChange={(e) => setFormData(prev => ({
-                      ...prev,
-                      address: { ...prev.address!, street: e.target.value }
-                    }))}
-                    placeholder="Enter your street address"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    City
-                  </label>
-                  <Input
-                    type="text"
-                    value={formData.address?.city || ''}
-                    onChange={(e) => setFormData(prev => ({
-                      ...prev,
-                      address: { ...prev.address!, city: e.target.value }
-                    }))}
-                    placeholder="Enter your city"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    State
-                  </label>
-                  <Input
-                    type="text"
-                    value={formData.address?.state || ''}
-                    onChange={(e) => setFormData(prev => ({
-                      ...prev,
-                      address: { ...prev.address!, state: e.target.value }
-                    }))}
-                    placeholder="Enter your state"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    ZIP Code
-                  </label>
-                  <Input
-                    type="text"
-                    value={formData.address?.zipCode || ''}
-                    onChange={(e) => setFormData(prev => ({
-                      ...prev,
-                      address: { ...prev.address!, zipCode: e.target.value }
-                    }))}
-                    placeholder="Enter your ZIP code"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Country
-                  </label>
-                  <Input
-                    type="text"
-                    value={formData.address?.country || ''}
-                    onChange={(e) => setFormData(prev => ({
-                      ...prev,
-                      address: { ...prev.address!, country: e.target.value }
-                    }))}
-                    placeholder="Enter your country"
-                  />
-                </div>
-              </div>
-            </div>
-          </CardContent>
-
-          {/* Emergency Contact */}
-          <CardContent padding="lg" className="border-t border-gray-200 dark:border-gray-700">
-            <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Emergency Contact</h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Name
-                  </label>
-                  <Input
-                    type="text"
-                    value={formData.emergencyContact?.name || ''}
-                    onChange={(e) => setFormData(prev => ({
-                      ...prev,
-                      emergencyContact: { ...prev.emergencyContact!, name: e.target.value }
-                    }))}
-                    placeholder="Emergency contact name"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Relationship
-                  </label>
-                  <Input
-                    type="text"
-                    value={formData.emergencyContact?.relationship || ''}
-                    onChange={(e) => setFormData(prev => ({
-                      ...prev,
-                      emergencyContact: { ...prev.emergencyContact!, relationship: e.target.value }
-                    }))}
-                    placeholder="Relationship to you"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Phone
-                  </label>
-                  <Input
-                    type="tel"
-                    value={formData.emergencyContact?.phone || ''}
-                    onChange={(e) => setFormData(prev => ({
-                      ...prev,
-                      emergencyContact: { ...prev.emergencyContact!, phone: e.target.value }
-                    }))}
-                    placeholder="Emergency contact phone"
-                  />
-                </div>
-              </div>
-            </div>
-          </CardContent>
-
-          {/* Medical Information */}
-          {user?.role === 'patient' && (
-            <CardContent padding="lg" className="border-t border-gray-200 dark:border-gray-700">
-              <div className="space-y-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Medical Information</h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Blood Type
-                    </label>
-                    <Select
-                      value={formData.medicalInfo?.bloodType || ''}
-                      onChange={(e) => setFormData(prev => ({
-                        ...prev,
-                        medicalInfo: { ...prev.medicalInfo!, bloodType: e.target.value }
-                      }))}
-                      options={[
-                        { value: '', label: 'Select blood type' },
-                        { value: 'A+', label: 'A+' },
-                        { value: 'A-', label: 'A-' },
-                        { value: 'B+', label: 'B+' },
-                        { value: 'B-', label: 'B-' },
-                        { value: 'AB+', label: 'AB+' },
-                        { value: 'AB-', label: 'AB-' },
-                        { value: 'O+', label: 'O+' },
-                        { value: 'O-', label: 'O-' }
-                      ]}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Allergies
-                    </label>
-                    <Input
-                      type="text"
-                      placeholder="Separate with commas"
-                      value={formData.medicalInfo?.allergies?.join(', ') || ''}
-                      onChange={(e) => handleArrayInput('allergies', e.target.value)}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Current Medications
-                    </label>
-                    <Input
-                      type="text"
-                      placeholder="Separate with commas"
-                      value={formData.medicalInfo?.medications?.join(', ') || ''}
-                      onChange={(e) => handleArrayInput('medications', e.target.value)}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Medical Conditions
-                    </label>
-                    <Input
-                      type="text"
-                      placeholder="Separate with commas"
-                      value={formData.medicalInfo?.conditions?.join(', ') || ''}
-                      onChange={(e) => handleArrayInput('conditions', e.target.value)}
-                    />
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          )}
 
           {/* Error/Success Messages */}
           <CardContent padding="lg">
@@ -498,13 +277,14 @@ export const ProfilePage: React.FC = () => {
             )}
 
             {/* Submit Button */}
-            <div className="flex justify-end">
+            <div className="flex justify-center sm:justify-end">
               <Button
                 type="submit"
                 loading={saving}
                 loadingText="Saving..."
                 leftIcon={<Save className="w-4 h-4" />}
                 size="lg"
+                className="w-full sm:w-auto"
               >
                 Save Changes
               </Button>

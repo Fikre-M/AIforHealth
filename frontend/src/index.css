@@ -139,6 +139,16 @@
     @apply grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6;
   }
 
+  /* Mobile-optimized scrollbar hiding */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
   /* Print styles */
   @media print {
     .no-print {

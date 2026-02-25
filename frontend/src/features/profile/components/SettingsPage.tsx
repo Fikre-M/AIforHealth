@@ -149,21 +149,21 @@ export const SettingsPage: React.FC = () => {
 
         {/* Tab Navigation */}
         <div className="border-b border-gray-200">
-          <nav className="flex space-x-8 px-6">
+          <nav className="flex overflow-x-auto px-6 scrollbar-hide">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                  className={`flex items-center space-x-2 py-4 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${
                     activeTab === tab.id
                       ? 'border-blue-500 text-blue-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
                 >
                   <Icon className="w-4 h-4" />
-                  <span>{tab.label}</span>
+                  <span className="hidden sm:inline">{tab.label}</span>
                 </button>
               );
             })}
@@ -289,7 +289,7 @@ export const SettingsPage: React.FC = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Reminder Times (minutes before appointment)
                     </label>
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                       {[15, 60, 1440, 2880].map((minutes) => (
                         <label key={minutes} className="flex items-center">
                           <input
@@ -363,7 +363,7 @@ export const SettingsPage: React.FC = () => {
                   Display Settings
                 </h3>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Font Size
@@ -398,8 +398,8 @@ export const SettingsPage: React.FC = () => {
                 </div>
 
                 <div className="space-y-4 mt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
+                    <div className="flex-1">
                       <label className="text-sm font-medium text-gray-700">High Contrast Mode</label>
                       <p className="text-xs text-gray-500">Increase contrast for better visibility</p>
                     </div>
@@ -414,8 +414,8 @@ export const SettingsPage: React.FC = () => {
                     </label>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <div>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
+                    <div className="flex-1">
                       <label className="text-sm font-medium text-gray-700">Reduced Motion</label>
                       <p className="text-xs text-gray-500">Minimize animations and transitions</p>
                     </div>
@@ -430,8 +430,8 @@ export const SettingsPage: React.FC = () => {
                     </label>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <div>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
+                    <div className="flex-1">
                       <label className="text-sm font-medium text-gray-700">Screen Reader Support</label>
                       <p className="text-xs text-gray-500">Optimize for screen reading software</p>
                     </div>
@@ -446,8 +446,8 @@ export const SettingsPage: React.FC = () => {
                     </label>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <div>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
+                    <div className="flex-1">
                       <label className="text-sm font-medium text-gray-700">Keyboard Navigation</label>
                       <p className="text-xs text-gray-500">Enhanced keyboard navigation support</p>
                     </div>
@@ -470,7 +470,7 @@ export const SettingsPage: React.FC = () => {
                   Localization
                 </h3>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Language
@@ -534,8 +534,8 @@ export const SettingsPage: React.FC = () => {
                     </select>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <div>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
+                    <div className="flex-1">
                       <label className="text-sm font-medium text-gray-700">Share Data for Research</label>
                       <p className="text-xs text-gray-500">Help improve healthcare by sharing anonymized data</p>
                     </div>
@@ -550,8 +550,8 @@ export const SettingsPage: React.FC = () => {
                     </label>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <div>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
+                    <div className="flex-1">
                       <label className="text-sm font-medium text-gray-700">Allow Marketing Communications</label>
                       <p className="text-xs text-gray-500">Receive promotional content and special offers</p>
                     </div>
