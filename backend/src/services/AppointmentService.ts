@@ -1,4 +1,4 @@
-import { Appointment } from '@/models/Appointment';
+import Appointment from '@/models/Appointment';
 import { AppError } from '@/middleware/errorHandler';
 
 export interface PaginatedResult<T> {

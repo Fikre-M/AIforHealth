@@ -19,7 +19,7 @@ export const enforceHTTPS = (req: Request, res: Response, next: NextFunction): v
 /**
  * Enhanced Security Headers Configuration
  */
-const setupSecurity = (app: Express): void => {
+export const setupSecurity = (app: Express): void => {
   // HTTPS enforcement in production
   if (env.NODE_ENV === 'production') {
     app.use(enforceHTTPS);

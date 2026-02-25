@@ -1,50 +1,68 @@
 import { Router } from 'express';
-import { appointmentValidators } from '@/middleware/validators/appointment.validators';
-import { AppointmentController } from '@/controllers/appointment.controller';
-import { authenticate } from '@/middleware/auth';
-import { authorize } from '@/middleware/authorize';
+import { ValidationUtil } from '@/utils/validation';
+import { AppointmentController } from '@/controllers/AppointmentController';
+import { authenticate, authorize } from '@/middleware/auth';
+import { UserRole } from '@/types';
 
 const router = Router();
 
-// ✅ CREATE Appointment - Validators are USED here
+// All appointment routes require authentication
+router.use(authenticate);
+
+// ✅ CREATE Appointment
 router.post(
   '/',
-  authenticate,
-  authorize(['patient', 'doctor']),
-  appointmentValidators.create, // <-- THIS is where validators are RENDERED/USED
+  ValidationUtil.validateAppointmentCreation(),
   AppointmentController.create
 );
+
+// ✅ GET Appointments (with filtering and pagination)
+router.get('/', AppointmentController.getAppointments);
+
+// ✅ GET Appointment by ID
+router.get('/:id', AppointmentController.getById);
 
 // ✅ UPDATE Appointment
 router.put(
   '/:id',
-  authenticate,
-  appointmentValidators.update, // <-- Validators in action
+  ValidationUtil.validateAppointmentUpdate(),
   AppointmentController.update
 );
 
 // ✅ RESCHEDULE Appointment
 router.post(
   '/:id/reschedule',
-  authenticate,
-  appointmentValidators.reschedule, // <-- Validators in action
+  ValidationUtil.validateAppointmentReschedule(),
   AppointmentController.reschedule
 );
 
 // ✅ CANCEL Appointment
 router.post(
   '/:id/cancel',
-  authenticate,
-  appointmentValidators.cancel, // <-- Validators in action
+  ValidationUtil.validateAppointmentCancellation(),
   AppointmentController.cancel
 );
 
-// ✅ GET by Date Range with Pagination
+// ✅ COMPLETE Appointment (doctors only)
+router.post(
+  '/:id/complete',
+  authorize(UserRole.DOCTOR, UserRole.ADMIN),
+  ValidationUtil.validateAppointmentCompletion(),
+  AppointmentController.complete
+);
+
+// ✅ GET Statistics (doctors and admins only)
 router.get(
-  '/range',
-  authenticate,
-  appointmentValidators.getByDateRange, // <-- Validators validate query params
-  AppointmentController.getByDateRange
+  '/stats',
+  authorize(UserRole.DOCTOR, UserRole.ADMIN),
+  AppointmentController.getStatistics
+);
+
+// ✅ BULK Update (admins only)
+router.post(
+  '/bulk',
+  authorize(UserRole.ADMIN),
+  AppointmentController.bulkUpdate
 );
 
 export default router;

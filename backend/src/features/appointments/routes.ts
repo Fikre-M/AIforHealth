@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import * as AppointmentController from '@/controllers/AppointmentController';
+import { AppointmentController } from '@/controllers/AppointmentController';
 import { ValidationUtil } from '@/utils';
 import { authenticate, authorize, ownerOrRoles } from '@/middleware/auth';
 import { UserRole } from '@/types';
@@ -15,7 +15,7 @@ router.get('/availability', AppointmentController.checkDoctorAvailability);
 // Appointment CRUD operations
 router.post('/', 
   ValidationUtil.validateAppointmentCreation(), 
-  AppointmentController.createAppointment
+  AppointmentController.create
 );
 
 // Appointment requests endpoint (for pending/requested appointments)
@@ -36,16 +36,16 @@ router.get('/', (req, res, next) => {
 
 router.get('/stats', 
   authorize(UserRole.DOCTOR, UserRole.ADMIN), 
-  AppointmentController.getAppointmentStats
+  AppointmentController.getStatistics
 );
 
 router.get('/user/:userId', AppointmentController.getUserAppointments);
 
-router.get('/:id', AppointmentController.getAppointmentById);
+router.get('/:id', AppointmentController.getById);
 
 router.put('/:id', 
   ValidationUtil.validateAppointmentUpdate(), 
-  AppointmentController.updateAppointment
+  AppointmentController.update
 );
 
 // Appointment status management
@@ -54,18 +54,18 @@ router.patch('/:id/status', AppointmentController.updateAppointmentStatus);
 // Appointment actions
 router.post('/:id/cancel', 
   ValidationUtil.validateAppointmentCancellation(), 
-  AppointmentController.cancelAppointment
+  AppointmentController.cancel
 );
 
 router.post('/:id/reschedule', 
   ValidationUtil.validateAppointmentReschedule(), 
-  AppointmentController.rescheduleAppointment
+  AppointmentController.reschedule
 );
 
 router.post('/:id/complete', 
   authorize(UserRole.DOCTOR, UserRole.ADMIN),
   ValidationUtil.validateAppointmentCompletion(), 
-  AppointmentController.completeAppointment
+  AppointmentController.complete
 );
 
 export default router;

@@ -1,44 +1,36 @@
 // backend/src/routes/authRoutes.ts
 import { Router } from 'express';
-import { authValidators } from '@/middleware/validators/auth.validators';
-import { AuthController } from '@/controllers/auth.controller';
-import { rateLimit } from '@/middleware/rateLimit';
+import { ValidationUtil } from '@/utils/validation';
+import { AuthController } from '@/controllers/AuthController';
+import { authenticate } from '@/middleware/auth';
 
 const router = Router();
-
-// Rate limiting for auth routes
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // 5 attempts
-});
 
 // ✅ REGISTER - Using validation
 router.post(
   '/register',
-  authLimiter,
-  authValidators.register, // <-- Validates: email, password, name, role
+  ValidationUtil.validateUserRegistration(),
   AuthController.register
 );
 
 // ✅ LOGIN - Using validation
 router.post(
   '/login',
-  authLimiter,
-  authValidators.login, // <-- Validates: email, password
+  ValidationUtil.validateUserLogin(),
   AuthController.login
 );
 
 // ✅ FORGOT PASSWORD - Using validation
 router.post(
   '/forgot-password',
-  authValidators.forgotPassword, // <-- Validates: email
-  AuthController.forgotPassword
+  ValidationUtil.validatePasswordResetRequest(),
+  AuthController.requestPasswordReset
 );
 
 // ✅ RESET PASSWORD - Using validation
 router.post(
-  '/reset-password/:token',
-  authValidators.resetPassword, // <-- Validates: token, newPassword, confirmPassword
+  '/reset-password',
+  ValidationUtil.validatePasswordReset(),
   AuthController.resetPassword
 );
 
@@ -46,9 +38,24 @@ router.post(
 router.post(
   '/change-password',
   authenticate,
-  authValidators.changePassword, // <-- Validates: currentPassword, newPassword
+  ValidationUtil.validatePasswordUpdate(),
   AuthController.changePassword
 );
+
+// ✅ REFRESH TOKEN
+router.post('/refresh-token', AuthController.refreshToken);
+
+// ✅ LOGOUT
+router.post('/logout', authenticate, AuthController.logout);
+
+// ✅ VERIFY EMAIL
+router.post('/verify-email', AuthController.verifyEmail);
+
+// ✅ GET PROFILE
+router.get('/profile', authenticate, AuthController.getProfile);
+
+// ✅ UPDATE PROFILE
+router.put('/profile', authenticate, AuthController.updateProfile);
 
 export default router;
 
