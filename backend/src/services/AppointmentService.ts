@@ -18,7 +18,7 @@ export class AppointmentService {
   static async createAppointment(data: any): Promise<any> {
     // Check for conflicts
     const existingAppointment = await Appointment.findOne({
-      doctorId: data.doctorId,
+      doctor: data.doctorId,
       appointmentDate: data.appointmentDate,
       status: { $ne: 'cancelled' },
     });
@@ -27,7 +27,16 @@ export class AppointmentService {
       throw new AppError('Time slot already booked', 409);
     }
 
-    const appointment = await Appointment.create(data);
+    const appointment = await Appointment.create({
+      patient: data.patientId,
+      doctor: data.doctorId,
+      appointmentDate: data.appointmentDate,
+      duration: data.duration,
+      type: data.type,
+      reason: data.reason,
+      notes: data.notes,
+      isEmergency: data.isEmergency,
+    });
     return appointment;
   }
 
@@ -36,8 +45,8 @@ export class AppointmentService {
    */
   static async getAppointmentById(id: string): Promise<any | null> {
     return Appointment.findById(id)
-      .populate('patientId', 'name email phone')
-      .populate('doctorId', 'name email specialization');
+      .populate('patient', 'name email phone')
+      .populate('doctor', 'name email specialization');
   }
 
   /**
@@ -63,8 +72,8 @@ export class AppointmentService {
       Appointment.find(query)
         .skip(skip)
         .limit(limit)
-        .populate('patientId', 'name email')
-        .populate('doctorId', 'name email')
+        .populate('patient', 'name email')
+        .populate('doctor', 'name email')
         .sort({ appointmentDate: 1 }),
       Appointment.countDocuments(query),
     ]);
@@ -85,6 +94,18 @@ export class AppointmentService {
    */
   static async updateAppointment(id: string, data: any): Promise<any | null> {
     return Appointment.findByIdAndUpdate(id, { $set: data }, { new: true, runValidators: true });
+  }
+
+  /**
+   * Update appointment status
+   */
+  static async updateAppointmentStatus(id: string, status: string): Promise<any | null> {
+    return Appointment.findByIdAndUpdate(
+      id,
+      { $set: { status } },
+      { new: true, runValidators: true }
+    ).populate('patient', 'name email')
+     .populate('doctor', 'name email');
   }
 
   /**
@@ -117,7 +138,7 @@ export class AppointmentService {
     }
 
     const conflictingAppointment = await Appointment.findOne({
-      doctorId: appointment.doctorId,
+      doctor: appointment.doctor,
       appointmentDate: newDate,
       status: { $ne: 'cancelled' },
       _id: { $ne: id },
@@ -166,7 +187,7 @@ export class AppointmentService {
     const { page, limit, date } = options;
     const skip = (page - 1) * limit;
 
-    const query: any = { doctorId };
+    const query: any = { doctor: doctorId };
 
     if (date) {
       const startDate = new Date(date as string);
@@ -185,7 +206,7 @@ export class AppointmentService {
       Appointment.find(query)
         .skip(skip)
         .limit(limit)
-        .populate('patientId', 'name email phone')
+        .populate('patient', 'name email phone')
         .sort({ appointmentDate: 1 }),
       Appointment.countDocuments(query),
     ]);
@@ -211,7 +232,7 @@ export class AppointmentService {
     const { page, limit, status } = options;
     const skip = (page - 1) * limit;
 
-    const query: any = { patientId };
+    const query: any = { patient: patientId };
     if (status) {
       query.status = status;
     }
@@ -220,7 +241,7 @@ export class AppointmentService {
       Appointment.find(query)
         .skip(skip)
         .limit(limit)
-        .populate('doctorId', 'name email specialization')
+        .populate('doctor', 'name email specialization')
         .sort({ appointmentDate: -1 }),
       Appointment.countDocuments(query),
     ]);
@@ -251,7 +272,7 @@ export class AppointmentService {
     }
 
     if (doctorId) {
-      matchStage.doctorId = doctorId;
+      matchStage.doctor = doctorId;
     }
 
     const statistics = await Appointment.aggregate([
@@ -331,8 +352,8 @@ export class AppointmentService {
     }
 
     const appointments = await Appointment.find(query)
-      .populate('patientId', 'name email')
-      .populate('doctorId', 'name email')
+      .populate('patient', 'name email')
+      .populate('doctor', 'name email')
       .sort({ appointmentDate: 1 });
 
     if (format === 'csv') {
@@ -350,8 +371,8 @@ export class AppointmentService {
     const rows = appointments.map((a) => [
       a._id,
       a.appointmentDate.toISOString(),
-      a.patientId?.name || 'Unknown',
-      a.doctorId?.name || 'Unknown',
+      a.patient?.name || 'Unknown',
+      a.doctor?.name || 'Unknown',
       a.status,
       a.type,
       a.duration,
@@ -360,6 +381,36 @@ export class AppointmentService {
     return [headers.join(','), ...rows.map((row) => row.map((cell) => `"${cell}"`).join(','))].join(
       '\n'
     );
+  }
+
+  /**
+   * Check doctor availability
+   */
+  static async checkDoctorAvailability(
+    doctorId: string,
+    date: string,
+    startTime: string,
+    endTime: string
+  ): Promise<boolean> {
+    try {
+      const appointmentDate = new Date(`${date}T${startTime}`);
+      const appointmentEndDate = new Date(`${date}T${endTime}`);
+
+      // Find any appointments that overlap with the requested time slot
+      const conflictingAppointment = await Appointment.findOne({
+        doctor: doctorId,
+        appointmentDate: {
+          $gte: appointmentDate,
+          $lt: appointmentEndDate,
+        },
+        status: { $in: ['scheduled', 'confirmed', 'in_progress'] },
+      });
+
+      return !conflictingAppointment;
+    } catch (error) {
+      console.error('Error checking doctor availability:', error);
+      return false;
+    }
   }
 }
 
