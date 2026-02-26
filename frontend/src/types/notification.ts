@@ -37,6 +37,7 @@ export interface NotificationPreferences {
 export interface NotificationStats {
   total: number;
   unread: number;
+  today: number; // Add today property
   byType: {
     [key: string]: number;
   };

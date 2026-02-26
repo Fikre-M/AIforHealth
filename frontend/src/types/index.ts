@@ -110,6 +110,7 @@ export interface Doctor {
   specialty: DoctorSpecialty;
   licenseNumber: string;
   phone: string;
+  clinicName?: string; // Add clinicName property
   bio?: string;
   education: string[];
   experience: number; // years
@@ -140,6 +141,7 @@ export interface Appointment {
   time: string; // HH:mm format
   duration: number; // minutes
   status: AppointmentStatus;
+  type?: 'consultation' | 'follow-up' | 'emergency' | 'routine'; // Add type property
   reason: string;
   notes?: string;
   diagnosis?: string;
@@ -194,7 +196,8 @@ export type MessageRole = 'user' | 'assistant' | 'system';
 
 export interface ChatMessage {
   id: string;
-  role: MessageRole;
+  role?: MessageRole; // Make role optional for backward compatibility
+  sender?: 'user' | 'ai'; // Add sender as optional alias for backward compatibility
   content: string;
   timestamp: string;
 }

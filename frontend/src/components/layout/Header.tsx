@@ -21,6 +21,8 @@ export function Header() {
       const interval = setInterval(loadUnreadCount, 30000);
       return () => clearInterval(interval);
     }
+    // Return undefined for the else case
+    return undefined;
   }, [user]);
 
   const loadUnreadCount = async () => {

@@ -21,7 +21,7 @@ export const notificationService = {
       const response = await apiAdapter.notifications.getNotifications();
       // Handle both mock API format { notifications: [] } and real API format []
       const notifications = Array.isArray(response) ? response : response.notifications || [];
-      return notifications.sort((a, b) => 
+      return notifications.sort((a: any, b: any) => 
         new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
       );
     } catch (error) {
@@ -133,7 +133,7 @@ export const notificationService = {
       const byPriority = notifications.reduce((acc, n) => {
         acc[n.priority] = (acc[n.priority] || 0) + 1;
         return acc;
-      }, {} as Record<string, number>);
+      }, { low: 0, medium: 0, high: 0, urgent: 0 });
 
       const unreadCount = notifications.filter(n => !n.read).length;
       const today = new Date().toISOString().split('T')[0];

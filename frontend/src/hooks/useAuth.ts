@@ -6,7 +6,7 @@ interface AuthActions {
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
-  refreshToken: () => Promise<void>;
+  refreshTokenAction: () => Promise<void>; // Rename to avoid conflict
 }
 
 type AuthHook = AuthState & AuthActions;
@@ -176,6 +176,6 @@ export function useAuth(): AuthHook {
     login,
     register,
     logout,
-    refreshToken,
+    refreshTokenAction: refreshToken,
   };
 }

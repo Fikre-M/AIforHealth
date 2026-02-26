@@ -160,7 +160,7 @@ export const captureMessage = (
     });
   } else {
     // Fallback to console logging
-    logger.info(`Message captured (Sentry not available) [${level}]:`, message, context);
+    logger.info(`Message captured (Sentry not available) [${level}]: ${message}`, context);
     return 'no-sentry';
   }
 };

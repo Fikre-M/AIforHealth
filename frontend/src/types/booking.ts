@@ -18,6 +18,7 @@ export interface Doctor {
   name: string;
   specialty: string;
   clinicId: string;
+  clinicName?: string; // Add clinicName property
   rating: number;
   experience: number;
   education: string[];

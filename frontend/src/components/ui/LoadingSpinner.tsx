@@ -2,7 +2,7 @@ import { FC } from 'react';
 import clsx from 'clsx';
 
 interface LoadingSpinnerProps {
-  size?: 'small' | 'medium' | 'large';
+  size?: 'small' | 'medium' | 'large' | 'lg';
   className?: string;
 }
 
@@ -14,6 +14,7 @@ export const LoadingSpinner: FC<LoadingSpinnerProps> = ({
     small: 'w-4 h-4 border-2',
     medium: 'w-8 h-8 border-3',
     large: 'w-12 h-12 border-4',
+    lg: 'w-12 h-12 border-4', // Alias for large
   };
 
   return (

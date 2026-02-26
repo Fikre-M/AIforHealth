@@ -110,16 +110,19 @@ export function DoctorSelector({
           </div>
         ) : (
           filteredDoctors.map((doctor) => (
-            <Card 
+            <div 
               key={doctor.id}
-              className={`cursor-pointer transition-all ${
-                selectedDoctorId === doctor.id 
-                  ? 'ring-2 ring-medical-500 border-medical-500 bg-medical-50' 
-                  : 'hover:shadow-md hover:border-gray-300'
-              }`}
+              className="cursor-pointer"
               onClick={() => onSelectDoctor(doctor.id)}
-              overflow="hidden"
             >
+              <Card 
+                className={`transition-all ${
+                  selectedDoctorId === doctor.id 
+                    ? 'ring-2 ring-medical-500 border-medical-500 bg-medical-50' 
+                    : 'hover:shadow-md hover:border-gray-300'
+                }`}
+                overflow="hidden"
+              >
               <CardContent className="p-4">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-start space-x-4 flex-1 min-w-0">
@@ -221,6 +224,7 @@ export function DoctorSelector({
                 </div>
               </CardContent>
             </Card>
+            </div>
           ))
         )}
       </div>

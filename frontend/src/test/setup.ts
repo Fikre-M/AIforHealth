@@ -41,8 +41,10 @@ global.ResizeObserver = class ResizeObserver {
   unobserve() {}
 } as any;
 
-// Mock scrollTo
-window.scrollTo = vi.fn();
+// Mock scrollTo with proper overloads
+window.scrollTo = vi.fn((x?: number | ScrollToOptions, y?: number) => {
+  // Handle both overloads
+});
 
 // Mock localStorage
 const localStorageMock = {

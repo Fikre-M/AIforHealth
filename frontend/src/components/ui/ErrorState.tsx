@@ -16,6 +16,8 @@ interface ErrorStateProps {
   backLabel?: string;
 }
 
+export type { ErrorStateProps };
+
 const errorConfigs = {
   network: {
     icon: Wifi,

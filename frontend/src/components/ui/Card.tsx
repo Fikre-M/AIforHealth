@@ -84,11 +84,28 @@ export const CardHeader: React.FC<CardHeaderProps> = ({
   );
 };
 
+// Card title component
+interface CardTitleProps {
+  children: React.ReactNode;
+  className?: string;
+}
+
+export const CardTitle: React.FC<CardTitleProps> = ({
+  children,
+  className
+}) => {
+  return (
+    <h3 className={clsx('text-lg font-semibold text-gray-900 dark:text-white', className)}>
+      {children}
+    </h3>
+  );
+};
+
 // Card content component with consistent padding
 interface CardContentProps {
   children: React.ReactNode;
   className?: string;
-  padding?: 'sm' | 'md' | 'lg';
+  padding?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
 export const CardContent: React.FC<CardContentProps> = ({
@@ -99,7 +116,8 @@ export const CardContent: React.FC<CardContentProps> = ({
   const paddingClass = {
     sm: 'px-4 py-3',
     md: 'px-6 py-4',
-    lg: 'px-8 py-6'
+    lg: 'px-8 py-6',
+    xl: 'px-10 py-8'
   }[padding];
 
   return (

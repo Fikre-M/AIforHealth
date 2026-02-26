@@ -240,6 +240,8 @@ export function AISymptomChecker() {
         inputElement.removeEventListener('focus', handleFocus);
       };
     }
+    // Return undefined for the else case
+    return undefined;
   }, []);
 
   if (showDisclaimer) {

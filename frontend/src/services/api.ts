@@ -65,3 +65,30 @@ api.interceptors.response.use(
 );
 
 export default api;
+export { api }; // Also export as named export for backward compatibility
+
+// Extend the AxiosInstance interface to include custom methods
+declare module 'axios' {
+  interface AxiosInstance {
+    sendChatMessage(message: string): Promise<any>;
+    login(email: string, password: string): Promise<any>;
+    register(userData: any): Promise<any>;
+  }
+}
+
+// Add chat methods to the api instance
+api.sendChatMessage = async (message: string) => {
+  const response = await api.post('/chat/message', { message });
+  return response.data;
+};
+
+// Add auth methods to the api instance
+api.login = async (email: string, password: string) => {
+  const response = await api.post('/auth/login', { email, password });
+  return response.data;
+};
+
+api.register = async (userData: any) => {
+  const response = await api.post('/auth/register', userData);
+  return response.data;
+};

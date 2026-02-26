@@ -11,6 +11,8 @@ interface LoadingSkeletonProps {
   'aria-label'?: string;
 }
 
+export type { LoadingSkeletonProps };
+
 export const LoadingSkeleton: React.FC<LoadingSkeletonProps> = ({
   className,
   variant = 'rectangular',

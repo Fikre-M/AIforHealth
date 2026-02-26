@@ -22,6 +22,8 @@ interface EmptyStateProps {
   showAction?: boolean;
 }
 
+export type { EmptyStateProps };
+
 const emptyStateConfigs = {
   appointments: {
     icon: Calendar,

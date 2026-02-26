@@ -5,6 +5,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
   helperText?: string;
+  icon?: React.ReactNode; // Add backward compatibility
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
   fullWidth?: boolean;
@@ -15,6 +16,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
   label,
   error,
   helperText,
+  icon, // Add backward compatibility
   leftIcon,
   rightIcon,
   fullWidth = true,
@@ -25,6 +27,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
 }, ref) => {
   const inputId = id || `input-${Math.random().toString(36).substring(2, 11)}`;
   const hasError = !!error;
+  
+  // Use icon as leftIcon for backward compatibility
+  const actualLeftIcon = leftIcon || icon;
 
   const inputClasses = clsx(
     // Base styles with consistent design tokens
@@ -48,7 +53,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
       'dark:bg-gray-700 dark:focus:bg-gray-800'
     ],
     // Icon padding
-    leftIcon && 'pl-10',
+    actualLeftIcon && 'pl-10',
     rightIcon && 'pr-10',
     fullWidth ? 'w-full' : 'w-auto',
     className
@@ -67,9 +72,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
       )}
       
       <div className="relative">
-        {leftIcon && (
+        {actualLeftIcon && (
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <span className="text-gray-400 dark:text-gray-500">{leftIcon}</span>
+            <span className="text-gray-400 dark:text-gray-500">{actualLeftIcon}</span>
           </div>
         )}
         
