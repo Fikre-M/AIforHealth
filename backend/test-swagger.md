@@ -272,7 +272,8 @@ After verifying Swagger UI works:
    - Add to all route files
 
 2. **Export Postman Collection**
-   - Use Swagger JSON
+   - Use Swagger UI export feature
+   - Or manually create from Swagger JSON
    - Share with team
 
 3. **Add More Examples**
