@@ -10,7 +10,7 @@ const redisClient = process.env.REDIS_URL ? new Redis(process.env.REDIS_URL) : n
 
 // Custom key generator for more granular control
 const generateKey = (req: Request, prefix: string): string => {
-  const userId = req.user?.id || 'anonymous';
+  const userId = req.user?.userId || 'anonymous';
   const ip = req.ip || req.socket.remoteAddress;
   const userAgent = req.get('user-agent') || 'unknown';
 
@@ -44,7 +44,7 @@ export const rateLimiters = {
       logger.warn(`Rate limit exceeded for API`, {
         ip: req.ip,
         path: req.path,
-        userId: req.user?.id,
+        userId: req.user?.userId,
       });
       res.status(429).json({
         success: false,
@@ -139,7 +139,7 @@ export const rateLimiters = {
     handler: (req, res) => {
       logger.warn(`OTP rate limit exceeded`, {
         ip: req.ip,
-        userId: req.user?.id,
+        userId: req.user?.userId,
       });
       res.status(429).json({
         success: false,

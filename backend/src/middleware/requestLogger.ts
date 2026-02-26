@@ -164,12 +164,3 @@ export const securityLogger = (req: Request, res: Response, next: NextFunction) 
 
   next();
 };
-
-// Extend Express Request type
-declare global {
-  namespace Express {
-    interface Request {
-      id?: string;
-    }
-  }
-}

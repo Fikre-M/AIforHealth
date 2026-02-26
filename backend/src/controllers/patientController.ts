@@ -4,18 +4,6 @@ import asyncHandler from "../middleware/asyncHandler";
 import Notification from "../models/Notification";
 import { UserRole } from "@/types";
 
-// Extend the Express Request type
-declare module "express" {
-  interface Request {
-    user?: {
-      _id: Types.ObjectId;
-      role: string;
-      email: string;
-      name: string;
-    };
-  }
-}
-
 /**
  * @swagger
  * tags:
@@ -49,7 +37,7 @@ export const getPatientNotifications = asyncHandler(
     const skip =
       (parseInt(page as string, 10) - 1) * parseInt(limit as string, 10);
 
-    const query: any = { user: req.user._id };
+    const query: any = { user: req.user.userId };
     if (read !== undefined) {
       query.read = read === "true";
     }
@@ -105,7 +93,7 @@ export const markNotificationAsRead = asyncHandler(
     const notification = await Notification.findOneAndUpdate(
       {
         _id: notificationId,
-        user: req.user._id,
+        user: req.user.userId,
       },
       { read: true, readAt: new Date() },
       { new: true }

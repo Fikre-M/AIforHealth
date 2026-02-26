@@ -4,19 +4,6 @@ import AIAssistantService from '../services/AIAssistantService';
 import asyncHandler from '../middleware/asyncHandler';
 import { AIConversationStatus } from '../models/AIAssistant';
 
-// Extend the Express Request type
-declare module 'express' {
-  interface Request {
-    user?: {
-      userId: string;
-      role: string;
-      email: string;
-      iat?: number;
-      exp?: number;
-    };
-  }
-}
-
 /**
  * @route   POST /api/ai/conversations
  * @desc    Create a new AI conversation

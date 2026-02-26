@@ -4,21 +4,6 @@ import { UserService } from '@/services';
 import { UserRole } from '@/types';
 import { ResponseUtil } from '@/utils/response';
 
-// Extend Request interface to include user
-declare global {
-  namespace Express {
-    interface Request {
-      user?: {
-        userId: string;
-        email: string;
-        role: UserRole;
-        iat?: number;
-        exp?: number;
-      };
-    }
-  }
-}
-
 /**
  * Authentication middleware to verify JWT tokens
  */

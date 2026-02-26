@@ -36,7 +36,7 @@ export const auditLog = (action: string, resource: string) => {
     // Wait for response to finish
     res.once('finish', async () => {
       const auditLogEntry: AuditLog = {
-        userId: req.user?.id,
+        userId: req.user?.userId,
         action,
         resource,
         resourceId: req.params.id || req.body.id,

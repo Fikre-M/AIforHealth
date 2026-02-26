@@ -44,7 +44,7 @@ export const suspiciousActivityMonitor = (req: Request, res: Response, next: Nex
     logSuspiciousActivity({
       type: suspicious,
       ip,
-      userId: req.user?.id,
+      userId: req.user?.userId,
       path: req.path,
       method: req.method,
       timestamp: new Date(),
@@ -61,7 +61,7 @@ export const suspiciousActivityMonitor = (req: Request, res: Response, next: Nex
     activities.push({
       type: suspicious,
       ip,
-      userId: req.user?.id,
+      userId: req.user?.userId,
       path: req.path,
       method: req.method,
       timestamp: new Date(),

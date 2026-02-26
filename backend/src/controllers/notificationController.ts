@@ -3,31 +3,6 @@ import { Types } from 'mongoose';
 import NotificationService from '../services/NotificationService';
 import asyncHandler from '../middleware/asyncHandler';
 
-// Extend the Express Request type to include the user property
-declare global {
-  namespace Express {
-    interface Request {
-      user?: {
-        _id: Types.ObjectId;
-        role: string;
-        email: string;
-        name: string;
-      };
-    }
-  }
-}
-
-declare module 'express' {
-  interface Request {
-    user?: {
-      _id: Types.ObjectId;
-      role: string;
-      email: string;
-      name: string;
-    };
-  }
-}
-
 export const getNotifications = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user) {
     res.status(401).json({ success: false, message: 'Not authenticated' });
@@ -36,7 +11,7 @@ export const getNotifications = asyncHandler(async (req: Request, res: Response)
   const { limit = '20', page = '1', unreadOnly } = req.query;
   
   const result = await NotificationService.getUserNotifications(
-    req.user._id,
+    req.user.userId,
     {
       limit: parseInt(limit as string, 10),
       page: parseInt(page as string, 10),
@@ -58,7 +33,7 @@ export const markAsRead = asyncHandler(async (req: Request, res: Response) => {
   }
   const { id } = req.params;
   
-  const notification = await NotificationService.markAsRead(id, req.user._id);
+  const notification = await NotificationService.markAsRead(id, req.user.userId);
   
   if (!notification) {
     return res.status(404).json({
@@ -78,7 +53,7 @@ export const markAllAsRead = asyncHandler(async (req: Request, res: Response) =>
     res.status(401).json({ success: false, message: 'Not authenticated' });
     return;
   }
-  const result = await NotificationService.markAllAsRead(req.user._id);
+  const result = await NotificationService.markAllAsRead(req.user.userId);
   
   res.status(200).json({
     success: true,
@@ -95,7 +70,7 @@ export const deleteNotification = asyncHandler(async (req: Request, res: Respons
   }
   const { id } = req.params;
   
-  const deleted = await NotificationService.deleteNotification(id, req.user._id);
+  const deleted = await NotificationService.deleteNotification(id, req.user.userId);
   
   if (!deleted) {
     return res.status(404).json({

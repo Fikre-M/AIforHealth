@@ -7,6 +7,7 @@
 
 import { Request } from 'express';
 import { Document, Types } from 'mongoose';
+import { UserRole } from './enums';
 
 // Re-export enums
 export * from './enums';
@@ -35,7 +36,7 @@ export interface IUser extends Document {
 
 export interface JWTPayload {
   userId: string;
-  role: string;
+  role: UserRole;
   email: string;
   iat?: number;
   exp?: number;
