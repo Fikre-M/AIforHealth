@@ -1,4 +1,3 @@
-// API Adapter - Direct connection to real API (mock fallbacks removed)
 import api from './api';
 
 // Create a unified API interface

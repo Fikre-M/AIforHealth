@@ -1,4 +1,3 @@
-// src/services/authService.ts
 import type {
   LoginCredentials,
   RegisterData,

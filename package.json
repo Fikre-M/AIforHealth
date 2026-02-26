@@ -26,8 +26,12 @@
     "prettier": "^3.1.1"
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx}": [
-      "eslint --fix",
+    "frontend/**/*.{js,jsx,ts,tsx}": [
+      "node scripts/lint-frontend.js",
+      "prettier --write"
+    ],
+    "backend/**/*.{js,jsx,ts,tsx}": [
+      "node scripts/lint-backend.js",
       "prettier --write"
     ],
     "*.{json,md,yml,yaml}": [
