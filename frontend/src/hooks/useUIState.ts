@@ -4,14 +4,6 @@ import { useLoadingState } from './useLoadingState';
 
 export type UIState = 'idle' | 'loading' | 'success' | 'error' | 'empty';
 
-interface UIStateConfig<T> {
-  data: T | null;
-  error: Error | null;
-  isEmpty: boolean;
-  isLoading: boolean;
-  state: UIState;
-}
-
 interface UseUIStateOptions<T> {
   initialData?: T | null;
   emptyCheck?: (data: T | null) => boolean;

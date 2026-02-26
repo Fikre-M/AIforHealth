@@ -11,7 +11,6 @@ import { ClinicSelector } from '@/components/booking/ClinicSelector';
 import { DoctorSelector } from '@/components/booking/DoctorSelector';
 import { DateTimePicker } from '@/components/booking/DateTimePicker';
 import { AISuggestionPanel } from '@/components/booking/AISuggestionPanel';
-import { AppointmentConfirmation } from '@/components/booking/AppointmentConfirmation';
 import { useUIState } from '@/hooks/useUIState';
 import { useConcurrentOperations } from '@/hooks/useLoadingState';
 import { bookingService } from '@/services/bookingService';
@@ -20,8 +19,7 @@ import type {
   Doctor, 
   DayAvailability, 
   BookingFormData, 
-  AISuggestion, 
-  BookingConfirmation 
+  AISuggestion 
 } from '@/types/booking';
 import { addDays } from 'date-fns';
 
@@ -47,8 +45,6 @@ export function AppointmentBooking() {
   const suggestionsState = useUIState<AISuggestion[]>({
     emptyCheck: (data) => !data || data.length === 0
   });
-  
-  const confirmationState = useUIState<BookingConfirmation>();
   
   const { executeOperation, loadingStates, errors } = useConcurrentOperations();
   

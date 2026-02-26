@@ -1,4 +1,4 @@
-import { Bot, User, AlertTriangle, Calendar, Info } from 'lucide-react';
+import { Bot, User, AlertTriangle, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import type { ChatMessage as ChatMessageType } from '@/types/symptomChecker';
 import { format, parseISO } from 'date-fns';

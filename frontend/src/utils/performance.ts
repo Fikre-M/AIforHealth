@@ -2,7 +2,7 @@
  * Performance monitoring and optimization utilities
  */
 
-import { onCLS, onFID, onFCP, onLCP, onTTFB, onINP, Metric } from 'web-vitals';
+import { onCLS, onFID, onFCP, onLCP, onTTFB, onINP, type Metric } from 'web-vitals';
 
 // Web Vitals thresholds (Google's recommended values)
 export const WEB_VITALS_THRESHOLDS = {
@@ -37,18 +37,6 @@ export const WEB_VITALS_THRESHOLDS = {
     needsImprovement: 500,  // <= 500ms
   },
 };
-
-/**
- * Get rating for a metric value
- */
-function getRating(name: string, value: number): 'good' | 'needs-improvement' | 'poor' {
-  const thresholds = WEB_VITALS_THRESHOLDS[name as keyof typeof WEB_VITALS_THRESHOLDS];
-  if (!thresholds) return 'good';
-  
-  if (value <= thresholds.good) return 'good';
-  if (value <= thresholds.needsImprovement) return 'needs-improvement';
-  return 'poor';
-}
 
 /**
  * Send metric to analytics

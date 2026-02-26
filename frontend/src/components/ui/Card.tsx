@@ -1,6 +1,5 @@
 import React from 'react';
 import { clsx } from 'clsx';
-import { designTokens, componentTokens } from '@/styles/design-tokens';
 
 interface CardProps {
   children: React.ReactNode;

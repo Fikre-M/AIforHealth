@@ -3,7 +3,7 @@ import { Calendar, Clock, CheckCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import type { DayAvailability, TimeSlot } from '@/types/booking';
-import { format, parseISO, addDays } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 
 interface DateTimePickerProps {
   availability: DayAvailability[];

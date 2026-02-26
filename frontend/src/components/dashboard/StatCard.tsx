@@ -1,7 +1,6 @@
 import { clsx } from 'clsx';
 import { Card, CardContent } from '@/components/ui/Card';
 import { LoadingSkeleton } from '@/components/ui/LoadingSkeleton';
-import { designTokens, getVariantColors } from '@/styles/design-tokens';
 
 interface StatCardProps {
   title: string;
@@ -43,8 +42,6 @@ export function StatCard({
       </Card>
     );
   }
-
-  const variantColors = getVariantColors(variant);
 
   return (
     <Card className={clsx('h-full', className)} hover>

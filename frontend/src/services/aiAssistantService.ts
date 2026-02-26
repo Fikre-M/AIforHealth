@@ -1,5 +1,3 @@
-import type { ChatMessage } from '@/types';
-
 // Enhanced AI conversation types
 export interface AIConversation {
   id: string;

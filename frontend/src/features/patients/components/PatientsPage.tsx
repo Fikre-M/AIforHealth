@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { 
   Users, 
   Search, 
@@ -14,16 +14,14 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { Card, CardContent, CardHeader } from '@/components/ui/Card';
+import { Card, CardContent } from '@/components/ui/Card';
 import { LoadingSkeleton } from '@/components/ui/LoadingSkeleton';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { useAuth } from '@/hooks/useAuth';
 import { doctorService } from '@/services/doctorService';
 import type { Patient } from '@/types/doctor';
 
 export function PatientsPage() {
-  const { user } = useAuth();
   const navigate = useNavigate();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [isLoading, setIsLoading] = useState(true);

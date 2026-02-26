@@ -1,7 +1,6 @@
 import React from 'react';
 import { clsx } from 'clsx';
 import { ButtonSpinner } from './LoadingSpinner';
-import { designTokens, getVariantColors } from '@/styles/design-tokens';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'success';
