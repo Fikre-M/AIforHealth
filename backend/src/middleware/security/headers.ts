@@ -1,6 +1,7 @@
 // backend/src/middleware/security/headers.ts
 import helmet from 'helmet';
 import { Request, Response, NextFunction } from 'express';
+import { logger } from '@/utils/logger';
 
 // Custom security headers middleware
 export const securityHeaders = helmet({
@@ -38,11 +39,6 @@ export const securityHeaders = helmet({
   },
   referrerPolicy: {
     policy: 'strict-origin-when-cross-origin',
-  },
-  expectCt: {
-    maxAge: 86400,
-    enforce: true,
-    reportUri: '/api/v1/security/expect-ct-violation',
   },
 });
 

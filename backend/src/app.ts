@@ -11,7 +11,7 @@ import { logApp, logInfo, logError } from './utils/logger';
 import { responseMiddleware } from './middleware/responseMiddleware';
 
 // Import security middleware
-import { setupSecurity } from './middleware/security';
+import configureSecurity from './middleware/security';
 import rateLimiter from './middleware/rateLimiter';
 
 class App {
@@ -50,7 +50,7 @@ class App {
     this.app.use(requestLogger);
 
     // Enhanced security middleware (Helmet, CORS, HTTPS enforcement)
-    setupSecurity(this.app);
+    configureSecurity(this.app);
     
     // Parse JSON and URL-encoded bodies
     this.app.use(express.json({ limit: '10mb' }));
@@ -63,8 +63,9 @@ class App {
       customSiteTitle: "AI for Health API",
     };
     
-    const swaggerUiHandler = swaggerUi.setup(specs, swaggerOptions);
-    this.app.use("/api-docs", swaggerUi.serve, swaggerUiHandler);
+    // Setup swagger UI with type assertion to bypass type issues
+    this.app.use("/api-docs", swaggerUi.serve as any);
+    this.app.get("/api-docs", swaggerUi.setup(specs, swaggerOptions) as any);
   }
 
   private initializeRoutes(): void {

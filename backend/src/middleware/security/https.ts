@@ -48,28 +48,35 @@ export const hstsPreloadCheck = (req: Request, res: Response, next: NextFunction
 
 // Certificate transparency monitoring
 export const monitorCertificate = (req: Request, res: Response, next: NextFunction) => {
-  if (req.secure) {
-    const sslCertificate = req.socket.getPeerCertificate();
+  if (req.secure && req.socket) {
+    try {
+      // Type assertion for TLS socket
+      const tlsSocket = req.socket as any;
+      const sslCertificate = tlsSocket.getPeerCertificate ? tlsSocket.getPeerCertificate() : null;
 
-    // Check certificate expiration
-    if (sslCertificate && sslCertificate.valid_to) {
-      const expiryDate = new Date(sslCertificate.valid_to);
-      const daysUntilExpiry = Math.ceil(
-        (expiryDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
-      );
+      // Check certificate expiration
+      if (sslCertificate && sslCertificate.valid_to) {
+        const expiryDate = new Date(sslCertificate.valid_to);
+        const daysUntilExpiry = Math.ceil(
+          (expiryDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+        );
 
-      if (daysUntilExpiry < 30) {
-        logger.warn(`SSL certificate expires in ${daysUntilExpiry} days`, {
-          daysLeft: daysUntilExpiry,
-          expiryDate: expiryDate.toISOString(),
-        });
+        if (daysUntilExpiry < 30) {
+          logger.warn(`SSL certificate expires in ${daysUntilExpiry} days`, {
+            daysLeft: daysUntilExpiry,
+            expiryDate: expiryDate.toISOString(),
+          });
 
-        // Alert if less than 7 days
-        if (daysUntilExpiry < 7) {
-          // Send alert to admin
-          // alertAdmins('SSL_CERTIFICATE_EXPIRING', { daysUntilExpiry });
+          // Alert if less than 7 days
+          if (daysUntilExpiry < 7) {
+            // Send alert to admin
+            // alertAdmins('SSL_CERTIFICATE_EXPIRING', { daysUntilExpiry });
+          }
         }
       }
+    } catch (error) {
+      // Ignore certificate monitoring errors
+      console.warn('Certificate monitoring error:', error);
     }
   }
 

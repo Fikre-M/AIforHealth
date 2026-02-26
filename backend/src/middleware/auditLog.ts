@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import mongoose from 'mongoose';
 import AuditLog from '@/models/AuditLog';
 
 /**
@@ -29,7 +30,7 @@ export const auditLog = (action: string, options: {
       
       // Log the action (async, don't wait)
       AuditLog.logAction({
-        userId: req.user?.userId,
+        userId: req.user?.userId ? new mongoose.Types.ObjectId(req.user.userId) : undefined,
         action,
         resource: req.originalUrl,
         resourceId,
@@ -114,7 +115,7 @@ export const logSecurityEvent = async (
 ) => {
   try {
     await AuditLog.logAction({
-      userId: req.user?.userId,
+      userId: req.user?.userId ? new mongoose.Types.ObjectId(req.user.userId) : undefined,
       action: action as any,
       resource: req.originalUrl,
       method: req.method as any,

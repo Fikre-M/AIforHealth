@@ -1,4 +1,4 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Document, Schema, Model } from 'mongoose';
 
 export interface IAuditLog extends Document {
   userId?: mongoose.Types.ObjectId;
@@ -14,6 +14,13 @@ export interface IAuditLog extends Document {
   errorMessage?: string;
   metadata?: Record<string, any>;
   timestamp: Date;
+}
+
+export interface IAuditLogModel extends Model<IAuditLog> {
+  logAction(data: Partial<IAuditLog>): Promise<IAuditLog | undefined>;
+  getUserActivity(userId: string, options?: any): Promise<IAuditLog[]>;
+  getResourceActivity(resource: string, resourceId?: string, options?: any): Promise<IAuditLog[]>;
+  getSecurityEvents(options?: any): Promise<IAuditLog[]>;
 }
 
 const auditLogSchema = new Schema<IAuditLog>(
@@ -124,7 +131,7 @@ auditLogSchema.index({ success: 1, timestamp: -1 });
 auditLogSchema.index({ timestamp: 1 }, { expireAfterSeconds: 189216000 }); // 6 years
 
 // Static method to log action
-auditLogSchema.statics.logAction = async function(data: Partial<IAuditLog>) {
+auditLogSchema.statics.logAction = async function(data: Partial<IAuditLog>): Promise<IAuditLog | undefined> {
   try {
     return await this.create({
       ...data,
@@ -133,6 +140,7 @@ auditLogSchema.statics.logAction = async function(data: Partial<IAuditLog>) {
   } catch (error) {
     console.error('Failed to create audit log:', error);
     // Don't throw - audit logging should never break the application
+    return undefined;
   }
 };
 
@@ -176,6 +184,6 @@ auditLogSchema.statics.getSecurityEvents = function(
     .lean();
 };
 
-const AuditLog = mongoose.model<IAuditLog>('AuditLog', auditLogSchema);
+const AuditLog = mongoose.model<IAuditLog, IAuditLogModel>('AuditLog', auditLogSchema);
 
 export default AuditLog;

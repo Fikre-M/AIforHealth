@@ -24,6 +24,9 @@ export interface ApiResponse<T = any> {
     requestId?: string;
     responseTime?: number;
     version?: string;
+    sortBy?: string;
+    sortOrder?: string;
+    [key: string]: any;
   };
 }
 

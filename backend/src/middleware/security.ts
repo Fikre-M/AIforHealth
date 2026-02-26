@@ -17,77 +17,37 @@ export const enforceHTTPS = (req: Request, res: Response, next: NextFunction): v
 };
 
 /**
- * Enhanced Security Headers Configuration
+ * Basic Security Configuration
  */
-export const setupSecurity = (app: Express): void => {
-  // HTTPS enforcement in production
-  if (env.NODE_ENV === 'production') {
-    app.use(enforceHTTPS);
-  }
+export const configureSecurity = (app: Express): void => {
+  // Basic CORS configuration
+  app.use(cors({
+    origin: env.NODE_ENV === 'production' 
+      ? ['https://yourdomain.com'] 
+      : ['http://localhost:3000', 'http://localhost:5173'],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+  }));
 
-  // Enhanced security headers with Helmet
+  // Basic helmet configuration
   app.use(helmet({
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        styleSrc: ["'self'", "'unsafe-inline'"], // Required for some UI frameworks
+        styleSrc: ["'self'", "'unsafe-inline'"],
         scriptSrc: ["'self'"],
         imgSrc: ["'self'", "data:", "https:"],
-        connectSrc: ["'self'"],
-        fontSrc: ["'self'"],
-        objectSrc: ["'none'"],
-        mediaSrc: ["'self'"],
-        frameSrc: ["'none'"],
-        upgradeInsecureRequests: env.NODE_ENV === 'production' ? [] : null,
       },
     },
-    hsts: {
-      maxAge: 31536000, // 1 year in seconds
-      includeSubDomains: true,
-      preload: true,
-    },
-    noSniff: true, // X-Content-Type-Options: nosniff
-    xssFilter: true, // X-XSS-Protection: 1; mode=block
-    hidePoweredBy: true, // Remove X-Powered-By header
-    frameguard: { action: 'deny' }, // X-Frame-Options: DENY
-    crossOriginEmbedderPolicy: false,
-    crossOriginResourcePolicy: { policy: 'cross-origin' },
+    crossOriginEmbedderPolicy: false
   }));
 
-  // CORS configuration
-  app.use(cors({
-    origin: env.CORS_ORIGIN.split(',').map(origin => origin.trim()),
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Request-ID'],
-    exposedHeaders: ['X-Request-ID'],
-    maxAge: 86400, // 24 hours
-  }));
+  // Compression
+  app.use(compression());
 
-  // Compression for response optimization
-  app.use(compression({
-    filter: (req, res) => {
-      if (req.headers['x-no-compression']) {
-        return false;
-      }
-      return compression.filter(req, res);
-    },
-    level: 6, // Compression level (0-9)
-  }));
-
-  // Additional security headers
-  app.use((req: Request, res: Response, next: NextFunction) => {
-    // Prevent MIME type sniffing
-    res.setHeader('X-Content-Type-Options', 'nosniff');
-    
-    // Referrer policy
-    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-    
-    // Permissions policy
-    res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
-    
-    next();
-  });
+  // HTTPS enforcement
+  app.use(enforceHTTPS);
 };
 
-export default setupSecurity;
+export default configureSecurity;

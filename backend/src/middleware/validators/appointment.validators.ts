@@ -124,7 +124,7 @@ export const appointmentValidators = {
       query('endDate')
         .isISO8601()
         .custom((value, { req }) => {
-          if (new Date(value) <= new Date(req.query.startDate)) {
+          if (req.query && req.query.startDate && new Date(value) <= new Date(req.query.startDate as string)) {
             throw new Error('End date must be after start date');
           }
           return true;

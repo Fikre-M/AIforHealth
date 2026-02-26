@@ -45,7 +45,9 @@ export class DatabaseUtil {
       const db = mongoose.connection.db;
       if (!db) throw new Error('Database not connected');
       
-      return await db.collection(collectionName).stats();
+      // Use countDocuments instead of stats for basic collection info
+      const count = await db.collection(collectionName).countDocuments();
+      return { count };
     } catch (error) {
       console.error(`Error getting stats for collection ${collectionName}:`, error);
       return null;
@@ -74,7 +76,7 @@ export class DatabaseUtil {
   static async createIndexes(model: mongoose.Model<any>, indexes: any[]): Promise<void> {
     try {
       for (const index of indexes) {
-        await model.createIndexes([index]);
+        await model.collection.createIndex(index);
       }
       console.log(`✅ Indexes created for ${model.modelName}`);
     } catch (error) {

@@ -28,10 +28,10 @@ router.get('/requests',
 router.get('/', (req, res, next) => {
   // If this is accessed via /appointment-requests, treat it as requests
   if (req.baseUrl.includes('appointment-requests')) {
-    return AppointmentController.getAppointmentRequests(req, res, next);
+    return AppointmentController.getAppointmentRequests(req, res);
   }
   // Otherwise, use the normal getAppointments
-  return AppointmentController.getAppointments(req, res, next);
+  return AppointmentController.getAppointments(req, res);
 });
 
 router.get('/stats', 

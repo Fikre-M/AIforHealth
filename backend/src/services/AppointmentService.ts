@@ -305,7 +305,10 @@ export class AppointmentService {
    * Bulk update appointments
    */
   static async bulkUpdateAppointments(operation: string, appointments: any[]): Promise<any> {
-    const results = {
+    const results: {
+      successful: any[];
+      failed: { id: any; reason: string }[];
+    } = {
       successful: [],
       failed: [],
     };
