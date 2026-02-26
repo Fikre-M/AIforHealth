@@ -54,50 +54,18 @@ export function AnalyticsPage() {
     try {
       setIsLoading(true);
       
-      // Simulate API call with mock data
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Fetch analytics data from API
+      const response = await fetch(`/api/v1/analytics/dashboard?period=${selectedPeriod}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch analytics data');
+      }
       
-      const mockData: AnalyticsData = {
-        totalPatients: 1247,
-        totalAppointments: 3456,
-        completedAppointments: 3102,
-        cancelledAppointments: 354,
-        averageWaitTime: 12,
-        patientSatisfaction: 4.7,
-        monthlyRevenue: 125000,
-        patientGrowth: 8.5,
-        appointmentTrends: [
-          { month: 'Jan', appointments: 280, completed: 252, cancelled: 28 },
-          { month: 'Feb', appointments: 310, completed: 279, cancelled: 31 },
-          { month: 'Mar', appointments: 295, completed: 266, cancelled: 29 },
-          { month: 'Apr', appointments: 340, completed: 306, cancelled: 34 },
-          { month: 'May', appointments: 365, completed: 328, cancelled: 37 },
-          { month: 'Jun', appointments: 320, completed: 288, cancelled: 32 },
-        ],
-        topConditions: [
-          { condition: 'Hypertension', count: 156, percentage: 12.5 },
-          { condition: 'Diabetes Type 2', count: 134, percentage: 10.7 },
-          { condition: 'Anxiety', count: 98, percentage: 7.9 },
-          { condition: 'Asthma', count: 87, percentage: 7.0 },
-          { condition: 'Depression', count: 76, percentage: 6.1 },
-        ],
-        appointmentsByHour: [
-          { hour: '8 AM', count: 45 },
-          { hour: '9 AM', count: 78 },
-          { hour: '10 AM', count: 92 },
-          { hour: '11 AM', count: 85 },
-          { hour: '12 PM', count: 67 },
-          { hour: '1 PM', count: 54 },
-          { hour: '2 PM', count: 89 },
-          { hour: '3 PM', count: 95 },
-          { hour: '4 PM', count: 82 },
-          { hour: '5 PM', count: 71 },
-        ]
-      };
-      
-      setAnalyticsData(mockData);
+      const data = await response.json();
+      setAnalyticsData(data.data || data);
     } catch (error) {
       console.error('Error loading analytics data:', error);
+      // Show error to user instead of falling back to mock data
+      throw error;
     } finally {
       setIsLoading(false);
     }

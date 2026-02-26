@@ -2,7 +2,6 @@
 interface AppConfig {
   // API Configuration
   apiBaseUrl: string;
-  useMockApi: boolean;
   
   // App Configuration
   appName: string;
@@ -46,7 +45,6 @@ const getBooleanEnvVar = (key: string, defaultValue = false): boolean => {
 export const config: AppConfig = {
   // API Configuration
   apiBaseUrl: getEnvVar('VITE_API_BASE_URL', 'http://localhost:5000/api/v1'),
-  useMockApi: getBooleanEnvVar('VITE_USE_MOCK_API', import.meta.env.DEV),
   
   // App Configuration
   appName: getEnvVar('VITE_APP_NAME', 'AI for Health'),
