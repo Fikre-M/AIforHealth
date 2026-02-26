@@ -17,6 +17,12 @@
     "format": "prettier --write \"src/**/*.{ts,js,json}\"",
     "format:check": "prettier --check \"src/**/*.{ts,js,json}\"",
     "type-check": "tsc --noEmit",
+    "test": "jest --coverage",
+    "test:watch": "jest --watch",
+    "test:auth": "jest src/services/__tests__/AuthService.test.ts --coverage",
+    "test:appointment": "jest src/services/__tests__/AppointmentService.test.ts --coverage",
+    "test:middleware": "jest src/middleware/__tests__ --coverage",
+    "test:utils": "jest src/utils/__tests__ --coverage"
     "test": "jest",
     "test:unit": "jest --testPathPattern=unit",
     "test:integration": "jest --testPathPattern=integration",
