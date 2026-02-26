@@ -3,6 +3,7 @@ import { Types } from "mongoose";
 import asyncHandler from "../middleware/asyncHandler";
 import Notification from "../models/Notification";
 import { UserRole } from "@/types";
+import { ResponseUtil } from "@/utils/response";
 
 /**
  * @swagger
@@ -10,6 +11,61 @@ import { UserRole } from "@/types";
  *   name: Patients
  *   description: Patient management
  */
+
+export class PatientController {
+  /**
+   * @route   POST /api/patients
+   * @desc    Create a new patient
+   * @access  Private/Doctor/Admin
+   */
+  static create = asyncHandler(async (req: Request, res: Response) => {
+    try {
+      // TODO: Implement patient creation logic
+      // This would typically involve creating a patient record in the database
+      ResponseUtil.success(res, {}, 'Patient created successfully', 201);
+    } catch (error: any) {
+      ResponseUtil.error(res, error.message, 400);
+    }
+  });
+
+  /**
+   * @route   PUT /api/patients/:id
+   * @desc    Update a patient
+   * @access  Private/Doctor/Admin/Patient
+   */
+  static update = asyncHandler(async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      // TODO: Implement patient update logic
+      ResponseUtil.success(res, { id }, 'Patient updated successfully');
+    } catch (error: any) {
+      ResponseUtil.error(res, error.message, 400);
+    }
+  });
+
+  /**
+   * @route   GET /api/patients
+   * @desc    Get list of patients with pagination
+   * @access  Private/Doctor/Admin
+   */
+  static list = asyncHandler(async (req: Request, res: Response) => {
+    try {
+      const { page = 1, limit = 10 } = req.query;
+      // TODO: Implement patient listing logic with pagination
+      ResponseUtil.success(res, {
+        patients: [],
+        pagination: {
+          page: Number(page),
+          limit: Number(limit),
+          total: 0,
+          totalPages: 0
+        }
+      }, 'Patients retrieved successfully');
+    } catch (error: any) {
+      ResponseUtil.error(res, error.message, 400);
+    }
+  });
+}
 
 /**
  * @route   GET /api/patients/notifications

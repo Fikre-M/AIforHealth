@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import { patientValidators } from '@/middleware/validators/patient.validators';
-import { PatientController } from '@/controllers/patient.controller';
-import { authenticate } from '@/middleware/auth';
-import { authorize } from '@/middleware/authorize';
+import { PatientController } from '@/controllers/patientController';
+import { authenticate, authorize } from '@/middleware/auth';
+import { UserRole } from '@/types';
 
 const router = Router();
 
@@ -10,7 +10,7 @@ const router = Router();
 router.post(
   '/',
   authenticate,
-  authorize(['doctor', 'admin']),
+  authorize(UserRole.DOCTOR, UserRole.ADMIN),
   patientValidators.create, // <-- Validates ALL patient fields (name, DOB, address, medical history, etc.)
   PatientController.create
 );
@@ -19,7 +19,7 @@ router.post(
 router.put(
   '/:id',
   authenticate,
-  authorize(['doctor', 'admin', 'patient']),
+  authorize(UserRole.DOCTOR, UserRole.ADMIN, UserRole.PATIENT),
   patientValidators.update, // <-- Validates update fields
   PatientController.update
 );
@@ -28,7 +28,7 @@ router.put(
 router.get(
   '/',
   authenticate,
-  authorize(['doctor', 'admin']),
+  authorize(UserRole.DOCTOR, UserRole.ADMIN),
   patientValidators.list, // <-- Validates pagination: page, limit, sortBy, sortOrder
   PatientController.list
 );
