@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { env } from '@/config/env';
-import { JwtPayload, UserRole } from '@/types';
+import { JWTPayload, UserRole } from '@/types';
 
 export interface TokenPayload {
   userId: string;
@@ -60,12 +60,12 @@ export class JwtUtil {
   /**
    * Verify access token
    */
-  static verifyAccessToken(token: string): JwtPayload {
+  static verifyAccessToken(token: string): JWTPayload {
     try {
       return jwt.verify(token, env.JWT_SECRET, {
         issuer: 'aiforhealth-api',
         audience: 'aiforhealth-client',
-      }) as JwtPayload;
+      }) as JWTPayload;
     } catch (error) {
       if (error instanceof jwt.TokenExpiredError) {
         throw new Error('Access token expired');
@@ -80,12 +80,12 @@ export class JwtUtil {
   /**
    * Verify refresh token
    */
-  static verifyRefreshToken(token: string): JwtPayload {
+  static verifyRefreshToken(token: string): JWTPayload {
     try {
       return jwt.verify(token, env.JWT_REFRESH_SECRET, {
         issuer: 'aiforhealth-api',
         audience: 'aiforhealth-client',
-      }) as JwtPayload;
+      }) as JWTPayload;
     } catch (error) {
       if (error instanceof jwt.TokenExpiredError) {
         throw new Error('Refresh token expired');
