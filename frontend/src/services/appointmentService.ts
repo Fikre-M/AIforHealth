@@ -100,7 +100,7 @@ export const appointmentService = {
           hour12: false 
         }),
         status: response.status,
-        type: response.type,
+        type: response.type || 'consultation', // Add fallback for missing type
         notes: response.notes || response.reason,
         ...response
       };

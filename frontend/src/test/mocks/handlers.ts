@@ -72,6 +72,7 @@ export const handlers = [
           date: '2024-03-20',
           time: '10:00',
           status: 'scheduled',
+          type: 'consultation', // Add missing type property
           reason: 'Regular checkup',
         },
       ],
@@ -88,6 +89,7 @@ export const handlers = [
         date: '2024-03-21',
         time: '14:00',
         status: 'scheduled',
+        type: 'follow-up', // Add missing type property
         reason: 'Follow-up',
       },
     });

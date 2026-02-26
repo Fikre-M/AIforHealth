@@ -69,7 +69,7 @@ export function AppointmentsPage() {
         doctorSpecialty: apt.doctor?.specialty || 'General Practice',
         date: apt.appointmentDate ? apt.appointmentDate.split('T')[0] : (apt.date || ''),
         time: apt.appointmentDate ? format(parseISO(apt.appointmentDate), 'HH:mm') : apt.time,
-        type: apt.type as any,
+        type: apt.type || 'consultation', // Add fallback for missing type
         status: apt.status as any,
         location: 'Medical Center',
         notes: apt.notes || apt.reason,
@@ -108,7 +108,7 @@ export function AppointmentsPage() {
           doctorSpecialty: apt.doctor?.specialty || 'General Practice',
           date: apt.appointmentDate ? apt.appointmentDate.split('T')[0] : (apt.date || ''),
           time: apt.appointmentDate ? format(parseISO(apt.appointmentDate), 'HH:mm') : apt.time,
-          type: apt.type as any,
+          type: apt.type || 'consultation', // Add fallback for missing type
           status: apt.status as any,
           location: 'Medical Center',
           notes: apt.notes || apt.reason,
