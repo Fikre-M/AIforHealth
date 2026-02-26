@@ -19,6 +19,9 @@ import patientRoutes from './patientRoutes';
 // Import doctor routes
 import doctorRoutes from './doctorRoutes';
 
+// Import clinic routes
+import clinicRoutes from './clinicRoutes';
+
 // Import AI assistant routes
 import aiAssistantRoutes from './aiAssistantRoutes';
 
@@ -47,6 +50,9 @@ router.use('/patients', patientRoutes);
 
 // Doctor routes
 router.use('/doctors', doctorRoutes);
+
+// Clinic routes
+router.use('/clinics', clinicRoutes);
 
 // AI Assistant routes
 router.use('/ai-assistant', aiAssistantRoutes);

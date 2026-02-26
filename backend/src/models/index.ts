@@ -11,6 +11,8 @@ export { ReminderType, ReminderPriority } from './HealthReminder';
 export { default as HealthMetric } from './HealthMetric';
 export type { IHealthMetric } from './HealthMetric';
 export { MetricType, MetricStatus, MetricTrend } from './HealthMetric';
+export { Clinic } from './Clinic';
+export type { IClinic } from './Clinic';
 
 // Future model exports will be added here:
 // export { default as Doctor } from './Doctor';
