@@ -1,4 +1,4 @@
-import jwt from 'jsonwebtoken';
+import * as jwt from 'jsonwebtoken';
 import { redisClient } from '@/config/redis';
 
 interface TokenPayload {
@@ -29,11 +29,13 @@ export class TokenService {
 
     const accessToken = jwt.sign(payload, process.env.JWT_SECRET!, {
       expiresIn: this.ACCESS_TOKEN_EXPIRY,
-    });
+      algorithm: 'HS256'
+    } as jwt.SignOptions);
 
     const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET!, {
       expiresIn: this.REFRESH_TOKEN_EXPIRY,
-    });
+      algorithm: 'HS256'
+    } as jwt.SignOptions);
 
     // Store refresh token in Redis with 7 day expiry
     await redisClient.setEx(`refresh_token:${refreshToken}`, 7 * 24 * 60 * 60, user._id.toString());
@@ -50,7 +52,9 @@ export class TokenService {
    */
   static verifyAccessToken(token: string): TokenPayload {
     try {
-      return jwt.verify(token, process.env.JWT_SECRET!) as TokenPayload;
+      return jwt.verify(token, process.env.JWT_SECRET!, {
+        algorithms: ['HS256']
+      } as jwt.VerifyOptions) as TokenPayload;
     } catch (error) {
       throw new Error('Invalid or expired access token');
     }
@@ -61,7 +65,9 @@ export class TokenService {
    */
   static verifyRefreshToken(token: string): TokenPayload {
     try {
-      return jwt.verify(token, process.env.JWT_REFRESH_SECRET!) as TokenPayload;
+      return jwt.verify(token, process.env.JWT_REFRESH_SECRET!, {
+        algorithms: ['HS256']
+      } as jwt.VerifyOptions) as TokenPayload;
     } catch (error) {
       throw new Error('Invalid or expired refresh token');
     }

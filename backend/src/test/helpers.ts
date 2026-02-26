@@ -1,4 +1,4 @@
-import jwt from 'jsonwebtoken';
+import * as jwt from 'jsonwebtoken';
 import { Types } from 'mongoose';
 
 /**
@@ -8,7 +8,10 @@ export const generateTestToken = (userId: string, role: string = 'patient'): str
   return jwt.sign(
     { userId, role },
     process.env.JWT_SECRET!,
-    { expiresIn: process.env.JWT_EXPIRES_IN }
+    { 
+      expiresIn: process.env.JWT_EXPIRES_IN || '24h',
+      algorithm: 'HS256'
+    } as jwt.SignOptions
   );
 };
 

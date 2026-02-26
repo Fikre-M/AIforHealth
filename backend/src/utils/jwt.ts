@@ -1,4 +1,4 @@
-import jwt from 'jsonwebtoken';
+import * as jwt from 'jsonwebtoken';
 import { env } from '@/config/env';
 import { JWTPayload, UserRole } from '@/types';
 
@@ -17,18 +17,22 @@ export interface TokenPair {
  * JWT utility functions for token generation and verification
  */
 export class JwtUtil {
+  private static secret = env.JWT_SECRET;
+  private static refreshSecret = env.JWT_REFRESH_SECRET;
+
   /**
    * Generate access token
    */
   static generateAccessToken(payload: TokenPayload): string {
     return jwt.sign(
-      payload as any,
-      env.JWT_SECRET,
+      payload,
+      this.secret,
       {
         expiresIn: env.JWT_EXPIRES_IN,
+        algorithm: 'HS256',
         issuer: 'aiforhealth-api',
         audience: 'aiforhealth-client',
-      }
+      } as jwt.SignOptions
     );
   }
 
@@ -37,13 +41,14 @@ export class JwtUtil {
    */
   static generateRefreshToken(payload: TokenPayload): string {
     return jwt.sign(
-      payload as any,
-      env.JWT_REFRESH_SECRET,
+      payload,
+      this.refreshSecret,
       {
         expiresIn: env.JWT_REFRESH_EXPIRES_IN,
+        algorithm: 'HS256',
         issuer: 'aiforhealth-api',
         audience: 'aiforhealth-client',
-      }
+      } as jwt.SignOptions
     );
   }
 
@@ -62,10 +67,20 @@ export class JwtUtil {
    */
   static verifyAccessToken(token: string): JWTPayload {
     try {
-      return jwt.verify(token, env.JWT_SECRET, {
+      const decoded = jwt.verify(token, this.secret, {
         issuer: 'aiforhealth-api',
         audience: 'aiforhealth-client',
-      }) as JWTPayload;
+        algorithms: ['HS256'],
+      }) as jwt.JwtPayload;
+
+      // Convert to our JWTPayload format
+      return {
+        userId: decoded.userId as string,
+        email: decoded.email as string,
+        role: decoded.role as UserRole,
+        iat: decoded.iat,
+        exp: decoded.exp,
+      };
     } catch (error) {
       if (error instanceof jwt.TokenExpiredError) {
         throw new Error('Access token expired');
@@ -82,10 +97,20 @@ export class JwtUtil {
    */
   static verifyRefreshToken(token: string): JWTPayload {
     try {
-      return jwt.verify(token, env.JWT_REFRESH_SECRET, {
+      const decoded = jwt.verify(token, this.refreshSecret, {
         issuer: 'aiforhealth-api',
         audience: 'aiforhealth-client',
-      }) as JWTPayload;
+        algorithms: ['HS256'],
+      }) as jwt.JwtPayload;
+
+      // Convert to our JWTPayload format
+      return {
+        userId: decoded.userId as string,
+        email: decoded.email as string,
+        role: decoded.role as UserRole,
+        iat: decoded.iat,
+        exp: decoded.exp,
+      };
     } catch (error) {
       if (error instanceof jwt.TokenExpiredError) {
         throw new Error('Refresh token expired');
@@ -114,8 +139,8 @@ export class JwtUtil {
   /**
    * Decode token without verification (for debugging)
    */
-  static decodeToken(token: string): any {
-    return jwt.decode(token);
+  static decodeToken(token: string): jwt.JwtPayload | null {
+    return jwt.decode(token) as jwt.JwtPayload;
   }
 
   /**
@@ -123,7 +148,7 @@ export class JwtUtil {
    */
   static getTokenExpiration(token: string): Date | null {
     try {
-      const decoded = jwt.decode(token) as any;
+      const decoded = jwt.decode(token) as jwt.JwtPayload;
       if (decoded && decoded.exp) {
         return new Date(decoded.exp * 1000);
       }
