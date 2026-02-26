@@ -139,7 +139,7 @@ export function DateTimePicker({
                 <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
                   {selectedDayAvailability.slots
                     .filter(slot => {
-                      const hour = parseInt(slot.time.split(':')[0]);
+                      const hour = parseInt((slot.time || '').split(':')[0] || '0');
                       return hour < 12;
                     })
                     .map((slot) => (
@@ -159,7 +159,7 @@ export function DateTimePicker({
                 <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
                   {selectedDayAvailability.slots
                     .filter(slot => {
-                      const hour = parseInt(slot.time.split(':')[0]);
+                      const hour = parseInt((slot.time || '').split(':')[0] || '0');
                       return hour >= 12 && hour < 17;
                     })
                     .map((slot) => (
@@ -179,7 +179,7 @@ export function DateTimePicker({
                 <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
                   {selectedDayAvailability.slots
                     .filter(slot => {
-                      const hour = parseInt(slot.time.split(':')[0]);
+                      const hour = parseInt((slot.time || '').split(':')[0] || '0');
                       return hour >= 17;
                     })
                     .map((slot) => (

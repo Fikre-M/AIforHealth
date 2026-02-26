@@ -137,7 +137,7 @@ export function PatientDashboard() {
       {/* Welcome Header with consistent gradient and typography */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-700 dark:to-blue-800 rounded-xl p-6 text-white shadow-lg">
         <h1 className="text-2xl font-bold mb-2">
-          Welcome back, {user?.name?.split(' ')[0]}! 👋
+          Welcome back, {user?.name?.split(' ')[0] || 'User'}! 👋
         </h1>
         <p className="text-blue-100 dark:text-blue-200 text-base">
           Here's your health overview for today

@@ -133,7 +133,7 @@ export function DoctorDashboard() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold mb-2">
-              Good morning, Dr. {user?.name?.split(' ').pop()}! 👨‍⚕️
+              Good morning, Dr. {user?.name?.split(' ').pop() || 'Doctor'}! 👨‍⚕️
             </h1>
             <p className="text-medical-100">
               You have {scheduledAppointments} appointments scheduled for today

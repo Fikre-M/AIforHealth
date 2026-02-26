@@ -93,7 +93,7 @@ export const appointmentService = {
         id: response._id,
         patientId: response.patient?._id || response.patient,
         doctorId: response.doctor?._id || response.doctor,
-        date: response.appointmentDate?.split('T')[0] || response.date,
+        date: response.appointmentDate?.split('T')[0] || response.date || '',
         time: new Date(response.appointmentDate).toLocaleTimeString('en-US', { 
           hour: '2-digit', 
           minute: '2-digit',

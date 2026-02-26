@@ -45,6 +45,7 @@ export const formatters = {
    * Format time
    */
   time: (time: string): string => {
+    if (!time) return '';
     const [hours, minutes] = time.split(':');
     const hour = parseInt(hours, 10);
     const ampm = hour >= 12 ? 'PM' : 'AM';
@@ -99,6 +100,7 @@ export const stringUtils = {
    * Generate initials from name
    */
   initials: (name: string): string => {
+    if (!name) return '';
     return name
       .split(' ')
       .map(word => word.charAt(0))
