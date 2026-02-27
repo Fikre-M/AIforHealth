@@ -66,11 +66,7 @@ function App() {
               <AppointmentsPage />
             </ProtectedRoute>
           } />
-          <Route path="appointments/book" element={
-            <ProtectedRoute>
-              <AppointmentBooking />
-            </ProtectedRoute>
-          } />
+          <Route path="appointments/book" element={<AppointmentBooking />} />
           <Route path="appointments/:id/confirmation" element={
             <ProtectedRoute>
               <AppointmentConfirmationPage />

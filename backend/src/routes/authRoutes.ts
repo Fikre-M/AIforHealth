@@ -57,6 +57,15 @@ router.get('/profile', authenticate, AuthController.getProfile);
 // ✅ UPDATE PROFILE
 router.put('/profile', authenticate, AuthController.updateProfile);
 
+// ✅ UPLOAD AVATAR
+router.post('/profile/avatar', authenticate, AuthController.uploadAvatar);
+
+// ✅ GET SETTINGS
+router.get('/settings', authenticate, AuthController.getSettings);
+
+// ✅ UPDATE SETTINGS
+router.put('/settings', authenticate, AuthController.updateSettings);
+
 export default router;
 
 // import { Router } from 'express';

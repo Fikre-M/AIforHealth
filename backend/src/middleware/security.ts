@@ -24,7 +24,14 @@ export const configureSecurity = (app: Express): void => {
   app.use(cors({
     origin: env.NODE_ENV === 'production' 
       ? ['https://yourdomain.com'] 
-      : ['http://localhost:3000', 'http://localhost:5173'],
+      : (origin, callback) => {
+          // Allow any localhost origin in development
+          if (!origin || origin.startsWith('http://localhost:')) {
+            callback(null, true);
+          } else {
+            callback(new Error('Not allowed by CORS'));
+          }
+        },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']

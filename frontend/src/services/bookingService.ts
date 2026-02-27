@@ -11,7 +11,14 @@ import apiAdapter from './apiAdapter';
 export const bookingService = {
   async getClinics(): Promise<Clinic[]> {
     const response = await apiAdapter.get('/clinics');
-    return response.data || response;
+    console.log('🏥 Raw clinics response:', response);
+    
+    // Handle different response formats
+    const data = response.data || response;
+    const clinics = data.clinics || data;
+    
+    console.log('🏥 Processed clinics:', clinics);
+    return Array.isArray(clinics) ? clinics : [];
   },
 
   async getDoctorsByClinic(clinicId: string): Promise<Doctor[]> {
