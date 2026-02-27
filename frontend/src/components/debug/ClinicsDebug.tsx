@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { bookingService } from '@/services/bookingService';
-import apiAdapter from '@/services/apiAdapter';
 
 export function ClinicsDebug() {
   const [clinics, setClinics] = useState<any>(null);
