@@ -22,7 +22,6 @@ import type {
   AISuggestion 
 } from '@/types/booking';
 import { addDays } from 'date-fns';
-import { ClinicsDebug } from '@/components/debug/ClinicsDebug';
 
 type BookingStep = 'clinic' | 'doctor' | 'datetime' | 'details' | 'confirmation';
 
@@ -193,11 +192,6 @@ export function AppointmentBooking() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Debug Component - Remove after testing */}
-        <div className="lg:col-span-3 mb-4">
-          <ClinicsDebug />
-        </div>
-        
         {/* Main Content */}
         <div className="lg:col-span-2">
           {currentStep === 'clinic' && (
