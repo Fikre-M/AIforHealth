@@ -61,85 +61,85 @@ export const Footer: React.FC = () => {
             </div>
           </div>
 
-          {/* Quick Links & Support - Side by Side on Mobile */}
-          <div className="grid grid-cols-2 gap-6 md:col-span-2 lg:col-span-2">
+          {/* Quick Links, Support & Contact - Horizontal on Mobile */}
+          <div className="grid grid-cols-3 gap-4 md:gap-6 md:col-span-2 lg:col-span-3">
             {/* Quick Links */}
-            <div className="space-y-4">
-              <h4 className="text-lg font-semibold">Quick Links</h4>
-              <nav className="space-y-2">
-                <Link to="/app/dashboard" className="block text-gray-300 hover:text-white transition-colors text-sm">
+            <div className="space-y-3 md:space-y-4">
+              <h4 className="text-base md:text-lg font-semibold">Product</h4>
+              <nav className="space-y-1.5 md:space-y-2">
+                <Link to="/app/dashboard" className="block text-gray-300 hover:text-white transition-colors text-xs md:text-sm">
                   Dashboard
                 </Link>
-                <Link to="/app/appointments" className="block text-gray-300 hover:text-white transition-colors text-sm">
+                <Link to="/app/appointments" className="block text-gray-300 hover:text-white transition-colors text-xs md:text-sm">
                   Appointments
                 </Link>
-                <Link to="/app/ai-chat" className="block text-gray-300 hover:text-white transition-colors text-sm">
+                <Link to="/app/ai-chat" className="block text-gray-300 hover:text-white transition-colors text-xs md:text-sm">
                   AI Assistant
                 </Link>
-                <Link to="/app/symptom-checker" className="block text-gray-300 hover:text-white transition-colors text-sm">
-                  Symptom Checker
+                <Link to="/app/symptom-checker" className="block text-gray-300 hover:text-white transition-colors text-xs md:text-sm">
+                  Symptoms
                 </Link>
               </nav>
             </div>
 
             {/* Support */}
-            <div className="space-y-4">
-              <h4 className="text-lg font-semibold">Support</h4>
-              <nav className="space-y-2">
-                <a href="/help" className="block text-gray-300 hover:text-white transition-colors text-sm">
+            <div className="space-y-3 md:space-y-4">
+              <h4 className="text-base md:text-lg font-semibold">Company</h4>
+              <nav className="space-y-1.5 md:space-y-2">
+                <a href="/help" className="block text-gray-300 hover:text-white transition-colors text-xs md:text-sm">
                   Help Center
                 </a>
-                <a href="/privacy" className="block text-gray-300 hover:text-white transition-colors text-sm">
-                  Privacy Policy
+                <a href="/privacy" className="block text-gray-300 hover:text-white transition-colors text-xs md:text-sm">
+                  Privacy
                 </a>
-                <a href="/terms" className="block text-gray-300 hover:text-white transition-colors text-sm">
-                  Terms of Service
+                <a href="/terms" className="block text-gray-300 hover:text-white transition-colors text-xs md:text-sm">
+                  Terms
                 </a>
-                <a href="/accessibility" className="block text-gray-300 hover:text-white transition-colors text-sm">
-                  Accessibility
+                <a href="/accessibility" className="block text-gray-300 hover:text-white transition-colors text-xs md:text-sm">
+                  Access
                 </a>
               </nav>
             </div>
-          </div>
 
-          {/* Contact */}
-          <div className="space-y-4">
-            <h4 className="text-lg font-semibold">Contact</h4>
-            <div className="space-y-3">
-              <div className="flex items-center space-x-3 text-sm text-gray-300">
-                <Phone className="w-4 h-4" aria-hidden="true" />
-                <span>1-800-HEALTH (1-800-432-5844)</span>
-              </div>
-              <div className="flex items-center space-x-3 text-sm text-gray-300">
-                <Mail className="w-4 h-4" aria-hidden="true" />
-                <a href="mailto:support@aiforhealth.com" className="hover:text-white transition-colors">
-                  support@aiforhealth.com
-                </a>
-              </div>
-              <div className="flex items-start space-x-3 text-sm text-gray-300">
-                <MapPin className="w-4 h-4 mt-0.5" aria-hidden="true" />
-                <address className="not-italic">
-                  123 Healthcare Ave<br />
-                  Medical District<br />
-                  Health City, HC 12345
-                </address>
+            {/* Contact */}
+            <div className="space-y-3 md:space-y-4">
+              <h4 className="text-base md:text-lg font-semibold">Support</h4>
+              <div className="space-y-2 md:space-y-3">
+                <div className="flex items-center space-x-2 text-xs md:text-sm text-gray-300">
+                  <Phone className="w-3 h-3 md:w-4 md:h-4 flex-shrink-0" aria-hidden="true" />
+                  <span className="truncate">1-800-432-5844</span>
+                </div>
+                <div className="flex items-center space-x-2 text-xs md:text-sm text-gray-300">
+                  <Mail className="w-3 h-3 md:w-4 md:h-4 flex-shrink-0" aria-hidden="true" />
+                  <a href="mailto:support@aiforhealth.com" className="hover:text-white transition-colors truncate">
+                    support@ai...
+                  </a>
+                </div>
+                <div className="flex items-start space-x-2 text-xs md:text-sm text-gray-300">
+                  <MapPin className="w-3 h-3 md:w-4 md:h-4 mt-0.5 flex-shrink-0" aria-hidden="true" />
+                  <address className="not-italic">
+                    123 Healthcare Ave<br className="hidden md:block" />
+                    <span className="md:hidden">Health City</span>
+                    <span className="hidden md:inline">Medical District<br />Health City, HC 12345</span>
+                  </address>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-gray-800 mt-12 pt-8">
+        <div className="border-t border-gray-800 mt-8 md:mt-12 pt-6 md:pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-            <div className="text-sm text-gray-400">
+            <div className="text-xs md:text-sm text-gray-400">
               © {new Date().getFullYear()} AIforHealth. All rights reserved.
             </div>
-            <div className="flex items-center space-x-6 text-sm text-gray-400">
-              <span>HIPAA Compliant</span>
+            <div className="flex items-center space-x-3 md:space-x-6 text-xs md:text-sm text-gray-400">
+              <span>HIPAA</span>
               <span>•</span>
-              <span>SOC 2 Certified</span>
+              <span>SOC 2</span>
               <span>•</span>
-              <span>FDA Registered</span>
+              <span>FDA</span>
             </div>
           </div>
         </div>
