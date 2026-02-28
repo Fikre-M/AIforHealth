@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appointment Booking Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .test-section {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #4F46E5;
+            margin-bottom: 10px;
+        }
+        
+        h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        
+        button {
+            background: #4F46E5;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        
+        button:hover {
+            background: #4338CA;
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 6px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        
+        .loading {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+        
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .card {
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 15px;
+            background: #f8fafc;
+        }
+        
+        .card h3 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #4F46E5;
+        }
+        
+        .card p {
+            font-size: 14px;
+            color: #666;
+            margin: 5px 0;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            margin: 2px;
+        }
+        
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .badge-info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏥 Appointment Booking System Test</h1>
+            <p>Test the complete appointment booking flow</p>
+        </div>
+
+        <!-- Backend Status -->
+        <div class="test-section">
+            <h2>🔍 Backend Status</h2>
+            <button onclick="checkBackend()">Check Backend</button>
+            <div id="backendResult" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- Clinics Test -->
+        <div class="test-section">
+            <h2>🏥 Step 1: Load Clinics</h2>
+            <button onclick="loadClinics()">Load Clinics</button>
+            <div id="clinicsResult" class="result" style="display: none;"></div>
+            <div id="clinicsList" class="grid"></div>
+        </div>
+
+        <!-- Doctors Test -->
+        <div class="test-section">
+            <h2>👨‍⚕️ Step 2: Load Doctors</h2>
+            <p>Select a clinic first to load doctors</p>
+            <div id="doctorsResult" class="result" style="display: none;"></div>
+            <div id="doctorsList" class="grid"></div>
+        </div>
+
+        <!-- Appointment Booking Test -->
+        <div class="test-section">
+            <h2>📅 Step 3: Book Appointment</h2>
+            <p>Select a doctor first to book an appointment</p>
+            <button onclick="bookTestAppointment()" id="bookBtn" disabled>Book Test Appointment</button>
+            <div id="bookingResult" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- Instructions -->
+        <div class="test-section">
+            <h2>📋 Instructions</h2>
+            <ol style="padding-left: 20px; line-height: 1.8;">
+                <li>First, check if the backend is running</li>
+                <li>Load clinics to see available medical centers</li>
+                <li>Click on a clinic to load its doctors</li>
+                <li>Click on a doctor to select them</li>
+                <li>Book a test appointment</li>
+                <li>Check the confirmation details</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000/api/v1';
+        let selectedClinic = null;
+        let selectedDoctor = null;
+        let authToken = null;
+
+        // Mock authentication for testing
+        async function getMockToken() {
+            if (authToken) return authToken;
+            
+            // Try to login with test credentials or create a test user
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'test@example.com',
+                        password: 'Test123!@#'
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    authToken = data.data?.tokens?.accessToken || data.data?.accessToken;
+                    return authToken;
+                }
+            } catch (error) {
+                console.log('Login failed, will try without auth');
+            }
+            
+            return null;
+        }
+
+        async function checkBackend() {
+            const resultDiv = document.getElementById('backendResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result loading';
+            resultDiv.textContent = 'Checking backend...';
+
+            try {
+                const response = await fetch('http://localhost:5000/health');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✅ Backend is running!\n\n${JSON.stringify(data, null, 2)}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ Backend returned error: ${response.status}\n\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Cannot connect to backend\n\nError: ${error.message}\n\nMake sure the backend is running on http://localhost:5000`;
+            }
+        }
+
+        async function loadClinics() {
+            const resultDiv = document.getElementById('clinicsResult');
+            const listDiv = document.getElementById('clinicsList');
+            
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result loading';
+            resultDiv.textContent = 'Loading clinics...';
+            listDiv.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE}/clinics`);
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${data.message || 'Failed to load clinics'}`);
+                }
+
+                const clinics = data.data?.clinics || data.clinics || [];
+                
+                if (clinics.length === 0) {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = '❌ No clinics found!\n\nRun: npm run db:seed in the backend directory';
+                    return;
+                }
+
+                resultDiv.className = 'result success';
+                resultDiv.textContent = `✅ Loaded ${clinics.length} clinics successfully!`;
+
+                // Display clinics
+                clinics.forEach(clinic => {
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.style.cursor = 'pointer';
+                    card.onclick = () => selectClinic(clinic);
+                    
+                    card.innerHTML = `
+                        <h3>${clinic.name}</h3>
+                        <p><strong>Address:</strong> ${clinic.address}</p>
+                        <p><strong>Phone:</strong> ${clinic.phone}</p>
+                        <p><strong>Rating:</strong> ⭐ ${clinic.rating}/5</p>
+                        <div>
+                            ${clinic.specialties.map(s => `<span class="badge badge-info">${s}</span>`).join('')}
+                        </div>
+                    `;
+                    
+                    listDiv.appendChild(card);
+                });
+
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Error loading clinics\n\n${error.message}`;
+            }
+        }
+
+        async function selectClinic(clinic) {
+            selectedClinic = clinic;
+            selectedDoctor = null;
+            document.getElementById('bookBtn').disabled = true;
+            
+            const resultDiv = document.getElementById('doctorsResult');
+            const listDiv = document.getElementById('doctorsList');
+            
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result loading';
+            resultDiv.textContent = `Loading doctors for ${clinic.name}...`;
+            listDiv.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE}/clinics/${clinic._id}/doctors`);
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${data.message || 'Failed to load doctors'}`);
+                }
+
+                const doctors = data.data?.doctors || data.doctors || [];
+                
+                if (doctors.length === 0) {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = '❌ No doctors found for this clinic!\n\nRun the seedDoctors script';
+                    return;
+                }
+
+                resultDiv.className = 'result success';
+                resultDiv.textContent = `✅ Loaded ${doctors.length} doctors successfully!`;
+
+                // Display doctors
+                doctors.forEach(doctor => {
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.style.cursor = 'pointer';
+                    card.onclick = () => selectDoctor(doctor);
+                    
+                    card.innerHTML = `
+                        <h3>${doctor.name}</h3>
+                        <p><strong>Specialty:</strong> ${doctor.specialty}</p>
+                        <p><strong>Experience:</strong> ${doctor.experience} years</p>
+                        <p><strong>Rating:</strong> ⭐ ${doctor.rating}/5</p>
+                        <p><strong>Fee:</strong> $${doctor.consultationFee}</p>
+                        <span class="badge ${doctor.isAvailable ? 'badge-success' : 'badge-error'}">
+                            ${doctor.isAvailable ? 'Available' : 'Unavailable'}
+                        </span>
+                    `;
+                    
+                    listDiv.appendChild(card);
+                });
+
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Error loading doctors\n\n${error.message}`;
+            }
+        }
+
+        function selectDoctor(doctor) {
+            selectedDoctor = doctor;
+            document.getElementById('bookBtn').disabled = false;
+            
+            // Highlight selected doctor
+            const cards = document.querySelectorAll('#doctorsList .card');
+            cards.forEach(card => {
+                card.style.border = '1px solid #e2e8f0';
+            });
+            event.currentTarget.style.border = '3px solid #4F46E5';
+            
+            alert(`Selected: ${doctor.name}\nClick "Book Test Appointment" to continue`);
+        }
+
+        async function bookTestAppointment() {
+            if (!selectedDoctor) {
+                alert('Please select a doctor first');
+                return;
+            }
+
+            const resultDiv = document.getElementById('bookingResult');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result loading';
+            resultDiv.textContent = 'Booking appointment...';
+
+            try {
+                // Get auth token
+                const token = await getMockToken();
+                
+                // Create appointment
+                const appointmentDate = new Date();
+                appointmentDate.setDate(appointmentDate.getDate() + 3); // 3 days from now
+                appointmentDate.setHours(10, 0, 0, 0); // 10:00 AM
+
+                const appointmentData = {
+                    doctor: selectedDoctor.id,
+                    appointmentDate: appointmentDate.toISOString(),
+                    duration: 30,
+                    type: 'consultation',
+                    reason: 'Test appointment - General checkup',
+                    notes: 'This is a test appointment created via the test interface',
+                    isEmergency: false
+                };
+
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+                
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+
+                const response = await fetch(`${API_BASE}/appointments`, {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify(appointmentData)
+                });
+
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        throw new Error('Authentication required. Please log in to the main app first.');
+                    }
+                    throw new Error(`HTTP ${response.status}: ${data.message || 'Failed to book appointment'}`);
+                }
+
+                const appointment = data.data?.appointment || data.appointment || data.data;
+                const confirmationNumber = data.data?.confirmationNumber || appointment.confirmationNumber;
+
+                resultDiv.className = 'result success';
+                resultDiv.textContent = `✅ Appointment booked successfully!\n\nConfirmation Number: ${confirmationNumber}\nAppointment ID: ${appointment._id}\n\nFull Response:\n${JSON.stringify(data, null, 2)}`;
+
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Error booking appointment\n\n${error.message}\n\nNote: You may need to log in to the main application first to book appointments.`;
+            }
+        }
+
+        // Auto-check backend on load
+        window.addEventListener('load', () => {
+            setTimeout(checkBackend, 500);
+        });
+    </script>
+</body>
+</html>
