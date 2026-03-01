@@ -16,6 +16,9 @@ build/
 .env.production.local
 RENDER_ENV_VARS.txt
 
+# Secret generation script
+generate-secrets.js
+
 # Logs
 logs/
 *.log
