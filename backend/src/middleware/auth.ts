@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { JwtUtil } from '@/utils/jwt';
 import { UserService } from '@/services';
 import { UserRole } from '@/types';
-import { ResponseUtil } from '@/utils/response';
+import { ResponseUtil } from '@/utils/apiResponse';
 import { AuthenticatedRequest } from '@/types/express';
 
 /**
@@ -22,9 +22,7 @@ export async function authenticate(
     const token = JwtUtil.extractTokenFromHeader(req.headers.authorization);
 
     if (!token) {
-      ResponseUtil.error(res, 'Access token is required', 401, {
-        code: 'TOKEN_MISSING',
-      });
+      ResponseUtil.error(res, 'Access token is required', 401);
       return;
     }
 
@@ -33,9 +31,7 @@ export async function authenticate(
     const user = await UserService.findUserById(payload.userId);
 
     if (!user || !user.isActive || user.isLocked()) {
-      ResponseUtil.error(res, 'Authentication failed', 401, {
-        code: 'AUTH_FAILED',
-      });
+      ResponseUtil.error(res, 'Authentication failed', 401);
       return;
     }
 
@@ -49,9 +45,7 @@ export async function authenticate(
 
     next();
   } catch (error) {
-    ResponseUtil.error(res, 'Authentication failed', 401, {
-      code: 'AUTH_FAILED',
-    });
+    ResponseUtil.error(res, 'Authentication failed', 401);
   }
 }
 
@@ -61,16 +55,12 @@ export async function authenticate(
 export function authorize(...roles: UserRole[]) {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
     if (!req.user) {
-      ResponseUtil.error(res, 'Authentication required', 401, {
-        code: 'AUTH_REQUIRED',
-      });
+      ResponseUtil.error(res, 'Authentication required', 401);
       return;
     }
 
     if (!roles.includes(req.user.role)) {
-      ResponseUtil.error(res, 'Insufficient permissions', 403, {
-        code: 'INSUFFICIENT_PERMISSIONS',
-      });
+      ResponseUtil.error(res, 'Insufficient permissions', 403);
       return;
     }
 
@@ -89,18 +79,14 @@ export const authorizeAny = authorize;
 export function authorizeAll(...roles: UserRole[]) {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
     if (!req.user) {
-      ResponseUtil.error(res, 'Authentication required', 401, {
-        code: 'AUTH_REQUIRED',
-      });
+      ResponseUtil.error(res, 'Authentication required', 401);
       return;
     }
 
     const hasAllRoles = roles.every((role) => role === req.user?.role);
 
     if (!hasAllRoles) {
-      ResponseUtil.error(res, 'Insufficient permissions', 403, {
-        code: 'INSUFFICIENT_PERMISSIONS',
-      });
+      ResponseUtil.error(res, 'Insufficient permissions', 403);
       return;
     }
 
@@ -145,18 +131,14 @@ export async function optionalAuth(
  */
 export function ownerOrAdmin(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
   if (!req.user) {
-    ResponseUtil.error(res, 'Authentication required', 401, {
-      code: 'AUTH_REQUIRED',
-    });
+    ResponseUtil.error(res, 'Authentication required', 401);
     return;
   }
 
   const resourceUserId = req.params?.id ?? req.params?.userId;
 
   if (!resourceUserId) {
-    ResponseUtil.error(res, 'Resource not specified', 400, {
-      code: 'RESOURCE_ID_MISSING',
-    });
+    ResponseUtil.error(res, 'Resource not specified', 400);
     return;
   }
 
@@ -164,11 +146,60 @@ export function ownerOrAdmin(req: AuthenticatedRequest, res: Response, next: Nex
   const isAdmin = req.user.role === UserRole.ADMIN;
 
   if (!isOwner && !isAdmin) {
-    ResponseUtil.error(res, 'Access denied', 403, {
-      code: 'ACCESS_DENIED',
-    });
+    ResponseUtil.error(res, 'Access denied', 403);
     return;
   }
 
+  next();
+}
+
+/**
+ * Owner or specific roles
+ */
+export function ownerOrRoles(...roles: UserRole[]) {
+  return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
+    if (!req.user) {
+      ResponseUtil.error(res, 'Authentication required', 401);
+      return;
+    }
+
+    const resourceUserId = req.params?.id ?? req.params?.userId;
+    const isOwner = resourceUserId && req.user.userId === resourceUserId;
+    const hasRole = roles.includes(req.user.role);
+
+    if (!isOwner && !hasRole) {
+      ResponseUtil.error(res, 'Access denied', 403);
+      return;
+    }
+
+    next();
+  };
+}
+
+/**
+ * Require verified email
+ */
+export function requireVerified(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
+  if (!req.user) {
+    ResponseUtil.error(res, 'Authentication required', 401);
+    return;
+  }
+
+  // In a real implementation, you'd check if the user's email is verified
+  // For now, we'll assume all authenticated users are verified
+  next();
+}
+
+/**
+ * Require sensitive operation confirmation
+ */
+export function sensitiveOperation(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
+  if (!req.user) {
+    ResponseUtil.error(res, 'Authentication required', 401);
+    return;
+  }
+
+  // In a real implementation, you might require additional confirmation
+  // like password re-entry or 2FA for sensitive operations
   next();
 }

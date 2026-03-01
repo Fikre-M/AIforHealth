@@ -194,7 +194,7 @@ export class NotificationService {
         doctorId:
           appointment.doctor instanceof Types.ObjectId
             ? appointment.doctor
-            : appointment.doctor._id,
+            : (appointment.doctor as any)._id,
         appointmentType: appointment.type,
       },
     });
@@ -294,6 +294,79 @@ export class NotificationService {
         await notification.save();
         failed++;
       }
+    }
+
+    return { processed, failed };
+  }
+
+  /* ================= APPOINTMENT CHECKS ================= */
+
+  async checkForUpcomingAppointments(): Promise<{
+    processed: number;
+    failed: number;
+  }> {
+    const now = new Date();
+    const twoHoursFromNow = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+
+    let processed = 0;
+    let failed = 0;
+
+    try {
+      const upcomingAppointments = await Appointment.find({
+        appointmentDate: {
+          $gte: now,
+          $lte: twoHoursFromNow,
+        },
+        status: { $in: ['scheduled', 'confirmed'] },
+      }).populate('patient doctor');
+
+      for (const appointment of upcomingAppointments) {
+        try {
+          await this.createAppointmentReminder(appointment);
+          processed++;
+        } catch {
+          failed++;
+        }
+      }
+    } catch {
+      failed++;
+    }
+
+    return { processed, failed };
+  }
+
+  async checkForMissedAppointments(): Promise<{
+    processed: number;
+    failed: number;
+  }> {
+    const now = new Date();
+    const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+
+    let processed = 0;
+    let failed = 0;
+
+    try {
+      const missedAppointments = await Appointment.find({
+        appointmentDate: {
+          $gte: oneHourAgo,
+          $lt: now,
+        },
+        status: 'scheduled',
+      }).populate('patient doctor');
+
+      for (const appointment of missedAppointments) {
+        try {
+          await this.createMissedAppointmentNotification(appointment);
+          // Update appointment status to missed
+          appointment.status = 'no-show' as any;
+          await appointment.save();
+          processed++;
+        } catch {
+          failed++;
+        }
+      }
+    } catch {
+      failed++;
     }
 
     return { processed, failed };

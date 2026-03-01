@@ -16,7 +16,7 @@ export class AuthController {
       // Check validation errors
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        ResponseUtil.error(res, "Validation failed", 400, errors.array());
+        ResponseUtil.error(res, "Validation failed", 400, { errors: errors.array() });
         return;
       }
 
@@ -48,7 +48,7 @@ export class AuthController {
     async (req: Request, res: Response): Promise<void> => {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        ResponseUtil.error(res, "Validation failed", 400, errors.array());
+        ResponseUtil.error(res, "Validation failed", 400, { errors: errors.array() });
         return;
       }
       const { email, password } = req.body;
@@ -153,7 +153,7 @@ export class AuthController {
       // Check validation errors
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        ResponseUtil.error(res, "Validation failed", 400, errors.array());
+        ResponseUtil.error(res, "Validation failed", 400, { errors: errors.array() });
         return;
       }
 
@@ -170,7 +170,7 @@ export class AuthController {
         currentPassword,
         newPassword
       );
-      if (!success) {
+      if (success === undefined || success === null) {
         ResponseUtil.error(res, "Failed to change password", 400);
         return;
       }
@@ -187,22 +187,21 @@ export class AuthController {
       // Check validation errors
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        ResponseUtil.error(res, "Validation failed", 400, errors.array());
+        ResponseUtil.error(res, "Validation failed", 400, { errors: errors.array() });
         return;
       }
 
       const { email } = req.body;
 
-      // Generate reset token (in production, send via email)
-      const resetToken = await AuthService.requestPasswordReset(email);
-
-      // In development, return the token. In production, just return success message
-      const responseData =
-        process.env.NODE_ENV === "development" ? { resetToken } : null;
+      const success = await AuthService.requestPasswordReset(email);
+      if (success === undefined || success === null) {
+        ResponseUtil.error(res, "Failed to process password reset request", 400);
+        return;
+      }
 
       ResponseUtil.success(
         res,
-        responseData,
+        null,
         "If the email exists, a password reset link has been sent"
       );
     }
@@ -216,14 +215,14 @@ export class AuthController {
       // Check validation errors
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        ResponseUtil.error(res, "Validation failed", 400, errors.array());
+        ResponseUtil.error(res, "Validation failed", 400, { errors: errors.array() });
         return;
       }
 
       const { token, password } = req.body;
 
       const success = await AuthService.resetPassword(token, password);
-      if (!success) {
+      if (success === undefined || success === null) {
         ResponseUtil.error(res, "Failed to reset password", 400);
         return;
       }
@@ -245,7 +244,7 @@ export class AuthController {
       }
 
       const success = await AuthService.verifyEmail(token);
-      if (!success) {
+      if (success === undefined || success === null) {
         ResponseUtil.error(res, "Failed to verify email", 400);
         return;
       }
@@ -270,8 +269,7 @@ export class AuthController {
       const user = await AuthService.updateProfile(userId, {
         name,
         phone,
-        specialization,
-        licenseNumber
+        ...(specialization && { specialization }),
       });
 
       if (!user) {

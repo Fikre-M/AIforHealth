@@ -15,7 +15,7 @@ export class UserController {
     // Check validation errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      ResponseUtil.error(res, 'Validation failed', 400, errors.array());
+      ResponseUtil.error(res, 'Validation failed', 400, { errors: errors.array() });
       return;
     }
 
@@ -86,7 +86,7 @@ export class UserController {
     // Check validation errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      ResponseUtil.error(res, 'Validation failed', 400, errors.array());
+      ResponseUtil.error(res, 'Validation failed', 400, { errors: errors.array() });
       return;
     }
 
@@ -132,7 +132,7 @@ export class UserController {
     // Check validation errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      ResponseUtil.error(res, 'Validation failed', 400, errors.array());
+      ResponseUtil.error(res, 'Validation failed', 400, { errors: errors.array() });
       return;
     }
 

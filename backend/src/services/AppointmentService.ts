@@ -12,6 +12,7 @@ export interface PaginationOptions {
   status?: string;
   startDate?: string;
   endDate?: string;
+  date?: string;
 }
 
 export interface PaginatedResult<T> {
@@ -65,9 +66,9 @@ function buildAppointmentQuery(filters: PaginationOptions, extra: Record<string,
   if (filters.status) query.status = filters.status;
 
   if (filters.startDate || filters.endDate) {
-    query.appointmentDate = {};
-    if (filters.startDate) query.appointmentDate.$gte = new Date(filters.startDate);
-    if (filters.endDate) query.appointmentDate.$lte = new Date(filters.endDate);
+    query.appointmentDate = {} as Record<string, unknown>;
+    if (filters.startDate) (query.appointmentDate as any).$gte = new Date(filters.startDate);
+    if (filters.endDate) (query.appointmentDate as any).$lte = new Date(filters.endDate);
   }
 
   return query;
@@ -289,5 +290,110 @@ export class AppointmentService {
 
     await Promise.all(promises);
     return result;
+  }
+
+  /* ================= STATISTICS ================= */
+
+  static async getAppointmentStatistics(filters: {
+    startDate?: string;
+    endDate?: string;
+    doctorId?: string;
+  }) {
+    const query: Record<string, unknown> = {};
+    
+    if (filters.doctorId) {
+      query.doctor = filters.doctorId;
+    }
+
+    if (filters.startDate || filters.endDate) {
+      query.appointmentDate = {} as Record<string, unknown>;
+      if (filters.startDate) (query.appointmentDate as any).$gte = new Date(filters.startDate);
+      if (filters.endDate) (query.appointmentDate as any).$lte = new Date(filters.endDate);
+    }
+
+    const [total, completed, cancelled, scheduled] = await Promise.all([
+      Appointment.countDocuments(query),
+      Appointment.countDocuments({ ...query, status: 'completed' }),
+      Appointment.countDocuments({ ...query, status: 'cancelled' }),
+      Appointment.countDocuments({ ...query, status: 'scheduled' }),
+    ]);
+
+    return {
+      total,
+      completed,
+      cancelled,
+      scheduled,
+      completionRate: total > 0 ? (completed / total) * 100 : 0,
+      cancellationRate: total > 0 ? (cancelled / total) * 100 : 0,
+    };
+  }
+
+  /* ================= EXPORT ================= */
+
+  static async exportAppointments(options: {
+    format?: string;
+    startDate?: string;
+    endDate?: string;
+  }) {
+    const query: Record<string, unknown> = {};
+    
+    if (options.startDate || options.endDate) {
+      query.appointmentDate = {} as Record<string, unknown>;
+      if (options.startDate) (query.appointmentDate as any).$gte = new Date(options.startDate);
+      if (options.endDate) (query.appointmentDate as any).$lte = new Date(options.endDate);
+    }
+
+    const appointments = await Appointment.find(query)
+      .populate('patient', 'name email phone')
+      .populate('doctor', 'name email specialization')
+      .sort({ appointmentDate: 1 })
+      .lean();
+
+    if (options.format === 'csv') {
+      const headers = ['Date', 'Time', 'Patient', 'Doctor', 'Status', 'Reason'];
+      const rows = appointments.map(apt => [
+        apt.appointmentDate.toISOString().split('T')[0],
+        apt.appointmentDate.toISOString().split('T')[1].split('.')[0],
+        (apt.patient as any)?.name || 'Unknown',
+        (apt.doctor as any)?.name || 'Unknown',
+        apt.status,
+        apt.reason
+      ]);
+      
+      return [headers, ...rows].map(row => row.join(',')).join('\n');
+    }
+
+    return appointments;
+  }
+
+  /* ================= DOCTOR AVAILABILITY CHECK ================= */
+
+  static async checkDoctorAvailability(
+    doctorId: string,
+    date: string,
+    startTime?: string,
+    endTime?: string
+  ): Promise<boolean> {
+    const appointmentDate = new Date(date);
+    
+    // If specific time range provided, check that slot
+    if (startTime && endTime) {
+      const startDateTime = new Date(`${date}T${startTime}`);
+      const endDateTime = new Date(`${date}T${endTime}`);
+      
+      const conflict = await Appointment.findOne({
+        doctor: doctorId,
+        appointmentDate: {
+          $gte: startDateTime,
+          $lt: endDateTime
+        },
+        status: { $in: ['scheduled', 'confirmed', 'in_progress'] }
+      });
+      
+      return !conflict;
+    }
+    
+    // Otherwise check general availability for the date
+    return this.checkAvailability(doctorId, appointmentDate);
   }
 }
