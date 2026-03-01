@@ -1,5 +1,5 @@
 import { UserService } from '../UserService';
-import { User } from '@/models';
+import { User } from '@/models/User';
 import { UserRole } from '@/types';
 import { generateObjectId } from '@/test/helpers';
 
@@ -50,7 +50,7 @@ describe('UserService', () => {
 
       expect(userWithPassword?.password).toBeDefined();
       expect(userWithPassword?.password).not.toBe(userData.password);
-      expect(userWithPassword?.password).toMatch(/^\$2[aby]\$/); // bcrypt hash pattern
+      expect(userWithPassword?.password as string).toMatch(/^\$2[aby]\$/);
     });
 
     it('should create doctor with specialization', async () => {
