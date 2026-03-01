@@ -44,17 +44,13 @@ export interface JWTPayload {
   userId: string;
   role: UserRole;
   email: string;
-  iat?: number;
-  exp?: number;
+  iat: number;
+  exp: number;
 }
 
 export interface AuthTokens {
   accessToken: string;
   refreshToken: string;
-}
-
-export interface AuthenticatedRequest extends Request {
-  user?: JWTPayload;
 }
 
 // ============================================================================

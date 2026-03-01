@@ -78,8 +78,8 @@ export class JwtUtil {
         userId: decoded.userId as string,
         email: decoded.email as string,
         role: decoded.role as UserRole,
-        iat: decoded.iat,
-        exp: decoded.exp,
+        iat: decoded.iat || 0,
+        exp: decoded.exp || 0,
       };
     } catch (error) {
       if (error instanceof jwt.TokenExpiredError) {
@@ -108,8 +108,8 @@ export class JwtUtil {
         userId: decoded.userId as string,
         email: decoded.email as string,
         role: decoded.role as UserRole,
-        iat: decoded.iat,
-        exp: decoded.exp,
+        iat: decoded.iat || 0,
+        exp: decoded.exp || 0,
       };
     } catch (error) {
       if (error instanceof jwt.TokenExpiredError) {

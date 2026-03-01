@@ -14,7 +14,7 @@ export const apiAdapter = {
       api.post('/auth/logout').then(res => res.data),
     
     refreshToken: (refreshToken: string) => 
-      api.post('/auth/refresh-token', { refreshToken }).then(res => res.data),
+      api.post('/auth/refresh-token', { refreshToken }).then(res => res.data.data),
     
     getProfile: () => 
       api.get('/auth/profile').then(res => res.data.data.user),

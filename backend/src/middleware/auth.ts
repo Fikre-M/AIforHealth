@@ -3,19 +3,7 @@ import { JwtUtil } from '@/utils/jwt';
 import { UserService } from '@/services';
 import { UserRole } from '@/types';
 import { ResponseUtil } from '@/utils/response';
-
-/**
- * Extend Express Request to include user
- */
-export interface AuthenticatedRequest extends Request {
-  user?: {
-    userId: string;
-    email: string;
-    role: UserRole;
-    iat: number;
-    exp: number;
-  };
-}
+import { AuthenticatedRequest } from '@/types/express';
 
 /**
  * Require authentication (alias for authenticate)

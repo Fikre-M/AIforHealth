@@ -105,6 +105,15 @@ export class DatabaseSeeder {
   }
 
   /**
+   * Generate a unique confirmation number
+   */
+  private generateConfirmationNumber(): string {
+    const timestamp = Date.now().toString(36);
+    const random = Math.random().toString(36).substring(2, 8);
+    return `APT-${timestamp}-${random}`.toUpperCase();
+  }
+
+  /**
    * Seed appointments
    */
   private async seedAppointments(users: any): Promise<void> {
@@ -136,6 +145,7 @@ export class DatabaseSeeder {
         symptoms: ['headache', 'fatigue'],
         notes: 'Patient reports mild symptoms',
         isEmergency: false,
+        confirmationNumber: this.generateConfirmationNumber(),
       },
       {
         patient: users.patient._id,
@@ -147,6 +157,7 @@ export class DatabaseSeeder {
         reason: 'Follow-up appointment for previous consultation',
         notes: 'Follow-up to check progress',
         isEmergency: false,
+        confirmationNumber: this.generateConfirmationNumber(),
       },
     ];
 
@@ -165,6 +176,7 @@ export class DatabaseSeeder {
       prescription: 'Vitamin D supplements, 1000 IU daily',
       diagnosis: 'Mild vitamin D deficiency',
       isEmergency: false,
+      confirmationNumber: this.generateConfirmationNumber(),
     });
 
     // Save without validation for past appointment

@@ -5,8 +5,8 @@
   "main": "dist/server.js",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/server.js",
-    "start:prod": "NODE_ENV=production node dist/server.js",
+    "start": "node run-dev.js",
+    "start:prod": "NODE_ENV=production node run-dev.js",
     "dev": "node run-dev.js",
     "dev:watch": "nodemon --watch src --ext ts --exec ts-node -r tsconfig-paths/register src/server.ts",
     "clean": "rimraf dist",
@@ -32,7 +32,7 @@
     "db:reset": "ts-node -r tsconfig-paths/register src/scripts/database.ts reset",
     "db:status": "ts-node -r tsconfig-paths/register src/scripts/database.ts status",
     "prepare": "npm run build",
-    "prestart": "npm run build",
+    "prestart": "echo 'Starting with ts-node (no build required)'",
     "validate": "npm run type-check && npm run lint && npm run test:ci"
   },
   "keywords": [

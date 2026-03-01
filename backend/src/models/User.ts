@@ -21,11 +21,25 @@ export interface IUser extends Document {
   email: string;
   password: string;
   role: UserRole;
+  phone?: string;
+  avatar?: string;
+  isActive: boolean;
+  isEmailVerified: boolean;
+  emailVerificationToken?: string;
+  passwordResetToken?: string;
+  passwordResetExpires?: Date;
+  lastLogin?: Date;
   loginAttempts: number;
   lockUntil?: Date;
+  dateOfBirth?: Date;
+  gender?: string;
+  specialization?: string;
+  licenseNumber?: string;
 
   comparePassword(password: string): Promise<boolean>;
   isLocked(): boolean;
+  incrementLoginAttempts(): Promise<void>;
+  generatePasswordResetToken(): string;
 }
 
 /* =========================================================
@@ -54,8 +68,20 @@ const userSchema = new Schema<IUser, UserModel>(
       enum: Object.values(UserRole),
       default: UserRole.PATIENT,
     },
+    phone: { type: String },
+    avatar: { type: String },
+    isActive: { type: Boolean, default: true },
+    isEmailVerified: { type: Boolean, default: false },
+    emailVerificationToken: { type: String },
+    passwordResetToken: { type: String },
+    passwordResetExpires: { type: Date },
+    lastLogin: { type: Date },
     loginAttempts: { type: Number, default: 0 },
     lockUntil: { type: Date },
+    dateOfBirth: { type: Date },
+    gender: { type: String },
+    specialization: { type: String },
+    licenseNumber: { type: String },
   },
   { timestamps: true }
 );
@@ -82,6 +108,24 @@ userSchema.methods.comparePassword = async function (candidatePassword: string):
 
 userSchema.methods.isLocked = function (): boolean {
   return !!(this.lockUntil && this.lockUntil > new Date());
+};
+
+userSchema.methods.incrementLoginAttempts = async function (): Promise<void> {
+  this.loginAttempts += 1;
+  
+  // Lock account after 5 failed attempts for 2 hours
+  if (this.loginAttempts >= 5) {
+    this.lockUntil = new Date(Date.now() + 2 * 60 * 60 * 1000); // 2 hours
+  }
+  
+  await this.save();
+};
+
+userSchema.methods.generatePasswordResetToken = function (): string {
+  const resetToken = crypto.randomBytes(32).toString('hex');
+  this.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+  this.passwordResetExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+  return resetToken;
 };
 
 /* =========================================================
