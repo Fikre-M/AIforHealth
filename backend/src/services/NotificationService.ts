@@ -1,61 +1,109 @@
-import { Types } from 'mongoose';
-import Notification, { INotification, NotificationType, NotificationStatus, NotificationChannel } from '../models/Notification';
+import { FilterQuery, Types } from 'mongoose';
+import Notification, {
+  INotification,
+  NotificationType,
+  NotificationStatus,
+  NotificationChannel,
+} from '../models/Notification';
 import Appointment, { AppointmentStatus, IAppointment } from '../models/Appointment';
 import { IUser } from '../models/User';
 
-class NotificationService {
-  /**
-   * Create a notification
-   */
-  async createNotification(data: {
-    user: Types.ObjectId | IUser;
-    title: string;
-    message: string;
-    type: NotificationType;
-    channel?: NotificationChannel;
-    relatedEntity?: {
-      kind: string;
-      item: Types.ObjectId;
-    };
-    metadata?: Record<string, any>;
-    scheduledFor?: Date;
-  }): Promise<INotification> {
+/* =========================================================
+   Types
+========================================================= */
+
+interface CreateNotificationInput {
+  user: Types.ObjectId | IUser;
+  title: string;
+  message: string;
+  type: NotificationType;
+  channel?: NotificationChannel;
+  relatedEntity?: {
+    kind: string;
+    item: Types.ObjectId;
+  };
+  metadata?: Record<string, unknown>;
+  scheduledFor?: Date;
+}
+
+interface PaginationOptions {
+  limit?: number;
+  page?: number;
+  unreadOnly?: boolean;
+}
+
+interface PaginatedNotifications {
+  data: INotification[];
+  pagination: {
+    total: number;
+    page: number;
+    totalPages: number;
+    limit: number;
+  };
+}
+
+/* =========================================================
+   Helpers
+========================================================= */
+
+const extractObjectId = (value: Types.ObjectId | IUser): Types.ObjectId => {
+  if (value instanceof Types.ObjectId) return value;
+  return value._id as Types.ObjectId;
+};
+
+const extractDoctorName = (doctor: Types.ObjectId | IUser): string => {
+  if (typeof doctor === 'object' && 'name' in doctor) {
+    return doctor.name;
+  }
+  return 'your doctor';
+};
+
+/* =========================================================
+   Service
+========================================================= */
+
+export class NotificationService {
+  /* ================= CREATE ================= */
+
+  async createNotification(data: CreateNotificationInput): Promise<INotification> {
     const notification = new Notification({
-      user: data.user,
+      user: extractObjectId(data.user),
       title: data.title,
       message: data.message,
       type: data.type,
-      channel: data.channel || NotificationChannel.IN_APP,
+      channel: data.channel ?? NotificationChannel.IN_APP,
       relatedEntity: data.relatedEntity,
-      metadata: data.metadata || {},
-      scheduledFor: data.scheduledFor || new Date(),
-      status: NotificationStatus.PENDING
+      metadata: data.metadata ?? {},
+      scheduledFor: data.scheduledFor ?? new Date(),
+      status: NotificationStatus.PENDING,
     });
 
     return notification.save();
   }
 
-  /**
-   * Get user notifications
-   */
+  /* ================= GET USER NOTIFICATIONS ================= */
+
   async getUserNotifications(
     userId: Types.ObjectId | string,
-    { limit = 20, page = 1, unreadOnly = false }: { limit?: number; page?: number; unreadOnly?: boolean } = {}
-  ) {
-    const query: any = { user: userId };
-    
+    options: PaginationOptions = {}
+  ): Promise<PaginatedNotifications> {
+    const { limit = 20, page = 1, unreadOnly = false } = options;
+
+    const filter: FilterQuery<INotification> = {
+      user: userId,
+    };
+
     if (unreadOnly) {
-      query.readAt = { $exists: false };
-      query.status = NotificationStatus.SENT;
+      filter.readAt = { $exists: false };
+      filter.status = NotificationStatus.SENT;
     }
 
     const [notifications, total] = await Promise.all([
-      Notification.find(query)
+      Notification.find(filter)
         .sort({ createdAt: -1 })
         .skip((page - 1) * limit)
-        .limit(limit)
-        .lean(),
-      Notification.countDocuments(query)
+        .limit(limit),
+      Notification.countDocuments(filter),
     ]);
 
     return {
@@ -64,93 +112,94 @@ class NotificationService {
         total,
         page,
         totalPages: Math.ceil(total / limit),
-        limit
-      }
+        limit,
+      },
     };
   }
 
-  /**
-   * Mark notification as read
-   */
-  async markAsRead(notificationId: string, userId: Types.ObjectId | string): Promise<INotification | null> {
-    const notification = await Notification.findOneAndUpdate(
+  /* ================= MARK READ ================= */
+
+  async markAsRead(
+    notificationId: string,
+    userId: Types.ObjectId | string
+  ): Promise<INotification | null> {
+    return Notification.findOneAndUpdate(
       { _id: notificationId, user: userId },
-      { 
-        $set: { 
+      {
+        $set: {
           readAt: new Date(),
-          status: NotificationStatus.READ 
-        } 
+          status: NotificationStatus.READ,
+        },
       },
       { new: true }
     );
-
-    return notification;
   }
 
-  /**
-   * Mark all notifications as read
-   */
   async markAllAsRead(userId: Types.ObjectId | string): Promise<{ modifiedCount: number }> {
     const result = await Notification.updateMany(
-      { 
-        user: userId, 
+      {
+        user: userId,
         readAt: { $exists: false },
-        status: NotificationStatus.SENT
+        status: NotificationStatus.SENT,
       },
-      { 
-        $set: { 
+      {
+        $set: {
           readAt: new Date(),
-          status: NotificationStatus.READ 
-        } 
+          status: NotificationStatus.READ,
+        },
       }
     );
 
-    return { modifiedCount: result.modifiedCount || 0 };
+    return { modifiedCount: result.modifiedCount ?? 0 };
   }
 
-  /**
-   * Delete a notification
-   */
-  async deleteNotification(notificationId: string, userId: Types.ObjectId | string): Promise<boolean> {
-    const result = await Notification.deleteOne({ _id: notificationId, user: userId });
-    return result.deletedCount > 0;
+  /* ================= DELETE ================= */
+
+  async deleteNotification(
+    notificationId: string,
+    userId: Types.ObjectId | string
+  ): Promise<boolean> {
+    const result = await Notification.deleteOne({
+      _id: notificationId,
+      user: userId,
+    });
+
+    return (result.deletedCount ?? 0) > 0;
   }
 
-  // ==================== APPOINTMENT-RELATED NOTIFICATIONS ====================
+  /* ================= APPOINTMENT NOTIFICATIONS ================= */
 
-  /**
-   * Create appointment reminder notification
-   */
   async createAppointmentReminder(appointment: IAppointment): Promise<INotification | null> {
-    // Only create reminder for upcoming appointments
     if (appointment.appointmentDate <= new Date()) {
       return null;
     }
 
     const reminderDate = new Date(appointment.appointmentDate);
-    reminderDate.setHours(reminderDate.getHours() - 2); // 2 hours before appointment
+    reminderDate.setHours(reminderDate.getHours() - 2);
+
+    const doctorName = extractDoctorName(appointment.doctor);
 
     return this.createNotification({
       user: appointment.patient,
       title: 'Upcoming Appointment Reminder',
-      message: `You have an appointment with Dr. ${(appointment as any).doctor?.name || 'your doctor'} at ${appointment.appointmentDate.toLocaleTimeString()}`,
+      message: `You have an appointment with Dr. ${doctorName} at ${appointment.appointmentDate.toLocaleTimeString()}`,
       type: NotificationType.APPOINTMENT_REMINDER,
       relatedEntity: {
         kind: 'Appointment',
-        item: appointment._id
+        item: appointment._id as Types.ObjectId,
       },
       scheduledFor: reminderDate,
       metadata: {
         appointmentDate: appointment.appointmentDate,
-        doctorId: appointment.doctor,
-        appointmentType: appointment.type
-      }
+        doctorId:
+          appointment.doctor instanceof Types.ObjectId
+            ? appointment.doctor
+            : appointment.doctor._id,
+        appointmentType: appointment.type,
+      },
     });
   }
 
-  /**
-   * Create missed appointment notification
-   */
   async createMissedAppointmentNotification(appointment: IAppointment): Promise<INotification> {
     return this.createNotification({
       user: appointment.patient,
@@ -159,106 +208,88 @@ class NotificationService {
       type: NotificationType.MISSED_APPOINTMENT,
       relatedEntity: {
         kind: 'Appointment',
-        item: appointment._id
+        item: appointment._id as Types.ObjectId,
       },
       metadata: {
         appointmentDate: appointment.appointmentDate,
-        doctorId: appointment.doctor
-      }
+      },
     });
   }
 
-  /**
-   * Create appointment confirmation notification
-   */
   async createAppointmentConfirmation(appointment: IAppointment): Promise<INotification> {
     return this.createNotification({
       user: appointment.patient,
       title: 'Appointment Confirmed',
-      message: `Your appointment with Dr. ${(appointment as any).doctor?.name || 'your doctor'} has been confirmed for ${appointment.appointmentDate.toLocaleString()}`,
+      message: `Your appointment has been confirmed for ${appointment.appointmentDate.toLocaleString()}`,
       type: NotificationType.APPOINTMENT_CONFIRMATION,
       relatedEntity: {
         kind: 'Appointment',
-        item: appointment._id
+        item: appointment._id as Types.ObjectId,
       },
-      metadata: {
-        appointmentDate: appointment.appointmentDate,
-        doctorId: appointment.doctor,
-        appointmentType: appointment.type
-      }
     });
   }
 
-  /**
-   * Create appointment cancellation notification
-   */
-  async createAppointmentCancellation(appointment: IAppointment, reason?: string): Promise<INotification> {
+  async createAppointmentCancellation(
+    appointment: IAppointment,
+    reason?: string
+  ): Promise<INotification> {
     return this.createNotification({
       user: appointment.patient,
       title: 'Appointment Cancelled',
-      message: `Your appointment scheduled for ${appointment.appointmentDate.toLocaleString()} has been cancelled.${reason ? ` Reason: ${reason}` : ''}`,
+      message: `Your appointment scheduled for ${appointment.appointmentDate.toLocaleString()} has been cancelled.${
+        reason ? ` Reason: ${reason}` : ''
+      }`,
       type: NotificationType.APPOINTMENT_CANCELLATION,
       relatedEntity: {
         kind: 'Appointment',
-        item: appointment._id
+        item: appointment._id as Types.ObjectId,
       },
-      metadata: {
-        appointmentDate: appointment.appointmentDate,
-        doctorId: appointment.doctor,
-        cancellationReason: reason
-      }
+      metadata: reason ? { cancellationReason: reason } : undefined,
     });
   }
 
-  /**
-   * Create appointment rescheduled notification
-   */
-  async createAppointmentRescheduled(appointment: IAppointment, oldDate: Date): Promise<INotification> {
+  async createAppointmentRescheduled(
+    appointment: IAppointment,
+    oldDate: Date
+  ): Promise<INotification> {
     return this.createNotification({
       user: appointment.patient,
       title: 'Appointment Rescheduled',
-      message: `Your appointment has been rescheduled from ${oldDate.toLocaleString()} to ${appointment.appointmentDate.toLocaleString()}`,
+      message: `Your appointment was moved from ${oldDate.toLocaleString()} to ${appointment.appointmentDate.toLocaleString()}`,
       type: NotificationType.APPOINTMENT_RESCHEDULED,
       relatedEntity: {
         kind: 'Appointment',
-        item: appointment._id
+        item: appointment._id as Types.ObjectId,
       },
       metadata: {
         oldAppointmentDate: oldDate,
         newAppointmentDate: appointment.appointmentDate,
-        doctorId: appointment.doctor
-      }
+      },
     });
   }
 
-  /**
-   * Process pending notifications (to be called by a scheduled job)
-   */
-  async processPendingNotifications(): Promise<{ processed: number; failed: number }> {
+  /* ================= PROCESS PENDING ================= */
+
+  async processPendingNotifications(): Promise<{
+    processed: number;
+    failed: number;
+  }> {
     const now = new Date();
     let processed = 0;
     let failed = 0;
 
-    // Find all pending notifications that are scheduled for now or before
     const pendingNotifications = await Notification.find({
       status: NotificationStatus.PENDING,
-      $or: [
-        { scheduledFor: { $lte: now } },
-        { scheduledFor: { $exists: false } }
-      ]
-    }).limit(100); // Process in batches of 100
+      $or: [{ scheduledFor: { $lte: now } }, { scheduledFor: { $exists: false } }],
+    }).limit(100);
 
     for (const notification of pendingNotifications) {
       try {
-        // In a real implementation, this is where you would send the notification
-        // via the appropriate channel (email, SMS, push, etc.)
-        // For now, we'll just mark it as sent
         notification.status = NotificationStatus.SENT;
         notification.sentAt = new Date();
         await notification.save();
         processed++;
-      } catch (error) {
-        console.error(`Failed to process notification ${notification._id}:`, error);
+      } catch {
         notification.status = NotificationStatus.FAILED;
         await notification.save();
         failed++;
@@ -267,80 +298,11 @@ class NotificationService {
 
     return { processed, failed };
   }
-
-  /**
-   * Check for upcoming appointments and create reminders
-   */
-  async checkForUpcomingAppointments(): Promise<{ remindersCreated: number }> {
-    const now = new Date();
-    const reminderWindow = new Date(now.getTime() + 2 * 60 * 60 * 1000); // 2 hours from now
-
-    // Find appointments that are within the reminder window and don't have a reminder sent yet
-    const appointments = await Appointment.find({
-      appointmentDate: {
-        $gt: now,
-        $lte: reminderWindow
-      },
-      reminderSent: { $ne: true },
-      status: { $in: [AppointmentStatus.SCHEDULED, AppointmentStatus.CONFIRMED] }
-    }).populate('patient doctor', 'name email');
-
-    let remindersCreated = 0;
-
-    for (const appointment of appointments) {
-      try {
-        await this.createAppointmentReminder(appointment);
-        appointment.reminderSent = true;
-        await appointment.save();
-        remindersCreated++;
-      } catch (error) {
-        console.error(`Failed to create reminder for appointment ${appointment._id}:`, error);
-      }
-    }
-
-    return { remindersCreated };
-  }
-
-  /**
-   * Check for missed appointments and create notifications
-   */
-  async checkForMissedAppointments(): Promise<{ notificationsCreated: number }> {
-    const now = new Date();
-    const windowStart = new Date(now.getTime() - 24 * 60 * 60 * 1000); // Last 24 hours
-
-    // Find appointments that were scheduled in the past 24 hours and were not completed
-    const appointments = await Appointment.find({
-      appointmentDate: {
-        $gte: windowStart,
-        $lt: now
-      },
-      status: { $in: [AppointmentStatus.SCHEDULED, AppointmentStatus.CONFIRMED] }
-    }).populate('patient doctor', 'name email');
-
-    let notificationsCreated = 0;
-
-    for (const appointment of appointments) {
-      try {
-        // Check if a notification was already created for this missed appointment
-        const existingNotification = await Notification.findOne({
-          'relatedEntity.kind': 'Appointment',
-          'relatedEntity.item': appointment._id,
-          type: NotificationType.MISSED_APPOINTMENT
-        });
-
-        if (!existingNotification) {
-          await this.createMissedAppointmentNotification(appointment);
-          appointment.status = AppointmentStatus.MISSED;
-          await appointment.save();
-          notificationsCreated++;
-        }
-      } catch (error) {
-        console.error(`Failed to create missed appointment notification for appointment ${appointment._id}:`, error);
-      }
-    }
-
-    return { notificationsCreated };
-  }
 }
 
-export default new NotificationService();
+/* =========================================================
+   Default Export (Required)
+========================================================= */
+
+const notificationService = new NotificationService();
+export default notificationService;
