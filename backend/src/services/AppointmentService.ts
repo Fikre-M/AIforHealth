@@ -35,10 +35,42 @@ export interface CreateAppointmentData {
   isEmergency?: boolean;
 }
 
+export interface UpdateAppointmentData {
+  appointmentDate?: Date;
+  duration?: number;
+  type?: string;
+  reason?: string;
+  notes?: string;
+  isEmergency?: boolean;
+  status?: string;
+  cancellationReason?: string;
+  rescheduleReason?: string;
+  completedAt?: Date;
+  diagnosis?: string;
+  prescription?: string;
+}
+
 export interface BulkOperationItem {
   id: string;
   reason?: string;
-  data?: Record<string, unknown>;
+  data?: Partial<UpdateAppointmentData>;
+}
+
+/* =========================================================
+   Helper Functions
+========================================================= */
+
+function buildAppointmentQuery(filters: PaginationOptions, extra: Record<string, unknown> = {}) {
+  const query: Record<string, unknown> = { ...extra };
+  if (filters.status) query.status = filters.status;
+
+  if (filters.startDate || filters.endDate) {
+    query.appointmentDate = {};
+    if (filters.startDate) query.appointmentDate.$gte = new Date(filters.startDate);
+    if (filters.endDate) query.appointmentDate.$lte = new Date(filters.endDate);
+  }
+
+  return query;
 }
 
 /* =========================================================
@@ -48,18 +80,14 @@ export interface BulkOperationItem {
 export class AppointmentService {
   /* ================= CREATE ================= */
 
-  static async createAppointment(
-    data: CreateAppointmentData
-  ): Promise<typeof Appointment.prototype> {
+  static async createAppointment(data: CreateAppointmentData) {
     const conflict = await Appointment.findOne({
       doctor: data.doctorId,
       appointmentDate: data.appointmentDate,
       status: { $ne: 'cancelled' },
     });
 
-    if (conflict) {
-      throw new AppError('Time slot already booked', 409);
-    }
+    if (conflict) throw new AppError('Time slot already booked', 409);
 
     return Appointment.create({
       patient: data.patientId,
@@ -76,35 +104,25 @@ export class AppointmentService {
   /* ================= GET BY ID ================= */
 
   static async getAppointmentById(id: string) {
-    if (!Types.ObjectId.isValid(id)) {
-      throw new AppError('Invalid appointment ID', 400);
-    }
+    if (!Types.ObjectId.isValid(id)) throw new AppError('Invalid appointment ID', 400);
 
     return Appointment.findById(id)
       .populate('patient', 'name email phone')
-      .populate('doctor', 'name email specialization');
+      .populate('doctor', 'name email specialization')
+      .lean();
   }
 
   /* ================= PAGINATED GET ================= */
 
-  static async getAppointments(filters: PaginationOptions): Promise<PaginatedResult<unknown>> {
+  static async getAppointments(
+    filters: PaginationOptions,
+    extraQuery: Record<string, unknown> = {}
+  ): Promise<PaginatedResult<typeof Appointment.prototype>> {
     const page = filters.page ?? 1;
     const limit = Math.min(filters.limit ?? 20, 100);
     const skip = (page - 1) * limit;
 
-    const query: Record<string, unknown> = {};
-
-    if (filters.status) query.status = filters.status;
-
-    if (filters.startDate || filters.endDate) {
-      query.appointmentDate = {};
-      if (filters.startDate) {
-        (query.appointmentDate as Record<string, unknown>).$gte = new Date(filters.startDate);
-      }
-      if (filters.endDate) {
-        (query.appointmentDate as Record<string, unknown>).$lte = new Date(filters.endDate);
-      }
-    }
+    const query = buildAppointmentQuery(filters, extraQuery);
 
     const [appointments, total] = await Promise.all([
       Appointment.find(query)
@@ -130,11 +148,11 @@ export class AppointmentService {
 
   /* ================= UPDATE ================= */
 
-  static async updateAppointment(id: string, data: Record<string, unknown>) {
+  static async updateAppointment(id: string, data: UpdateAppointmentData) {
     return Appointment.findByIdAndUpdate(id, data, {
       new: true,
       runValidators: true,
-    });
+    }).lean();
   }
 
   /* ================= STATUS ================= */
@@ -142,7 +160,8 @@ export class AppointmentService {
   static async updateAppointmentStatus(id: string, status: string) {
     return Appointment.findByIdAndUpdate(id, { status }, { new: true, runValidators: true })
       .populate('patient', 'name email')
-      .populate('doctor', 'name email');
+      .populate('doctor', 'name email')
+      .lean();
   }
 
   /* ================= CANCEL ================= */
@@ -156,22 +175,17 @@ export class AppointmentService {
         cancelledAt: new Date(),
       },
       { new: true }
-    );
+    ).lean();
   }
 
   /* ================= RESCHEDULE ================= */
 
   static async rescheduleAppointment(id: string, newDate: Date, reason?: string) {
     const appointment = await Appointment.findById(id);
-    if (!appointment) {
-      throw new AppError('Appointment not found', 404);
-    }
+    if (!appointment) throw new AppError('Appointment not found', 404);
 
-    const available = await this.checkAvailability(appointment.doctor.toString(), newDate);
-
-    if (!available) {
-      throw new AppError('New time slot is not available', 409);
-    }
+    const available = await this.checkAvailability(appointment.doctor.toString(), newDate, id);
+    if (!available) throw new AppError('New time slot is not available', 409);
 
     return Appointment.findByIdAndUpdate(
       id,
@@ -182,7 +196,7 @@ export class AppointmentService {
         rescheduledAt: new Date(),
       },
       { new: true }
-    );
+    ).lean();
   }
 
   /* ================= COMPLETE ================= */
@@ -203,7 +217,7 @@ export class AppointmentService {
         ...data,
       },
       { new: true }
-    );
+    ).lean();
   }
 
   /* ================= DOCTOR APPOINTMENTS ================= */
@@ -211,15 +225,8 @@ export class AppointmentService {
   static async getDoctorAppointments(
     doctorId: string,
     options: PaginationOptions
-  ): Promise<PaginatedResult<unknown>> {
-    return this.getAppointments({
-      ...options,
-      startDate: options.startDate,
-      endDate: options.endDate,
-      status: options.status,
-      page: options.page,
-      limit: options.limit,
-    });
+  ): Promise<PaginatedResult<typeof Appointment.prototype>> {
+    return this.getAppointments(options, { doctor: doctorId });
   }
 
   /* ================= PATIENT APPOINTMENTS ================= */
@@ -227,80 +234,50 @@ export class AppointmentService {
   static async getPatientAppointments(
     patientId: string,
     options: PaginationOptions
-  ): Promise<PaginatedResult<unknown>> {
-    const page = options.page ?? 1;
-    const limit = Math.min(options.limit ?? 20, 100);
-    const skip = (page - 1) * limit;
-
-    const query: Record<string, unknown> = { patient: patientId };
-    if (options.status) query.status = options.status;
-
-    const [appointments, total] = await Promise.all([
-      Appointment.find(query)
-        .skip(skip)
-        .limit(limit)
-        .populate('doctor', 'name email specialization')
-        .sort({ appointmentDate: -1 })
-        .lean(),
-      Appointment.countDocuments(query),
-    ]);
-
-    return {
-      appointments,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit),
-      },
-    };
+  ): Promise<PaginatedResult<typeof Appointment.prototype>> {
+    return this.getAppointments(options, { patient: patientId });
   }
 
   /* ================= BACKWARD COMPATIBILITY ================= */
 
-  // Alias to prevent test/controller failures
   static async getUpcomingAppointments(patientId: string, options: PaginationOptions) {
     return this.getPatientAppointments(patientId, options);
   }
 
   /* ================= AVAILABILITY ================= */
 
-  static async checkAvailability(doctorId: string, appointmentDate: Date): Promise<boolean> {
+  static async checkAvailability(
+    doctorId: string,
+    appointmentDate: Date,
+    excludeId?: string
+  ): Promise<boolean> {
     const conflict = await Appointment.findOne({
       doctor: doctorId,
       appointmentDate,
       status: { $in: ['scheduled', 'confirmed', 'in_progress'] },
+      ...(excludeId ? { _id: { $ne: excludeId } } : {}),
     });
-
     return !conflict;
   }
 
   /* ================= BULK ================= */
 
-  static async bulkUpdateAppointments(operation: string, appointments: BulkOperationItem[]) {
+  static async bulkUpdateAppointments(
+    operation: 'cancel' | 'complete',
+    appointments: BulkOperationItem[]
+  ) {
     const result = {
       successful: [] as unknown[],
       failed: [] as { id: string; reason: string }[],
     };
 
-    for (const item of appointments) {
+    const promises = appointments.map(async (item) => {
       try {
         let updated;
-
-        if (operation === 'cancel') {
-          updated = await this.cancelAppointment(item.id, item.reason);
-        } else if (operation === 'complete') {
-          updated = await this.completeAppointment(
-            item.id,
-            item.data as {
-              notes?: string;
-              diagnosis?: string;
-              prescription?: string;
-            }
-          );
-        } else {
-          throw new AppError('Unsupported operation', 400);
-        }
+        if (operation === 'cancel') updated = await this.cancelAppointment(item.id, item.reason);
+        else if (operation === 'complete')
+          updated = await this.completeAppointment(item.id, item.data || {});
+        else throw new AppError('Unsupported operation', 400);
 
         if (updated) result.successful.push(updated);
         else result.failed.push({ id: item.id, reason: 'Not found' });
@@ -308,8 +285,9 @@ export class AppointmentService {
         const message = err instanceof Error ? err.message : 'Unknown error';
         result.failed.push({ id: item.id, reason: message });
       }
-    }
+    });
 
+    await Promise.all(promises);
     return result;
   }
 }
