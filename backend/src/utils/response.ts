@@ -1,75 +1,54 @@
 import { Response } from 'express';
-import { ApiResponse } from '@/types';
+import { ApiResponse, ApiSuccessResponse, ApiErrorResponse } from '@/types';
 
-/**
- * Utility class for standardized API responses
- */
 export class ResponseUtil {
-  /**
-   * Send success response
-   */
   static success<T>(
     res: Response,
     data?: T,
     message?: string,
-    statusCode: number = 200
-  ): Response {
-    const response: any = {
+    statusCode = 200
+  ): Response<ApiSuccessResponse<T>> {
+    return res.status(statusCode).json({
       success: true,
       data,
-    };
-
-    if (message) {
-      response.message = message;
-    }
-
-    return res.status(statusCode).json(response);
+      ...(message ? { message } : {}),
+    });
   }
 
-  /**
-   * Send error response
-   */
   static error(
     res: Response,
     message: string,
-    statusCode: number = 400,
-    details?: any
-  ): Response {
-    const response: any = {
+    statusCode = 400,
+    details?: Record<string, unknown>
+  ): Response<ApiErrorResponse> {
+    return res.status(statusCode).json({
       success: false,
-      error: {
-        message,
-        ...(details && { details }),
-      },
-    };
-
-    return res.status(statusCode).json(response);
+      error: message,
+      ...(details ? { details } : {}),
+      statusCode,
+    });
   }
 
-  /**
-   * Send paginated response
-   */
   static paginated<T>(
     res: Response,
     data: T[],
     page: number,
     limit: number,
     total: number,
-    statusCode: number = 200
-  ): Response {
-    const pages = Math.ceil(total / limit);
-
-    const response: any = {
+    statusCode = 200
+  ): Response<ApiSuccessResponse<T[]>> {
+    const totalPages = Math.ceil(total / limit);
+    return res.status(statusCode).json({
       success: true,
       data,
       pagination: {
         page,
         limit,
         total,
-        pages,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1,
       },
-    };
-
-    return res.status(statusCode).json(response);
+    });
   }
 }
