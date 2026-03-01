@@ -1,7 +1,8 @@
 import { DoctorService } from '../DoctorService';
-import { User, Appointment } from '@/models';
 import { UserRole } from '@/types';
-import { AppointmentStatus } from '@/models';
+import { User } from '@/models/User';
+import { Appointment } from '@/models/Appointment';
+import { AppointmentStatus } from '@/types';
 
 describe('DoctorService', () => {
   let doctorId: string;
@@ -63,7 +64,7 @@ describe('DoctorService', () => {
 
       expect(appointments).toBeDefined();
       expect(appointments.length).toBeGreaterThan(0);
-      expect(appointments[0].doctor.toString()).toBe(doctorId);
+      expect(appointments[0].doctor?.toString()).toBe(doctorId);
     });
 
     it('should only return today appointments', async () => {
