@@ -1,13 +1,21 @@
+// backend/src/types/index.ts
+
 /**
  * Core Type Definitions for Backend
- * 
- * This file contains all shared types used across the backend application.
- * Use strict typing to avoid 'any' types.
+ * All shared types used across the backend application.
+ * Strict typing enforced.
  */
 
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { Document, Types } from 'mongoose';
-import { UserRole } from './enums';
+import {
+  UserRole,
+  DoctorSpecialty,
+  AppointmentStatus,
+  NotificationType,
+  NotificationPriority,
+  MessageRole,
+} from './enums';
 
 // Re-export enums
 export * from './enums';
@@ -16,14 +24,12 @@ export * from './enums';
 // User & Authentication Types
 // ============================================================================
 
-// UserRole enum is exported from enums.ts
-
 export interface IUser extends Document {
   _id: Types.ObjectId;
   email: string;
   password: string;
   name: string;
-  role: string;
+  role: UserRole;
   isEmailVerified: boolean;
   emailVerificationToken?: string;
   passwordResetToken?: string;
@@ -97,23 +103,21 @@ export interface IPatient extends Document {
 // Doctor Types
 // ============================================================================
 
-// DoctorSpecialty enum is exported from enums.ts
-
 export interface IDoctorAvailability {
   dayOfWeek: number; // 0-6 (Sunday-Saturday)
-  startTime: string; // HH:mm format
-  endTime: string; // HH:mm format
+  startTime: string; // HH:mm
+  endTime: string; // HH:mm
 }
 
 export interface IDoctor extends Document {
   _id: Types.ObjectId;
   userId: Types.ObjectId;
-  specialty: string;
+  specialty: DoctorSpecialty;
   licenseNumber: string;
   phone: string;
   bio?: string;
   education: string[];
-  experience: number; // years
+  experience: number;
   availability: IDoctorAvailability[];
   consultationFee: number;
   rating?: number;
@@ -127,16 +131,14 @@ export interface IDoctor extends Document {
 // Appointment Types
 // ============================================================================
 
-// AppointmentStatus enum is exported from enums.ts
-
 export interface IAppointment extends Document {
   _id: Types.ObjectId;
   patientId: Types.ObjectId;
   doctorId: Types.ObjectId;
   date: Date;
-  time: string; // HH:mm format
-  duration: number; // minutes
-  status: string;
+  time: string; // HH:mm
+  duration: number;
+  status: AppointmentStatus;
   reason: string;
   notes?: string;
   diagnosis?: string;
@@ -151,13 +153,11 @@ export interface IAppointment extends Document {
 // Notification Types
 // ============================================================================
 
-// NotificationType and NotificationPriority enums are exported from enums.ts
-
 export interface INotification extends Document {
   _id: Types.ObjectId;
   userId: Types.ObjectId;
-  type: string;
-  priority: string;
+  type: NotificationType;
+  priority: NotificationPriority;
   title: string;
   message: string;
   read: boolean;
@@ -172,10 +172,8 @@ export interface INotification extends Document {
 // AI Assistant Types
 // ============================================================================
 
-// MessageRole enum is exported from enums.ts
-
 export interface IChatMessage {
-  role: string;
+  role: MessageRole;
   content: string;
   timestamp: Date;
 }
@@ -203,7 +201,7 @@ export interface ApiSuccessResponse<T = unknown> {
 export interface ApiErrorResponse {
   success: false;
   error: string;
-  message: string;
+  message?: string;
   statusCode: number;
   details?: Record<string, unknown>;
   stack?: string;
@@ -231,14 +229,14 @@ export interface PaginatedResponse<T> {
 }
 
 // ============================================================================
-// Service Layer Types
+// Service Layer DTOs
 // ============================================================================
 
 export interface CreateUserDTO {
   email: string;
   password: string;
   name: string;
-  role: string;
+  role: UserRole;
 }
 
 export interface UpdateUserDTO {
@@ -265,7 +263,7 @@ export interface UpdatePatientDTO {
 
 export interface CreateDoctorDTO {
   userId: string;
-  specialty: string;
+  specialty: DoctorSpecialty;
   licenseNumber: string;
   phone: string;
   bio?: string;
@@ -294,14 +292,14 @@ export interface CreateAppointmentDTO {
 export interface UpdateAppointmentDTO {
   date?: Date;
   time?: string;
-  status?: string;
+  status?: AppointmentStatus;
   notes?: string;
   diagnosis?: string;
   prescription?: string;
 }
 
 // ============================================================================
-// Query Types
+// Query & Filter Options
 // ============================================================================
 
 export interface QueryOptions {
@@ -315,9 +313,9 @@ export interface QueryOptions {
 
 export interface FilterOptions {
   search?: string;
-  status?: string;
-  role?: string;
-  specialty?: string;
+  status?: AppointmentStatus | UserRole;
+  role?: UserRole;
+  specialty?: DoctorSpecialty;
   dateFrom?: Date;
   dateTo?: Date;
 }
@@ -326,7 +324,7 @@ export interface FilterOptions {
 // Validation Types
 // ============================================================================
 
-export interface ValidationError {
+export interface FieldValidationError {
   field: string;
   message: string;
   value?: unknown;
@@ -334,11 +332,11 @@ export interface ValidationError {
 
 export interface ValidationResult {
   isValid: boolean;
-  errors: ValidationError[];
+  errors: FieldValidationError[];
 }
 
 // ============================================================================
-// Error Types
+// Error Classes
 // ============================================================================
 
 export class AppError extends Error {
@@ -348,7 +346,7 @@ export class AppError extends Error {
     public isOperational: boolean = true
   ) {
     super(message);
-    Object.setPrototypeOf(this, AppError.prototype);
+    Object.setPrototypeOf(this, new.target.prototype);
     Error.captureStackTrace(this, this.constructor);
   }
 }
@@ -360,7 +358,10 @@ export class NotFoundError extends AppError {
 }
 
 export class ValidationError extends AppError {
-  constructor(message: string = 'Validation failed', public errors?: ValidationError[]) {
+  constructor(
+    message: string = 'Validation failed',
+    public errors?: FieldValidationError[]
+  ) {
     super(400, message);
   }
 }
@@ -387,35 +388,17 @@ export class ConflictError extends AppError {
 // Utility Types
 // ============================================================================
 
-/**
- * Make all properties of T required and non-nullable
- */
 export type RequiredNotNull<T> = {
   [P in keyof T]-?: NonNullable<T[P]>;
 };
 
-/**
- * Make specific properties of T optional
- */
 export type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 
-/**
- * Make specific properties of T required
- */
 export type RequiredBy<T, K extends keyof T> = Omit<T, K> & Required<Pick<T, K>>;
 
-/**
- * Omit _id and timestamps from Mongoose documents
- */
 export type WithoutMongooseFields<T> = Omit<T, '_id' | 'createdAt' | 'updatedAt' | '__v'>;
 
-/**
- * Convert Mongoose document to plain object
- */
-export type DocumentToObject<T extends Document> = Omit<
-  T,
-  keyof Document | '__v'
-> & {
+export type DocumentToObject<T extends Document> = Omit<T, keyof Document | '__v'> & {
   _id: string;
   createdAt: string;
   updatedAt: string;
@@ -465,8 +448,4 @@ export const NOTIFICATION_TYPES = [
   'system',
 ] as const;
 
-export const NOTIFICATION_PRIORITIES = [
-  'low',
-  'medium',
-  'high',
-] as const;
+export const NOTIFICATION_PRIORITIES = ['low', 'medium', 'high'] as const;
