@@ -36,6 +36,20 @@ export interface IUser extends Document {
   currentMedications?: string[];
   createdBy?: mongoose.Types.ObjectId; // For doctor-created patients
   
+  // Doctor-specific profile
+  profile?: {
+    clinicId?: mongoose.Types.ObjectId;
+    specialty?: string;
+    experience?: number;
+    education?: string[];
+    languages?: string[];
+    rating?: number;
+    consultationFee?: number;
+    isAvailable?: boolean;
+    bio?: string;
+    avatar?: string;
+  };
+  
   // Instance methods
   comparePassword(candidatePassword: string): Promise<boolean>;
   generatePasswordResetToken(): string;
@@ -162,6 +176,52 @@ const userSchema = new Schema<IUser>(
     createdBy: {
       type: Schema.Types.ObjectId,
       ref: 'User',
+    },
+    // Doctor-specific profile
+    profile: {
+      clinicId: {
+        type: Schema.Types.ObjectId,
+        ref: 'Clinic',
+      },
+      specialty: {
+        type: String,
+        trim: true,
+      },
+      experience: {
+        type: Number,
+        min: 0,
+      },
+      education: [{
+        type: String,
+        trim: true,
+      }],
+      languages: [{
+        type: String,
+        trim: true,
+      }],
+      rating: {
+        type: Number,
+        min: 0,
+        max: 5,
+        default: 4.0,
+      },
+      consultationFee: {
+        type: Number,
+        min: 0,
+      },
+      isAvailable: {
+        type: Boolean,
+        default: true,
+      },
+      bio: {
+        type: String,
+        trim: true,
+        maxlength: 500,
+      },
+      avatar: {
+        type: String,
+        trim: true,
+      },
     },
   },
   {

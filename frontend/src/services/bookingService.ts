@@ -17,13 +17,47 @@ export const bookingService = {
     const data = response.data || response;
     const clinics = data.clinics || data;
     
-    console.log('🏥 Processed clinics:', clinics);
-    return Array.isArray(clinics) ? clinics : [];
+    // Transform backend format to frontend format
+    const transformedClinics = Array.isArray(clinics) ? clinics.map((clinic: any) => ({
+      id: clinic.id || clinic._id,
+      name: clinic.name,
+      address: clinic.address,
+      phone: clinic.phone,
+      rating: clinic.rating,
+      specialties: clinic.specialties || [],
+      image: clinic.image,
+      isOpen: clinic.isOpen,
+      openingHours: clinic.openingHours || {},
+      distance: clinic.distance
+    })) : [];
+    
+    console.log('🏥 Processed clinics:', transformedClinics);
+    return transformedClinics;
   },
 
   async getDoctorsByClinic(clinicId: string): Promise<Doctor[]> {
     const response = await apiAdapter.get(`/clinics/${clinicId}/doctors`);
-    return response.data || response;
+    const data = response.data || response;
+    const doctors = data.doctors || data;
+    
+    // Transform backend format to frontend format
+    const transformedDoctors = Array.isArray(doctors) ? doctors.map((doctor: any) => ({
+      id: doctor.id || doctor._id,
+      name: doctor.name,
+      specialty: doctor.specialty,
+      clinicId: doctor.clinicId,
+      clinicName: doctor.clinicName,
+      rating: doctor.rating,
+      experience: doctor.experience,
+      education: doctor.education || [],
+      languages: doctor.languages || [],
+      avatar: doctor.avatar,
+      consultationFee: doctor.consultationFee,
+      nextAvailable: doctor.nextAvailable,
+      isAvailable: doctor.isAvailable
+    })) : [];
+    
+    return transformedDoctors;
   },
 
   async getDoctorsBySpecialty(specialty: string): Promise<Doctor[]> {
