@@ -1,44 +1,77 @@
-// Simplified Redis configuration (without actual Redis dependency)
 import logger from '@/utils/logger';
 
-// Mock Redis client for compilation
-const redisClient = {
+interface MockRedisClient {
+  isOpen: boolean;
+  connect(): Promise<void>;
+  quit(): Promise<void>;
+  get(key: string): Promise<string | null>;
+  set(key: string, value: string): Promise<'OK'>;
+  setEx(key: string, seconds: number, value: string): Promise<'OK'>;
+  del(key: string): Promise<number>;
+  exists(key: string): Promise<number>;
+  expire(key: string, seconds: number): Promise<number>;
+  incr(key: string): Promise<number>;
+  ttl(key: string): Promise<number>;
+}
+
+const redisClient: MockRedisClient = {
   isOpen: false,
-  connect: async () => {
-    console.log('Redis connection skipped (not configured)');
+
+  async connect() {
+    logger.info('Redis mock connected');
   },
-  quit: async () => {
-    console.log('Redis disconnection skipped');
+
+  async quit() {
+    logger.info('Redis mock disconnected');
   },
-  on: (event: string, callback: Function) => {
-    // Mock event handlers
+
+  async get() {
+    return null;
   },
-  get: async (key: string) => null,
-  set: async (key: string, value: string, options?: any) => 'OK',
-  setEx: async (key: string, seconds: number, value: string) => 'OK',
-  del: async (key: string) => 1,
-  exists: async (key: string) => 0,
-  expire: async (key: string, seconds: number) => 1,
-  incr: async (key: string) => 1,
-  ttl: async (key: string) => -1
+
+  async set() {
+    return 'OK';
+  },
+
+  async setEx() {
+    return 'OK';
+  },
+
+  async del() {
+    return 1;
+  },
+
+  async exists() {
+    return 0;
+  },
+
+  async expire() {
+    return 1;
+  },
+
+  async incr() {
+    return 1;
+  },
+
+  async ttl() {
+    return -1;
+  },
 };
 
-// Connect to Redis (mock)
-const connectRedis = async (): Promise<void> => {
+export async function connectRedis(): Promise<void> {
   try {
-    logger.info('Redis connection skipped (using mock client)');
+    await redisClient.connect();
   } catch (error) {
-    logger.error('Redis connection error (mock):', error);
+    logger.error('Redis connection error:', error);
   }
-};
+}
 
-// Graceful shutdown (mock)
-const disconnectRedis = async (): Promise<void> => {
+export async function disconnectRedis(): Promise<void> {
   try {
-    logger.info('Redis disconnection skipped (mock)');
+    await redisClient.quit();
   } catch (error) {
-    logger.error('Error closing Redis connection (mock):', error);
+    logger.error('Redis disconnection error:', error);
   }
-};
+}
 
-export { redisClient, connectRedis, disconnectRedis };
+export { redisClient };
