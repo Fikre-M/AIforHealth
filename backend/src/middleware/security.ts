@@ -25,7 +25,7 @@ export const configureSecurity = (app: Express): void => {
     cors({
       origin:
         env.NODE_ENV === 'production'
-          ? ['https://elegant-sfogliatella-4ff70a.netlify.app/']
+          ? ['https://elegant-sfogliatella-4ff70a.netlify.app']
           : (origin, callback) => {
               // Allow any localhost origin in development
               if (!origin || origin.startsWith('http://localhost:')) {
