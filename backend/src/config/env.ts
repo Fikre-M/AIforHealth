@@ -103,7 +103,7 @@ export const validateRequiredServices = () => {
 
   if (isProduction()) {
     // Required in production
-    if (!env.SENTRY_DSN) errors.push('SENTRY_DSN is required in production');
+    // Note: SENTRY_DSN is optional - if not provided, error monitoring will be disabled
   } else {
     // Development warnings (non-blocking)
     if (!env.SENTRY_DSN) warnings.push('SENTRY_DSN not set - error monitoring disabled');
