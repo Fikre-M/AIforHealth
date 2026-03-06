@@ -11,7 +11,8 @@ import {
   Activity,
   Stethoscope,
   User,
-  Bell
+  Bell,
+  LogOut
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { clsx } from 'clsx';
@@ -52,7 +53,7 @@ const adminNavItems = [
 ];
 
 export const MobileNav: React.FC<MobileNavProps> = ({ unreadCount = 0 }) => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
 
   const getNavItems = () => {
@@ -141,7 +142,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({ unreadCount = 0 }) => {
             )}
 
             {/* Navigation Links */}
-            <nav className="p-4 space-y-1" role="navigation">
+            <nav className="p-4 space-y-1 pb-24" role="navigation">
               {getNavItems().map(({ to, icon: Icon, label }) => (
                 <NavLink
                   key={to}
@@ -167,6 +168,18 @@ export const MobileNav: React.FC<MobileNavProps> = ({ unreadCount = 0 }) => {
                   <span>{label}</span>
                 </NavLink>
               ))}
+              
+              {/* Logout Button */}
+              <button
+                onClick={() => {
+                  logout();
+                  setIsOpen(false);
+                }}
+                className="flex items-center space-x-3 px-3 py-3 rounded-lg text-sm font-medium transition-colors text-red-600 hover:bg-red-50 w-full"
+              >
+                <LogOut className="w-5 h-5" />
+                <span>Sign Out</span>
+              </button>
             </nav>
 
             {/* Emergency Contact */}

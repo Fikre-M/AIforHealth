@@ -27,11 +27,12 @@ export const dashboardService = {
           startDate: new Date().toISOString().split('T')[0]
         } 
       });
-      logInfo('Successfully fetched upcoming appointments', { count: response.data.data.appointments.length });
-      return response.data.data.appointments;
+      const appointments = response.data?.data?.appointments || [];
+      logInfo('Successfully fetched upcoming appointments', { count: appointments.length });
+      return appointments;
     } catch (error) {
       logError("Failed to fetch upcoming appointments", error as Error);
-      throw error;
+      return []; // Return empty array instead of throwing
     }
   },
 
@@ -56,14 +57,16 @@ export const dashboardService = {
         }
       });
 
+      const appointments = response.data?.data?.appointments || [];
+      const total = response.data?.data?.pagination?.total || 0;
       logInfo('Successfully fetched appointment history', { 
-        count: response.data.data.appointments.length,
-        total: response.data.data.pagination.total 
+        count: appointments.length,
+        total 
       });
-      return response.data.data.appointments;
+      return appointments;
     } catch (error) {
       logError("Failed to fetch appointment history", error as Error);
-      throw error;
+      return []; // Return empty array instead of throwing
     }
   },
 
@@ -75,11 +78,12 @@ export const dashboardService = {
       const response = await api.get<
         ApiResponse<{ medications: Medication[] }>
       >("/health/medications");
-      logInfo('Successfully fetched medications', { count: response.data.data.medications.length });
-      return response.data.data.medications;
+      const medications = response.data?.data?.medications || [];
+      logInfo('Successfully fetched medications', { count: medications.length });
+      return medications;
     } catch (error) {
       logError("Failed to fetch medications", error as Error);
-      throw error;
+      return []; // Return empty array instead of throwing
     }
   },
 
@@ -94,11 +98,12 @@ export const dashboardService = {
       const response = await api.get<
         ApiResponse<{ reminders: HealthReminder[] }>
       >("/health/reminders", { params });
-      logInfo('Successfully fetched health reminders', { count: response.data.data.reminders.length });
-      return response.data.data.reminders;
+      const reminders = response.data?.data?.reminders || [];
+      logInfo('Successfully fetched health reminders', { count: reminders.length });
+      return reminders;
     } catch (error) {
       logError("Failed to fetch health reminders", error as Error);
-      throw error;
+      return []; // Return empty array instead of throwing
     }
   },
 
@@ -115,11 +120,12 @@ export const dashboardService = {
         "/health/metrics",
         { params }
       );
-      logInfo('Successfully fetched health metrics', { count: response.data.data.metrics.length });
-      return response.data.data.metrics;
+      const metrics = response.data?.data?.metrics || [];
+      logInfo('Successfully fetched health metrics', { count: metrics.length });
+      return metrics;
     } catch (error) {
       logError("Failed to fetch health metrics", error as Error);
-      throw error;
+      return []; // Return empty array instead of throwing
     }
   },
 
