@@ -2,7 +2,7 @@
 export const PRODUCTION_CONFIG = {
   // API Configuration
   API: {
-    BASE_URL: import.meta.env.VITE_API_BASE_URL || 'https://api.aiforhealth.com',
+    BASE_URL: import.meta.env.VITE_API_BASE_URL || 'https://aiforhealth-2.onrender.com/api/v1',
     TIMEOUT: 30000, // 30 seconds
     RETRY_ATTEMPTS: 3,
     RETRY_DELAY: 1000, // 1 second
@@ -102,7 +102,7 @@ export const getEnvironmentConfig = () => {
     isProd,
     isTest,
     environment: import.meta.env.MODE,
-    
+
     // Development-specific overrides
     ...(isDev && {
       API: {
@@ -154,15 +154,11 @@ export const shouldShowSkeleton = (loadingTime: number): boolean => {
 // Error reporting utilities
 export const shouldReportError = (error: Error): boolean => {
   if (!PRODUCTION_CONFIG.ERROR_HANDLING.REPORT_ERRORS) return false;
-  
+
   // Don't report certain types of errors
-  const ignoredErrors = [
-    'Network request failed',
-    'User cancelled',
-    'AbortError',
-  ];
-  
-  return !ignoredErrors.some(ignored => error.message.includes(ignored));
+  const ignoredErrors = ['Network request failed', 'User cancelled', 'AbortError'];
+
+  return !ignoredErrors.some((ignored) => error.message.includes(ignored));
 };
 
 // Accessibility utilities
@@ -187,26 +183,24 @@ export const isCacheExpired = (timestamp: number, duration: number): boolean => 
 // Validation utilities
 export const validateEnvironment = (): { isValid: boolean; errors: string[] } => {
   const errors: string[] = [];
-  
+
   // Check required environment variables
-  const requiredVars = [
-    'VITE_API_BASE_URL',
-  ];
-  
-  requiredVars.forEach(varName => {
+  const requiredVars = ['VITE_API_BASE_URL'];
+
+  requiredVars.forEach((varName) => {
     if (!import.meta.env[varName]) {
       errors.push(`Missing required environment variable: ${varName}`);
     }
   });
-  
+
   // Check feature flag consistency
   if (PRODUCTION_CONFIG.FEATURES.AI_ASSISTANT && !import.meta.env.VITE_OPENAI_API_KEY) {
     errors.push('AI Assistant feature enabled but VITE_OPENAI_API_KEY not provided');
   }
-  
+
   return {
     isValid: errors.length === 0,
-    errors
+    errors,
   };
 };
 
