@@ -1,9 +1,9 @@
 import rateLimit from 'express-rate-limit';
-import { env } from '@/config/env';
+import { env, isDevelopment } from '@/config/env';
 
 const rateLimiter = rateLimit({
   windowMs: env.RATE_LIMIT_WINDOW_MS, // 15 minutes by default
-  max: env.RATE_LIMIT_MAX_REQUESTS, // limit each IP to 100 requests per windowMs
+  max: isDevelopment ? 1000 : env.RATE_LIMIT_MAX_REQUESTS, // Higher limit in development
   message: {
     success: false,
     error: {
@@ -12,6 +12,10 @@ const rateLimiter = rateLimit({
   },
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  skip: (req) => {
+    // Skip rate limiting for health checks
+    return req.path === '/health' || req.path === '/api/v1/health';
+  }
 });
 
 export default rateLimiter;
