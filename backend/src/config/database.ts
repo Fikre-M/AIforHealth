@@ -36,9 +36,9 @@ class Database {
     const baseOptions: ConnectOptions = {
       maxPoolSize: env.MONGODB_MAX_POOL_SIZE,
       minPoolSize: env.MONGODB_MIN_POOL_SIZE,
-      serverSelectionTimeoutMS: env.MONGODB_SERVER_SELECTION_TIMEOUT_MS,
+      serverSelectionTimeoutMS: isProduction() ? 30000 : env.MONGODB_SERVER_SELECTION_TIMEOUT_MS, // 30s in production
       socketTimeoutMS: 45000, // 45 seconds
-      connectTimeoutMS: 10000, // 10 seconds
+      connectTimeoutMS: isProduction() ? 30000 : 10000, // 30s in production, 10s in dev
       maxIdleTimeMS: env.MONGODB_MAX_IDLE_TIME_MS,
       heartbeatFrequencyMS: 10000, // Check server status every 10 seconds
     };
@@ -143,14 +143,35 @@ class Database {
       
       console.log(`🔌 Connecting to MongoDB ${isTest() ? 'test' : 'main'} database...`);
       console.log(`📍 Connection URI: ${this.maskPassword(cleanUri)}`);
+      console.log(`⏱️  Timeout settings: serverSelection=${options.serverSelectionTimeoutMS}ms, connect=${options.connectTimeoutMS}ms`);
       
+      const startTime = Date.now();
       await mongoose.connect(cleanUri, options);
+      const connectTime = Date.now() - startTime;
       
-      // Verify connection
-      await this.healthCheck();
+      console.log(`✅ MongoDB connected in ${connectTime}ms`);
+      
+      // Verify connection with timeout
+      const healthCheckTimeout = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Health check timeout')), 15000)
+      );
+      
+      await Promise.race([
+        this.healthCheck(),
+        healthCheckTimeout
+      ]).catch(error => {
+        console.warn('⚠️  Health check failed, but connection established:', error.message);
+        // Don't throw - connection is established even if health check fails
+      });
       
     } catch (error) {
       console.error('❌ MongoDB connection failed:', error);
+      console.error('Error details:', {
+        name: error instanceof Error ? error.name : 'Unknown',
+        message: error instanceof Error ? error.message : String(error),
+        code: (error as any)?.code,
+        codeName: (error as any)?.codeName,
+      });
       this.isConnected = false;
       throw new Error(`Database connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
@@ -210,12 +231,21 @@ class Database {
 
   public async healthCheck(): Promise<boolean> {
     try {
-      const adminDb = mongoose.connection.db?.admin();
-      if (!adminDb) {
-        throw new Error('Admin database not available');
+      // Simple connection state check first
+      if (mongoose.connection.readyState !== 1) {
+        throw new Error('Database not connected');
       }
       
-      await adminDb.ping();
+      // Try admin ping, but don't fail if admin access is restricted
+      const adminDb = mongoose.connection.db?.admin();
+      if (adminDb) {
+        await adminDb.ping();
+      } else {
+        // Fallback: just check if we can access the database
+        await mongoose.connection.db?.listCollections().toArray();
+      }
+      
+      console.log('✅ Database health check passed');
       return true;
     } catch (error) {
       console.error('❌ Database health check failed:', error);
