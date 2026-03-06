@@ -146,7 +146,7 @@ export function ClinicSelector({
                     {/* Opening Hours Preview */}
                     <div className="flex items-center text-xs text-gray-600">
                       <Clock className="h-3 w-3 mr-1 flex-shrink-0" />
-                      {clinic.openingHours.monday ? (
+                      {clinic.openingHours?.monday ? (
                         <span className="truncate">
                           Mon-Fri: {clinic.openingHours.monday.open} - {clinic.openingHours.monday.close}
                         </span>

@@ -66,7 +66,7 @@ const fallbackClinics: Clinic[] = [
       thursday: { open: '08:00', close: '18:00' },
       friday: { open: '08:00', close: '18:00' },
       saturday: { open: '09:00', close: '14:00' },
-      sunday: { open: null }
+      sunday: { open: null, close: null }
     },
     distance: 6.1
   },
@@ -86,7 +86,7 @@ const fallbackClinics: Clinic[] = [
       thursday: { open: '08:00', close: '17:00' },
       friday: { open: '08:00', close: '17:00' },
       saturday: { open: '09:00', close: '13:00' },
-      sunday: { open: null }
+      sunday: { open: null, close: null }
     },
     distance: 8.3
   },
