@@ -21,12 +21,26 @@ export class AppointmentController {
         return ResponseUtil.validationError(res, formattedErrors);
       }
 
-      const appointment = await AppointmentService.createAppointment(req.body);
+      // Map frontend request to backend schema
+      const appointmentData = {
+        patientId: req.body.patientId || req.user?.userId, // Use authenticated user's ID
+        doctorId: req.body.doctor, // Validation expects 'doctor' field
+        appointmentDate: new Date(req.body.appointmentDate),
+        duration: req.body.duration || 30,
+        type: req.body.type || 'consultation',
+        reason: req.body.reason,
+      };
+
+      const appointment = await AppointmentService.createAppointment(appointmentData);
 
       // Return created response with location header
       return ResponseUtil.created(
         res,
-        appointment,
+        {
+          appointment,
+          confirmationNumber: appointment.confirmationNumber,
+          message: 'Appointment created successfully'
+        },
         'Appointment created successfully',
         `/api/v1/appointments/${appointment.id}`
       );
@@ -370,5 +384,23 @@ export class AppointmentController {
     }
 
     return ResponseUtil.success(res, appointment, 'Appointment status updated successfully');
+  }
+
+  /**
+   * Get AI suggestions for appointment booking
+   */
+  static async getAISuggestions(req: Request, res: Response) {
+    try {
+      const formData = req.body;
+      
+      // Generate AI suggestions based on form data
+      const suggestions = await AppointmentService.generateAISuggestions(formData);
+
+      return ResponseUtil.success(res, suggestions, 'AI suggestions generated successfully');
+    } catch (error) {
+      console.error('Error generating AI suggestions:', error);
+      // Return empty array on error to allow frontend fallback
+      return ResponseUtil.success(res, [], 'AI suggestions unavailable');
+    }
   }
 }

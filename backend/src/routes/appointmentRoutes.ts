@@ -58,6 +58,12 @@ router.get(
   AppointmentController.getStatistics
 );
 
+// ✅ GET AI Suggestions (for appointment booking)
+router.post(
+  '/ai-suggestions',
+  AppointmentController.getAISuggestions
+);
+
 // ✅ BULK Update (admins only)
 router.post(
   '/bulk',

@@ -14,6 +14,9 @@ export function AISuggestionPanel({
   onApplySuggestion, 
   isLoading = false 
 }: AISuggestionPanelProps) {
+  // Ensure suggestions is always an array
+  const safeSuggestions = Array.isArray(suggestions) ? suggestions : [];
+
   if (isLoading) {
     return (
       <Card>
@@ -28,7 +31,7 @@ export function AISuggestionPanel({
     );
   }
 
-  if (suggestions.length === 0) {
+  if (safeSuggestions.length === 0) {
     return (
       <Card>
         <CardContent>
@@ -83,7 +86,7 @@ export function AISuggestionPanel({
         </div>
 
         <div className="space-y-4">
-          {suggestions.map((suggestion, index) => (
+          {safeSuggestions.map((suggestion, index) => (
             <div
               key={index}
               className="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow"

@@ -508,21 +508,30 @@ export const bookingService = {
 
   async bookAppointment(formData: BookingFormData): Promise<BookingConfirmation> {
     try {
+      console.log('🔍 Starting booking process...');
+      console.log('📝 Form data:', formData);
+      
       const appointmentRequest = {
-        doctor: formData.doctorId,
+        doctor: formData.doctorId, // Backend validation expects 'doctor' field
         appointmentDate: `${formData.date}T${formData.time}:00`,
         duration: 30,
         type: formData.appointmentType,
         reason: formData.reason,
-        notes: formData.notes || '',
-        isEmergency: formData.urgency === 'urgent' || formData.urgency === 'emergency'
+        // Remove notes and isEmergency as they're not in the backend schema
       };
 
+      console.log('📤 Sending API request:', appointmentRequest);
+
       const response = await apiAdapter.appointments.createAppointment(appointmentRequest);
+      
+      console.log('✅ API Response received:', response);
       
       // Backend returns: { appointment, confirmationNumber, message }
       const appointment = response.appointment || response;
       const confirmationNumber = response.confirmationNumber || appointment.confirmationNumber || 'UNKNOWN';
+      
+      console.log('📋 Appointment created:', appointment._id);
+      console.log('🔢 Confirmation number:', confirmationNumber);
       
       // Get doctor info for confirmation
       const doctor = await this.getDoctor(formData.doctorId);
@@ -557,6 +566,13 @@ export const bookingService = {
 
       return confirmation;
     } catch (error) {
+      console.error('❌ Booking API Error:', error);
+      console.error('📊 Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        status: (error as any).response?.status,
+        statusText: (error as any).response?.statusText,
+        data: (error as any).response?.data
+      });
       console.warn('📋 Backend unavailable, using fallback booking confirmation:', error);
       
       // Generate fallback confirmation

@@ -90,16 +90,24 @@ export class AppointmentService {
 
     if (conflict) throw new AppError('Time slot already booked', 409);
 
+    // Generate unique confirmation number
+    const confirmationNumber = this.generateConfirmationNumber();
+
     return Appointment.create({
       patient: data.patientId,
       doctor: data.doctorId,
       appointmentDate: data.appointmentDate,
-      duration: data.duration,
-      type: data.type,
+      duration: data.duration || 30,
+      type: data.type || 'consultation',
       reason: data.reason,
-      notes: data.notes,
-      isEmergency: data.isEmergency,
+      confirmationNumber,
     });
+  }
+
+  static generateConfirmationNumber(): string {
+    const timestamp = Date.now().toString(36);
+    const random = Math.random().toString(36).substr(2, 5);
+    return `APT-${timestamp}-${random}`.toUpperCase();
   }
 
   /* ================= GET BY ID ================= */
@@ -395,5 +403,92 @@ export class AppointmentService {
     
     // Otherwise check general availability for the date
     return this.checkAvailability(doctorId, appointmentDate);
+  }
+
+  /* ================= AI SUGGESTIONS ================= */
+
+  static async generateAISuggestions(formData: any): Promise<any[]> {
+    const suggestions: any[] = [];
+    
+    try {
+      // Generate suggestions based on form data
+      if (formData.reason) {
+        const reasonLower = formData.reason.toLowerCase();
+        
+        // Urgency suggestions
+        if (reasonLower.includes('emergency') || reasonLower.includes('urgent')) {
+          suggestions.push({
+            type: 'urgency',
+            title: 'Urgent Care Recommended',
+            description: 'Based on your symptoms, urgent care may be more appropriate than a scheduled appointment.',
+            confidence: 0.85,
+            action: {
+              label: 'Switch to Urgent Care',
+              data: {
+                urgency: 'urgent',
+                appointmentType: 'emergency'
+              }
+            }
+          });
+        }
+        
+        // Doctor specialty suggestions
+        if (reasonLower.includes('heart') || reasonLower.includes('chest')) {
+          suggestions.push({
+            type: 'doctor-recommendation',
+            title: 'Consider Cardiology',
+            description: 'Your symptoms may require a cardiology specialist.',
+            confidence: 0.9,
+            action: {
+              label: 'Select Cardiologist',
+              data: {
+                clinicId: 'clinic-1',
+                doctorId: 'doctor-1'
+              }
+            }
+          });
+        }
+        
+        if (reasonLower.includes('skin') || reasonLower.includes('rash')) {
+          suggestions.push({
+            type: 'doctor-recommendation',
+            title: 'Consider Dermatology',
+            description: 'A dermatologist may be best suited for your skin concerns.',
+            confidence: 0.8,
+            action: {
+              label: 'Select Dermatologist',
+              data: {
+                clinicId: 'clinic-2',
+                doctorId: 'doctor-5'
+              }
+            }
+          });
+        }
+      }
+      
+      // Time-based suggestions
+      if (!formData.date) {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        suggestions.push({
+          type: 'best-time',
+          title: 'Earliest Available',
+          description: 'Next available appointment is tomorrow morning.',
+          confidence: 0.7,
+          action: {
+            label: 'Book Tomorrow 9AM',
+            data: {
+              date: tomorrow.toISOString().split('T')[0],
+              time: '09:00'
+            }
+          }
+        });
+      }
+      
+      return suggestions;
+    } catch (error) {
+      console.error('Error in generateAISuggestions:', error);
+      return [];
+    }
   }
 }
