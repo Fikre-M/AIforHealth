@@ -29,51 +29,27 @@ async function seedDoctors() {
         email: 'sarah.johnson@citygeneral.com',
         password: await bcrypt.hash('password123', 12),
         role: UserRole.DOCTOR,
-        profile: {
-          clinicId: clinics[0]._id,
-          specialty: 'Cardiology',
-          experience: 12,
-          education: ['MD from Harvard Medical School', 'Cardiology Fellowship at Mayo Clinic'],
-          languages: ['English', 'Spanish'],
-          rating: 4.8,
-          consultationFee: 250,
-          isAvailable: true,
-          bio: 'Experienced cardiologist specializing in interventional cardiology and heart disease prevention.',
-        }
+        specialization: 'Cardiology',
+        phone: '+1-555-0201',
+        isActive: true,
       },
       {
         name: 'Dr. Michael Chen',
         email: 'michael.chen@citygeneral.com',
         password: await bcrypt.hash('password123', 12),
         role: UserRole.DOCTOR,
-        profile: {
-          clinicId: clinics[0]._id,
-          specialty: 'Emergency Medicine',
-          experience: 8,
-          education: ['MD from Johns Hopkins', 'Emergency Medicine Residency at UCLA'],
-          languages: ['English', 'Mandarin'],
-          rating: 4.6,
-          consultationFee: 200,
-          isAvailable: true,
-          bio: 'Emergency medicine physician with expertise in trauma care and critical care medicine.',
-        }
+        specialization: 'Emergency Medicine',
+        phone: '+1-555-0202',
+        isActive: true,
       },
       {
         name: 'Dr. Emily Rodriguez',
         email: 'emily.rodriguez@citygeneral.com',
         password: await bcrypt.hash('password123', 12),
         role: UserRole.DOCTOR,
-        profile: {
-          clinicId: clinics[0]._id,
-          specialty: 'Pediatrics',
-          experience: 10,
-          education: ['MD from Stanford University', 'Pediatrics Residency at Children\'s Hospital Boston'],
-          languages: ['English', 'Spanish'],
-          rating: 4.9,
-          consultationFee: 180,
-          isAvailable: true,
-          bio: 'Pediatrician dedicated to providing comprehensive care for children from infancy through adolescence.',
-        }
+        specialization: 'Pediatrics',
+        phone: '+1-555-0203',
+        isActive: true,
       },
 
       // Westside Medical Center doctors
@@ -82,34 +58,18 @@ async function seedDoctors() {
         email: 'james.wilson@westside.com',
         password: await bcrypt.hash('password123', 12),
         role: UserRole.DOCTOR,
-        profile: {
-          clinicId: clinics[1]._id,
-          specialty: 'Family Medicine',
-          experience: 15,
-          education: ['MD from University of Michigan', 'Family Medicine Residency at Cleveland Clinic'],
-          languages: ['English'],
-          rating: 4.5,
-          consultationFee: 150,
-          isAvailable: true,
-          bio: 'Family physician providing comprehensive primary care for patients of all ages.',
-        }
+        specialization: 'Family Medicine',
+        phone: '+1-555-0204',
+        isActive: true,
       },
       {
         name: 'Dr. Lisa Thompson',
         email: 'lisa.thompson@westside.com',
         password: await bcrypt.hash('password123', 12),
         role: UserRole.DOCTOR,
-        profile: {
-          clinicId: clinics[1]._id,
-          specialty: 'Dermatology',
-          experience: 9,
-          education: ['MD from NYU School of Medicine', 'Dermatology Residency at Mount Sinai'],
-          languages: ['English', 'French'],
-          rating: 4.7,
-          consultationFee: 220,
-          isAvailable: true,
-          bio: 'Dermatologist specializing in medical and cosmetic dermatology, skin cancer prevention.',
-        }
+        specialization: 'Dermatology',
+        phone: '+1-555-0205',
+        isActive: true,
       },
 
       // Eastside Specialty Clinic doctors
@@ -118,34 +78,18 @@ async function seedDoctors() {
         email: 'robert.kim@eastside.com',
         password: await bcrypt.hash('password123', 12),
         role: UserRole.DOCTOR,
-        profile: {
-          clinicId: clinics[2]._id,
-          specialty: 'Neurology',
-          experience: 14,
-          education: ['MD from Yale School of Medicine', 'Neurology Residency at Massachusetts General'],
-          languages: ['English', 'Korean'],
-          rating: 4.8,
-          consultationFee: 300,
-          isAvailable: true,
-          bio: 'Neurologist with expertise in stroke care, epilepsy, and movement disorders.',
-        }
+        specialization: 'Neurology',
+        phone: '+1-555-0206',
+        isActive: true,
       },
       {
         name: 'Dr. Amanda Foster',
         email: 'amanda.foster@eastside.com',
         password: await bcrypt.hash('password123', 12),
         role: UserRole.DOCTOR,
-        profile: {
-          clinicId: clinics[2]._id,
-          specialty: 'Psychiatry',
-          experience: 11,
-          education: ['MD from Columbia University', 'Psychiatry Residency at Bellevue Hospital'],
-          languages: ['English'],
-          rating: 4.6,
-          consultationFee: 280,
-          isAvailable: true,
-          bio: 'Psychiatrist specializing in anxiety disorders, depression, and cognitive behavioral therapy.',
-        }
+        specialization: 'Psychiatry',
+        phone: '+1-555-0207',
+        isActive: true,
       },
 
       // Northside Community Health doctors
@@ -154,34 +98,18 @@ async function seedDoctors() {
         email: 'david.martinez@northside.com',
         password: await bcrypt.hash('password123', 12),
         role: UserRole.DOCTOR,
-        profile: {
-          clinicId: clinics[3]._id,
-          specialty: 'Family Medicine',
-          experience: 7,
-          education: ['MD from University of Texas', 'Family Medicine Residency at Baylor'],
-          languages: ['English', 'Spanish'],
-          rating: 4.4,
-          consultationFee: 140,
-          isAvailable: true,
-          bio: 'Community-focused family physician committed to preventive care and health education.',
-        }
+        specialization: 'Family Medicine',
+        phone: '+1-555-0208',
+        isActive: true,
       },
       {
         name: 'Dr. Jennifer Lee',
         email: 'jennifer.lee@northside.com',
         password: await bcrypt.hash('password123', 12),
         role: UserRole.DOCTOR,
-        profile: {
-          clinicId: clinics[3]._id,
-          specialty: 'Mental Health',
-          experience: 6,
-          education: ['MD from University of Washington', 'Psychiatry Residency at Seattle Children\'s'],
-          languages: ['English', 'Korean'],
-          rating: 4.5,
-          consultationFee: 160,
-          isAvailable: true,
-          bio: 'Mental health specialist focusing on community mental health and family therapy.',
-        }
+        specialization: 'Psychiatry',
+        phone: '+1-555-0209',
+        isActive: true,
       },
 
       // Southside Urgent Care doctors
@@ -190,32 +118,15 @@ async function seedDoctors() {
         email: 'mark.anderson@southside.com',
         password: await bcrypt.hash('password123', 12),
         role: UserRole.DOCTOR,
-        profile: {
-          clinicId: clinics[4]._id,
-          specialty: 'Urgent Care',
-          experience: 5,
-          education: ['MD from University of Florida', 'Emergency Medicine Residency at Jackson Memorial'],
-          languages: ['English'],
-          rating: 4.2,
-          consultationFee: 120,
-          isAvailable: true,
-          bio: 'Urgent care physician providing immediate care for non-life-threatening conditions.',
-        }
+        specialization: 'Urgent Care',
+        phone: '+1-555-0210',
+        isActive: true,
       }
     ];
 
     // Insert sample doctors
     const doctors = await User.insertMany(sampleDoctors);
     console.log(`Inserted ${doctors.length} sample doctors`);
-
-    // Log the created doctors by clinic
-    for (const clinic of clinics) {
-      const clinicDoctors = doctors.filter(doc => doc.profile?.clinicId?.toString() === clinic._id.toString());
-      console.log(`\n${clinic.name}:`);
-      clinicDoctors.forEach(doctor => {
-        console.log(`  - ${doctor.name} (${doctor.profile?.specialty})`);
-      });
-    }
 
     console.log('\nDoctor seeding completed successfully');
   } catch (error) {

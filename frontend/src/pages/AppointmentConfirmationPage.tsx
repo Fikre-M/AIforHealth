@@ -6,7 +6,7 @@ import { Calendar, Download, Printer, Share2, ArrowLeft, CheckCircle } from 'luc
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import apiAdapter from '@/services/apiAdapter';
+import { bookingService } from '@/services/bookingService';
 
 interface AppointmentData {
   _id: string;
@@ -54,7 +54,7 @@ export function AppointmentConfirmationPage() {
 
     try {
       setLoading(true);
-      const data = await apiAdapter.appointments.getAppointment(id);
+      const data = await bookingService.getAppointment(id);
       setAppointment(data);
       setError(null);
     } catch (err) {

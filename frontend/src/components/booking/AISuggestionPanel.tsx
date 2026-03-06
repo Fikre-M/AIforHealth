@@ -93,15 +93,15 @@ export function AISuggestionPanel({
                   {getIcon(suggestion.type)}
                 </div>
                 
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-medium text-gray-900">{suggestion.title}</h4>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getConfidenceColor(suggestion.confidence)}`}>
+                    <h4 className="font-medium text-gray-900 truncate">{suggestion.title}</h4>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium flex-shrink-0 ${getConfidenceColor(suggestion.confidence)}`}>
                       {Math.round(suggestion.confidence * 100)}% confident
                     </span>
                   </div>
                   
-                  <p className="text-sm text-gray-600 mb-3">
+                  <p className="text-sm text-gray-600 mb-3 break-words">
                     {suggestion.description}
                   </p>
                   
