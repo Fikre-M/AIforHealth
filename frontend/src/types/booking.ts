@@ -8,9 +8,11 @@ export interface Clinic {
   image?: string;
   distance?: number;
   isOpen: boolean;
-  openingHours: {
-    [key: string]: { open: string; close: string } | null;
-  };
+  openingHours: OpeningHours | null;
+}
+
+export interface OpeningHours {
+  [key: string]: ({ open: string | null; close: string | null } | null);
 }
 
 export interface Doctor {
@@ -32,7 +34,7 @@ export interface Doctor {
 export interface TimeSlot {
   time: string;
   available: boolean;
-  type: 'regular' | 'urgent' | 'emergency';
+  type: 'regular' | 'lunch' | 'closed';
   duration: number;
 }
 

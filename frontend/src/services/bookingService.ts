@@ -66,7 +66,7 @@ const fallbackClinics: Clinic[] = [
       thursday: { open: '08:00', close: '18:00' },
       friday: { open: '08:00', close: '18:00' },
       saturday: { open: '09:00', close: '14:00' },
-      sunday: { open: undefined }
+      sunday: { open: null }
     },
     distance: 6.1
   },
@@ -86,7 +86,7 @@ const fallbackClinics: Clinic[] = [
       thursday: { open: '08:00', close: '17:00' },
       friday: { open: '08:00', close: '17:00' },
       saturday: { open: '09:00', close: '13:00' },
-      sunday: { open: undefined }
+      sunday: { open: null }
     },
     distance: 8.3
   },
@@ -616,9 +616,9 @@ export const bookingService = {
         appointmentDate: `${formData.date}T${formData.time}:00`,
         duration: 30,
         type: formData.appointmentType,
-        reason: formData.reason || '',
+        reason: formData.reason || 'No reason provided',
         status: 'confirmed',
-        ...confirmation
+        confirmation
       });
 
       return confirmation;
