@@ -27,6 +27,6 @@ services:
       - key: LOG_LEVEL
         value: info
       - key: CORS_ORIGIN
-        sync: false
+        value: https://fridayhealth-123.netlify.app
       - key: FRONTEND_URL
-        sync: false
+        value: https://fridayhealth-123.netlify.app

@@ -20,12 +20,30 @@ export const enforceHTTPS = (req: Request, res: Response, next: NextFunction): v
  * Basic Security Configuration
  */
 export const configureSecurity = (app: Express): void => {
+  // Get allowed origins from environment
+  const allowedOrigins = env.NODE_ENV === 'production'
+    ? (env.CORS_ORIGIN || 'https://fridayhealth-123.netlify.app').split(',').map(origin => origin.trim())
+    : [];
+
   // Basic CORS configuration
   app.use(
     cors({
       origin:
         env.NODE_ENV === 'production'
-          ? ['https://elegant-sfogliatella-4ff70a.netlify.app']
+          ? (origin, callback) => {
+              // Allow requests with no origin (mobile apps, Postman, etc.)
+              if (!origin) {
+                callback(null, true);
+                return;
+              }
+              // Check if origin is in allowed list
+              if (allowedOrigins.some(allowed => origin.startsWith(allowed))) {
+                callback(null, true);
+              } else {
+                console.warn(`CORS blocked origin: ${origin}`);
+                callback(new Error('Not allowed by CORS'));
+              }
+            }
           : (origin, callback) => {
               // Allow any localhost origin in development
               if (!origin || origin.startsWith('http://localhost:')) {
