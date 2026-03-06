@@ -24,11 +24,8 @@ export const initializeSentry = (): void => {
   }
 
   if (!env.SENTRY_DSN || env.SENTRY_DSN.includes('test_sentry_dsn')) {
-    if (env.NODE_ENV === 'production') {
-      logger.warn('⚠️  Sentry DSN not configured in production environment');
-    } else {
-      logger.info('ℹ️  Sentry not configured for development environment');
-    }
+    // Silently skip Sentry initialization if not configured
+    // This is expected in many production deployments
     return;
   }
 

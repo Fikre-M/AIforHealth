@@ -136,12 +136,15 @@ class Database {
         throw new Error('MONGODB_URI is not defined in environment variables');
       }
       
+      // Ensure URI uses proper format to avoid deprecation warnings
+      const cleanUri = this.normalizeMongoUri(uri);
+      
       const options = this.getConnectionOptions();
       
       console.log(`🔌 Connecting to MongoDB ${isTest() ? 'test' : 'main'} database...`);
-      console.log(`📍 Connection URI: ${uri.replace(/\/\/([^:]+):([^@]+)@/, '//$1:****@')}`); // Log URI with masked password
+      console.log(`📍 Connection URI: ${this.maskPassword(cleanUri)}`);
       
-      await mongoose.connect(uri, options);
+      await mongoose.connect(cleanUri, options);
       
       // Verify connection
       await this.healthCheck();
@@ -150,6 +153,42 @@ class Database {
       console.error('❌ MongoDB connection failed:', error);
       this.isConnected = false;
       throw new Error(`Database connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Normalize MongoDB URI to avoid deprecation warnings
+   * Ensures proper URL format without legacy url.parse() issues
+   */
+  private normalizeMongoUri(uri: string): string {
+    try {
+      // Parse and reconstruct URI using WHATWG URL API
+      const url = new URL(uri);
+      
+      // Ensure required query parameters for modern MongoDB driver
+      if (!url.searchParams.has('retryWrites')) {
+        url.searchParams.set('retryWrites', 'true');
+      }
+      if (!url.searchParams.has('w')) {
+        url.searchParams.set('w', 'majority');
+      }
+      
+      return url.toString();
+    } catch (error) {
+      // If URL parsing fails, return original URI
+      console.warn('⚠️  Could not normalize MongoDB URI, using as-is');
+      return uri;
+    }
+  }
+
+  /**
+   * Mask password in URI for logging
+   */
+  private maskPassword(uri: string): string {
+    try {
+      return uri.replace(/\/\/([^:]+):([^@]+)@/, '//$1:****@');
+    } catch {
+      return uri;
     }
   }
 

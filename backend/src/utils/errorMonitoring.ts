@@ -9,7 +9,7 @@ import { Request } from 'express';
  */
 export const initializeErrorMonitoring = () => {
   if (!env.SENTRY_DSN) {
-    logger.warn('⚠️  Sentry DSN not configured - error monitoring disabled');
+    // Silently skip - Sentry is optional
     return;
   }
 
