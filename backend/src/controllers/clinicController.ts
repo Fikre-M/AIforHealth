@@ -77,24 +77,23 @@ export const getDoctorsByClinic = asyncHandler(async (req: Request, res: Respons
 
   const query: any = {
     role: UserRole.DOCTOR,
-    'profile.clinicId': id,
   };
 
   // Filter by specialty
   if (specialty) {
-    query['profile.specialty'] = specialty;
+    query['specialization'] = specialty;
   }
 
   // Filter by availability (if needed)
   if (available === 'true') {
-    query['profile.isAvailable'] = true;
+    query['isActive'] = true;
   }
 
   const skip = (Number(page) - 1) * Number(limit);
 
   const [doctors, total] = await Promise.all([
     User.find(query, '-password')
-      .sort({ 'profile.rating': -1, name: 1 })
+      .sort({ name: 1 })
       .limit(Number(limit))
       .skip(skip),
     User.countDocuments(query),
@@ -104,17 +103,17 @@ export const getDoctorsByClinic = asyncHandler(async (req: Request, res: Respons
   const transformedDoctors = doctors.map((doctor: any) => ({
     id: doctor._id,
     name: doctor.name,
-    specialty: doctor.profile?.specialty || 'General Medicine',
+    specialty: doctor.specialization || 'General Medicine',
     clinicId: id,
     clinicName: clinic.name,
-    rating: doctor.profile?.rating || 4.0,
-    experience: doctor.profile?.experience || 5,
-    education: doctor.profile?.education || ['Medical Degree'],
-    languages: doctor.profile?.languages || ['English'],
-    avatar: doctor.profile?.avatar,
-    consultationFee: doctor.profile?.consultationFee || 100,
+    rating: 4.5, // Default rating
+    experience: 5, // Default experience
+    education: ['Medical Degree'],
+    languages: ['English'],
+    avatar: doctor.avatar,
+    consultationFee: 100,
     nextAvailable: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // Tomorrow
-    isAvailable: doctor.profile?.isAvailable !== false,
+    isAvailable: doctor.isActive,
   }));
 
   ResponseUtil.success(
