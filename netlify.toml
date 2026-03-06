@@ -12,4 +12,4 @@
   VITE_ENABLE_SYMPTOM_CHECKER = "true"
   VITE_ENABLE_APPOINTMENT_BOOKING = "true"
   VITE_ENABLE_DARK_MODE = "true"
-  # Updated to trigger new deployment
+  # Updated to trigger new deployment - v1.0.1
