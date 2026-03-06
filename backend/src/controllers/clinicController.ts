@@ -165,6 +165,54 @@ export const updateClinic = asyncHandler(async (req: Request, res: Response) => 
 });
 
 /**
+ * Get doctor availability for booking
+ */
+export const getDoctorAvailability = asyncHandler(async (req: Request, res: Response) => {
+  const { doctorId } = req.params;
+  const { startDate, endDate } = req.query;
+
+  // Verify doctor exists
+  const doctor = await User.findOne({ _id: doctorId, role: UserRole.DOCTOR });
+  if (!doctor) {
+    return ResponseUtil.error(res, 'Doctor not found', 404);
+  }
+
+  // Generate availability for the date range
+  const start = new Date(startDate as string);
+  const end = new Date(endDate as string);
+  const availability = [];
+
+  // Generate time slots for each day
+  for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
+    const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+    const dateStr = date.toISOString().split('T')[0];
+    
+    // Generate slots from 9 AM to 5 PM (every 30 minutes)
+    const slots = [];
+    for (let hour = 9; hour < 17; hour++) {
+      for (let minute = 0; minute < 60; minute += 30) {
+        const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        slots.push({
+          time,
+          available: true, // In production, check against existing appointments
+          type: 'regular',
+          duration: 30
+        });
+      }
+    }
+
+    availability.push({
+      date: dateStr,
+      dayOfWeek,
+      isAvailable: slots.length > 0,
+      slots
+    });
+  }
+
+  ResponseUtil.success(res, availability, 'Doctor availability retrieved successfully');
+});
+
+/**
  * Delete clinic (Admin only)
  */
 export const deleteClinic = asyncHandler(async (req: Request, res: Response) => {

@@ -89,6 +89,9 @@ router.get('/', validateClinicQuery, clinicController.getClinics);
 router.get('/:id', clinicController.getClinicById);
 router.get('/:id/doctors', clinicController.getDoctorsByClinic);
 
+// Public doctor availability endpoint (no auth required for booking flow)
+router.get('/doctors/:doctorId/availability', clinicController.getDoctorAvailability);
+
 // Protected routes (require authentication)
 router.use(authenticate);
 

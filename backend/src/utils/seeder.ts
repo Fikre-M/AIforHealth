@@ -1,6 +1,6 @@
 import { database } from '@/config/database';
 import { isDevelopment } from '@/config/env';
-import { User, Appointment, AppointmentStatus, AppointmentType } from '@/models';
+import { User, Appointment, AppointmentStatus, AppointmentType, Clinic } from '@/models';
 import { UserRole } from '@/types';
 
 /**
@@ -35,8 +35,11 @@ export class DatabaseSeeder {
         await database.connect();
       }
 
-      // Seed users first
-      const users = await this.seedUsers();
+      // Seed clinics first
+      const clinics = await this.seedClinics();
+      
+      // Seed users with clinic references
+      const users = await this.seedUsers(clinics);
       
       // Seed appointments
       await this.seedAppointments(users);
@@ -49,9 +52,92 @@ export class DatabaseSeeder {
   }
 
   /**
+   * Seed clinics
+   */
+  private async seedClinics(): Promise<any[]> {
+    console.log('🏥 Seeding clinics...');
+
+    const existingClinics = await Clinic.countDocuments();
+    if (existingClinics > 0) {
+      console.log('🏥 Clinics already exist, returning existing clinics');
+      return await Clinic.find({});
+    }
+
+    const clinics = [
+      {
+        name: 'City General Hospital',
+        address: '123 Main Street, Downtown, NY 10001',
+        phone: '+1-555-0100',
+        rating: 4.5,
+        specialties: ['Cardiology', 'Neurology', 'Orthopedics', 'General Medicine'],
+        isOpen: true,
+        openingHours: {
+          monday: { open: '08:00', close: '20:00' },
+          tuesday: { open: '08:00', close: '20:00' },
+          wednesday: { open: '08:00', close: '20:00' },
+          thursday: { open: '08:00', close: '20:00' },
+          friday: { open: '08:00', close: '20:00' },
+          saturday: { open: '09:00', close: '17:00' },
+          sunday: { open: '10:00', close: '16:00' },
+        },
+        location: {
+          type: 'Point',
+          coordinates: [-73.9857, 40.7484], // NYC coordinates
+        },
+      },
+      {
+        name: 'Wellness Medical Center',
+        address: '456 Health Avenue, Midtown, NY 10022',
+        phone: '+1-555-0200',
+        rating: 4.7,
+        specialties: ['Pediatrics', 'Dermatology', 'Internal Medicine', 'Family Medicine'],
+        isOpen: true,
+        openingHours: {
+          monday: { open: '07:00', close: '19:00' },
+          tuesday: { open: '07:00', close: '19:00' },
+          wednesday: { open: '07:00', close: '19:00' },
+          thursday: { open: '07:00', close: '19:00' },
+          friday: { open: '07:00', close: '19:00' },
+          saturday: { open: '08:00', close: '14:00' },
+          sunday: null,
+        },
+        location: {
+          type: 'Point',
+          coordinates: [-73.9712, 40.7589],
+        },
+      },
+      {
+        name: 'Advanced Care Clinic',
+        address: '789 Medical Plaza, Uptown, NY 10025',
+        phone: '+1-555-0300',
+        rating: 4.3,
+        specialties: ['Psychiatry', 'Endocrinology', 'Gastroenterology', 'General Medicine'],
+        isOpen: true,
+        openingHours: {
+          monday: { open: '09:00', close: '18:00' },
+          tuesday: { open: '09:00', close: '18:00' },
+          wednesday: { open: '09:00', close: '18:00' },
+          thursday: { open: '09:00', close: '18:00' },
+          friday: { open: '09:00', close: '18:00' },
+          saturday: { open: '10:00', close: '15:00' },
+          sunday: null,
+        },
+        location: {
+          type: 'Point',
+          coordinates: [-73.9665, 40.7829],
+        },
+      },
+    ];
+
+    const createdClinics = await Clinic.insertMany(clinics);
+    console.log(`✅ Created ${createdClinics.length} clinics`);
+    return createdClinics;
+  }
+
+  /**
    * Seed users
    */
-  private async seedUsers(): Promise<any> {
+  private async seedUsers(clinics: any[]): Promise<any> {
     console.log('👥 Seeding users...');
 
     const existingUsers = await User.countDocuments();
@@ -79,6 +165,67 @@ export class DatabaseSeeder {
         password: 'Doctor123!@#',
         role: UserRole.DOCTOR,
         isEmailVerified: true,
+        profile: {
+          specialty: 'Cardiology',
+          clinicId: clinics[0]?._id,
+          experience: 15,
+          education: ['MD from Harvard Medical School', 'Cardiology Fellowship at Mayo Clinic'],
+          languages: ['English', 'Spanish'],
+          consultationFee: 200,
+          rating: 4.8,
+          isAvailable: true,
+        },
+      },
+      {
+        name: 'Dr. Sarah Johnson',
+        email: 'doctor2@aiforhealth.com',
+        password: 'Doctor123!@#',
+        role: UserRole.DOCTOR,
+        isEmailVerified: true,
+        profile: {
+          specialty: 'Pediatrics',
+          clinicId: clinics[1]?._id,
+          experience: 10,
+          education: ['MD from Johns Hopkins', 'Pediatrics Residency at Boston Children\'s Hospital'],
+          languages: ['English', 'French'],
+          consultationFee: 150,
+          rating: 4.9,
+          isAvailable: true,
+        },
+      },
+      {
+        name: 'Dr. Michael Chen',
+        email: 'doctor3@aiforhealth.com',
+        password: 'Doctor123!@#',
+        role: UserRole.DOCTOR,
+        isEmailVerified: true,
+        profile: {
+          specialty: 'General Medicine',
+          clinicId: clinics[0]?._id,
+          experience: 8,
+          education: ['MD from Stanford University', 'Internal Medicine Residency'],
+          languages: ['English', 'Mandarin'],
+          consultationFee: 120,
+          rating: 4.6,
+          isAvailable: true,
+        },
+      },
+      {
+        name: 'Dr. Emily Rodriguez',
+        email: 'doctor4@aiforhealth.com',
+        password: 'Doctor123!@#',
+        role: UserRole.DOCTOR,
+        isEmailVerified: true,
+        profile: {
+          specialty: 'Dermatology',
+          clinicId: clinics[1]?._id,
+          experience: 12,
+          education: ['MD from Columbia University', 'Dermatology Fellowship'],
+          languages: ['English', 'Spanish', 'Portuguese'],
+          consultationFee: 180,
+          rating: 4.7,
+          isAvailable: true,
+        },
       },
       {
         name: 'Jane Doe',
@@ -97,9 +244,11 @@ export class DatabaseSeeder {
     }
     console.log(`✅ Created ${users.length} users`);
 
+    const doctors = createdUsers.filter(u => u.role === UserRole.DOCTOR);
     return {
       admin: createdUsers.find(u => u.role === UserRole.ADMIN),
-      doctor: createdUsers.find(u => u.role === UserRole.DOCTOR),
+      doctor: doctors[0], // Primary doctor for appointments
+      doctors: doctors, // All doctors
       patient: createdUsers.find(u => u.role === UserRole.PATIENT)
     };
   }
@@ -204,6 +353,10 @@ export class DatabaseSeeder {
       // Clear users
       await User.deleteMany({});
       console.log('✅ Cleared users');
+
+      // Clear clinics
+      await Clinic.deleteMany({});
+      console.log('✅ Cleared clinics');
 
       console.log('✅ Database cleared successfully');
     } catch (error) {
