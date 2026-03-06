@@ -130,9 +130,16 @@ class Database {
 
     try {
       const uri = isTest() ? env.MONGODB_TEST_URI || env.MONGODB_URI : env.MONGODB_URI;
+      
+      // Validate MongoDB URI
+      if (!uri) {
+        throw new Error('MONGODB_URI is not defined in environment variables');
+      }
+      
       const options = this.getConnectionOptions();
       
       console.log(`🔌 Connecting to MongoDB ${isTest() ? 'test' : 'main'} database...`);
+      console.log(`📍 Connection URI: ${uri.replace(/\/\/([^:]+):([^@]+)@/, '//$1:****@')}`); // Log URI with masked password
       
       await mongoose.connect(uri, options);
       
