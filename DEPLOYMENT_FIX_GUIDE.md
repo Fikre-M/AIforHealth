@@ -3,8 +3,10 @@
 ## Problem
 Frontend at `https://fridayhealth-123.netlify.app` was getting "No response from server" when trying to connect to backend at `https://aiforhealth-2.onrender.com`.
 
-## Root Cause
-The backend CORS configuration was allowing the wrong Netlify URL (old deployment URL) instead of the current one.
+## Root Causes Identified
+1. Backend CORS configuration had hardcoded old Netlify URL
+2. CORS middleware was not properly returning the origin in the Access-Control-Allow-Origin header
+3. CORS_ORIGIN environment variable had a default value that prevented fallback logic
 
 ## Fixes Applied
 
@@ -13,9 +15,16 @@ The backend CORS configuration was allowing the wrong Netlify URL (old deploymen
 - Set `FRONTEND_URL` to `https://fridayhealth-123.netlify.app`
 
 ### 2. Updated `backend/src/middleware/security.ts`
-- Modified CORS configuration to use `CORS_ORIGIN` environment variable
+- Modified CORS configuration to use both `CORS_ORIGIN` and `FRONTEND_URL` environment variables
+- Fixed CORS callback to return the actual origin instead of `true`
+- Added comprehensive logging for CORS debugging
 - Added support for multiple origins (comma-separated)
-- Added better logging for blocked origins
+- Improved origin matching logic
+
+### 3. Updated `backend/src/config/env.ts`
+- Changed `CORS_ORIGIN` from required with default to optional
+- Added `FRONTEND_URL` as optional environment variable
+- This allows proper fallback to hardcoded value if env vars not set
 
 ## Deployment Steps
 
