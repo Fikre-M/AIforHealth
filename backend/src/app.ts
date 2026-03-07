@@ -3,7 +3,12 @@ import { env, validateRequiredServices } from '@/config/env';
 import { database } from '@/config/database';
 import { initializeSentry } from '@/config/sentry';
 import { errorHandler, notFound } from './middleware/errorHandler';
-import { requestLogger, performanceMonitor, requestId, securityLogger } from './middleware/requestLogger';
+import {
+  requestLogger,
+  performanceMonitor,
+  requestId,
+  securityLogger,
+} from './middleware/requestLogger';
 import { initializeErrorMonitoring } from './utils/errorMonitoring';
 import swaggerUi from 'swagger-ui-express';
 import { specs } from './config/swagger';
@@ -19,12 +24,12 @@ class App {
 
   constructor() {
     this.app = express();
-    
+
     // Initialize services
     validateRequiredServices();
     initializeSentry();
     initializeErrorMonitoring();
-    
+
     this.initializeMiddleware();
     this.initializeRoutes();
     this.initializeErrorHandling();
@@ -51,7 +56,7 @@ class App {
 
     // Enhanced security middleware (Helmet, CORS, HTTPS enforcement)
     configureSecurity(this.app);
-    
+
     // Parse JSON and URL-encoded bodies
     this.app.use(express.json({ limit: '10mb' }));
     this.app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -59,13 +64,15 @@ class App {
     // Swagger UI
     const swaggerOptions = {
       explorer: true,
-      customCss: ".swagger-ui .topbar { display: none }",
-      customSiteTitle: "AI for Health API",
+      customCss: '.swagger-ui .topbar { display: none }',
+      customSiteTitle: 'AI for Health API',
     };
-    
-    // Setup swagger UI with type assertion to bypass type issues
-    this.app.use("/api-docs", swaggerUi.serve as any);
-    this.app.get("/api-docs", swaggerUi.setup(specs, swaggerOptions) as any);
+
+    // Setup swagger UI - disable type checking for swagger middleware
+    // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
+    this.app.use('/api-docs', swaggerUi.serve as any);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
+    this.app.get('/api-docs', swaggerUi.setup(specs, swaggerOptions) as any);
   }
 
   private initializeRoutes(): void {
@@ -76,12 +83,13 @@ class App {
         timestamp: new Date().toISOString(),
         uptime: process.uptime(),
         environment: env['NODE_ENV'],
-        version: '1.0.0'
+        version: '1.0.0',
       });
     });
 
     // API routes with rate limiting
-    this.app.use("/api/v1", rateLimiter, require('./routes').default);
+    // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
+    this.app.use('/api/v1', rateLimiter, require('./routes').default);
 
     // 404 handler
     this.app.use((req: Request, res: Response, next: NextFunction) => {
@@ -94,12 +102,16 @@ class App {
     this.app.use(errorHandler as ErrorRequestHandler);
 
     // Handle unhandled promise rejections
-    process.on("unhandledRejection", (reason: unknown, promise: Promise<unknown>) => {
+    process.on('unhandledRejection', (reason: unknown, promise: Promise<unknown>) => {
       logError('Unhandled Rejection', new Error(String(reason)), { promise });
+      // Explicitly ignore the promise to satisfy linting
+      void promise.catch(() => {
+        /* handled */
+      });
     });
 
     // Handle uncaught exceptions
-    process.on("uncaughtException", (error: Error) => {
+    process.on('uncaughtException', (error: Error) => {
       logError('Uncaught Exception', error);
       process.exit(1);
     });
@@ -107,13 +119,13 @@ class App {
     // Handle SIGTERM for graceful shutdown
     process.on('SIGTERM', () => {
       logInfo('SIGTERM received, starting graceful shutdown');
-      this.gracefulShutdown(0);
+      void this.gracefulShutdown(0);
     });
 
     // Handle SIGINT for graceful shutdown
     process.on('SIGINT', () => {
       logInfo('SIGINT received, starting graceful shutdown');
-      this.gracefulShutdown(0);
+      void this.gracefulShutdown(0);
     });
   }
 
@@ -122,7 +134,7 @@ class App {
    */
   private async gracefulShutdown(exitCode: number): Promise<void> {
     logInfo('Graceful shutdown initiated');
-    
+
     try {
       // Close database connection
       await this.disconnectDatabase();
@@ -130,16 +142,16 @@ class App {
     } catch (error) {
       logError('Error during graceful shutdown', error as Error);
     }
-    
+
     process.exit(exitCode);
   }
 
   public async connectDatabase(): Promise<void> {
     try {
       await database.connect();
-      logInfo("Database connected successfully");
+      logInfo('Database connected successfully');
     } catch (error) {
-      logError("Database connection error", error as Error);
+      logError('Database connection error', error as Error);
       process.exit(1);
     }
   }
@@ -147,16 +159,23 @@ class App {
   public async disconnectDatabase(): Promise<void> {
     try {
       await database.disconnect();
-      logInfo("Database disconnected successfully");
+      logInfo('Database disconnected successfully');
     } catch (error) {
-      logError("Error disconnecting database", error as Error);
+      logError('Error disconnecting database', error as Error);
     }
   }
 
   public start() {
     const port = env.PORT || 5000;
+
+    // Log CORS configuration on startup
+    // eslint-disable-next-line no-console
+    console.log('🌐 CORS_ORIGIN env var:', process.env.CORS_ORIGIN);
+    // eslint-disable-next-line no-console
+    console.log('🌐 FRONTEND_URL env var:', process.env.FRONTEND_URL);
+
     logApp.starting(port, env['NODE_ENV']);
-    
+
     const server = this.app.listen(port, () => {
       logApp.started(port);
       logInfo(`API Documentation available at http://localhost:${port}/api-docs`);
