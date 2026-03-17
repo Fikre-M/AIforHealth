@@ -1,6 +1,9 @@
 import Appointment from '@/models/Appointment';
 import { AppError } from '@/middleware/errorHandler';
 import { Types } from 'mongoose';
+import notificationService from '@/services/NotificationService';
+import { EmailService } from '@/services/EmailService';
+import User from '@/models/User';
 
 /* =========================================================
    Interfaces
@@ -90,10 +93,9 @@ export class AppointmentService {
 
     if (conflict) throw new AppError('Time slot already booked', 409);
 
-    // Generate unique confirmation number
     const confirmationNumber = this.generateConfirmationNumber();
 
-    return Appointment.create({
+    const appointment = await Appointment.create({
       patient: data.patientId,
       doctor: data.doctorId,
       appointmentDate: data.appointmentDate,
@@ -102,6 +104,33 @@ export class AppointmentService {
       reason: data.reason,
       confirmationNumber,
     });
+
+    // Fire notifications async - don't block the response
+    this.sendAppointmentCreatedNotifications(appointment).catch(err =>
+      console.warn('Notification error (non-blocking):', err)
+    );
+
+    return appointment;
+  }
+
+  private static async sendAppointmentCreatedNotifications(appointment: any): Promise<void> {
+    try {
+      // In-app notification
+      await notificationService.createAppointmentConfirmation(appointment);
+
+      // Email confirmation (only if SendGrid is configured)
+      if (process.env['SENDGRID_API_KEY']) {
+        const [patient, doctor] = await Promise.all([
+          User.findById(appointment.patient),
+          User.findById(appointment.doctor),
+        ]);
+        if (patient && doctor) {
+          await EmailService.sendAppointmentConfirmation(appointment, patient, doctor);
+        }
+      }
+    } catch (err) {
+      console.warn('sendAppointmentCreatedNotifications failed:', err);
+    }
   }
 
   static generateConfirmationNumber(): string {
@@ -176,7 +205,7 @@ export class AppointmentService {
   /* ================= CANCEL ================= */
 
   static async cancelAppointment(id: string, reason?: string) {
-    return Appointment.findByIdAndUpdate(
+    const appointment = await Appointment.findByIdAndUpdate(
       id,
       {
         status: 'cancelled',
@@ -185,6 +214,14 @@ export class AppointmentService {
       },
       { new: true }
     ).lean();
+
+    if (appointment) {
+      notificationService
+        .createAppointmentCancellation(appointment as any, reason)
+        .catch(err => console.warn('Cancellation notification error:', err));
+    }
+
+    return appointment;
   }
 
   /* ================= RESCHEDULE ================= */
