@@ -170,32 +170,49 @@ export const getDoctorAvailability = asyncHandler(async (req: Request, res: Resp
   const { doctorId } = req.params;
   const { startDate, endDate } = req.query;
 
-  // Verify doctor exists
   const doctor = await User.findOne({ _id: doctorId, role: UserRole.DOCTOR });
   if (!doctor) {
     return ResponseUtil.error(res, 'Doctor not found', 404);
   }
 
-  // Generate availability for the date range
   const start = new Date(startDate as string);
   const end = new Date(endDate as string);
+
+  // Fetch existing appointments for this doctor in the date range
+  const existingAppointments = await (await import('../models/Appointment')).default.find({
+    doctor: doctorId,
+    appointmentDate: { $gte: start, $lte: end },
+    status: { $in: ['scheduled', 'confirmed', 'in_progress'] },
+  }).lean();
+
+  // Build a set of booked time strings "YYYY-MM-DDTHH:MM"
+  const bookedSlots = new Set(
+    existingAppointments.map((apt: any) => {
+      const d = new Date(apt.appointmentDate);
+      return `${d.toISOString().split('T')[0]}T${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+    })
+  );
+
   const availability = [];
 
-  // Generate time slots for each day
   for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
     const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
     const dateStr = date.toISOString().split('T')[0];
-    
-    // Generate slots from 9 AM to 5 PM (every 30 minutes)
+    const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+
     const slots = [];
-    for (let hour = 9; hour < 17; hour++) {
+    const startHour = isWeekend ? 10 : 9;
+    const endHour = isWeekend ? 14 : 17;
+
+    for (let hour = startHour; hour < endHour; hour++) {
       for (let minute = 0; minute < 60; minute += 30) {
         const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        const slotKey = `${dateStr}T${time}`;
         slots.push({
           time,
-          available: true, // In production, check against existing appointments
+          available: !bookedSlots.has(slotKey),
           type: 'regular',
-          duration: 30
+          duration: 30,
         });
       }
     }
@@ -203,8 +220,8 @@ export const getDoctorAvailability = asyncHandler(async (req: Request, res: Resp
     availability.push({
       date: dateStr,
       dayOfWeek,
-      isAvailable: slots.length > 0,
-      slots
+      isAvailable: slots.some(s => s.available),
+      slots,
     });
   }
 
