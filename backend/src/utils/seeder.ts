@@ -30,18 +30,18 @@ export class DatabaseSeeder {
     try {
       console.log('🌱 Starting database seeding...');
       
-      // Ensure database is connected
       if (!database.getConnectionStatus()) {
         await database.connect();
       }
 
-      // Seed clinics first
+      // When force=true, always clear and re-create users so passwords hash correctly
+      if (force) {
+        await User.deleteMany({});
+        console.log('🧹 Cleared users for fresh seed');
+      }
+
       const clinics = await this.seedClinics();
-      
-      // Seed users with clinic references
       const users = await this.seedUsers(clinics);
-      
-      // Seed appointments
       await this.seedAppointments(users);
 
       console.log('✅ Database seeding completed successfully');
@@ -147,7 +147,8 @@ export class DatabaseSeeder {
       return {
         admin: users.find(u => u.role === UserRole.ADMIN),
         doctor: users.find(u => u.role === UserRole.DOCTOR),
-        patient: users.find(u => u.role === UserRole.PATIENT)
+        doctors: users.filter(u => u.role === UserRole.DOCTOR),
+        patient: users.find(u => u.role === UserRole.PATIENT),
       };
     }
 
