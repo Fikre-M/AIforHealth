@@ -16,6 +16,9 @@ Important rules:
 - If asked about emergencies, always direct to emergency services (911 or local equivalent)
 - You can answer general knowledge questions too, not just health topics`;
 
+// Log key presence at module load time
+console.log('[AIAssistantService] GEMINI_API_KEY present at startup:', !!env.GEMINI_API_KEY);
+
 class AIAssistantService {
   private genAI: GoogleGenerativeAI | null = null;
 
@@ -30,6 +33,10 @@ class AIAssistantService {
   }
 
   private async callGemini(messages: { role: string; content: string }[]): Promise<string> {
+    const keyPresent = !!env.GEMINI_API_KEY;
+    const keyPreview = env.GEMINI_API_KEY ? env.GEMINI_API_KEY.slice(0, 6) + '...' : 'NOT SET';
+    console.log(`[Gemini] Calling API. Key present: ${keyPresent}, preview: ${keyPreview}, model: ${env.GEMINI_MODEL || 'gemini-1.5-flash'}`);
+
     try {
       const client = this.getClient();
       const model = client.getGenerativeModel({
@@ -37,18 +44,25 @@ class AIAssistantService {
         systemInstruction: SYSTEM_PROMPT,
       });
 
-      const history = messages.slice(0, -1).map(m => ({
+      // Filter out any empty messages and ensure alternating user/model roles
+      const validMessages = messages.filter(m => m.content?.trim());
+
+      const history = validMessages.slice(0, -1).map(m => ({
         role: m.role === 'assistant' ? 'model' : 'user',
         parts: [{ text: m.content }],
       }));
 
       const chat = model.startChat({ history });
-      const lastMessage = messages[messages.length - 1];
+      const lastMessage = validMessages[validMessages.length - 1];
       const result = await chat.sendMessage(lastMessage.content);
-      return result.response.text();
+      const text = result.response.text();
+      console.log(`[Gemini] Success, response length: ${text.length}`);
+      return text;
     } catch (err: any) {
-      console.error('Gemini API error:', err?.message || err);
-      console.error('GEMINI_API_KEY set:', !!env.GEMINI_API_KEY);
+      console.error('[Gemini] API call failed:');
+      console.error('  message:', err?.message);
+      console.error('  status:', err?.status);
+      console.error('  errorDetails:', JSON.stringify(err?.errorDetails || err?.response?.data || ''));
       return this.fallbackResponse(messages[messages.length - 1]?.content || '');
     }
   }
