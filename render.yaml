@@ -28,5 +28,7 @@ services:
         value: info
       - key: CORS_ORIGIN
         value: https://fridayhealth-123.netlify.app
+      - key: SEED_SECRET
+        sync: false
       - key: FRONTEND_URL
         value: https://fridayhealth-123.netlify.app
