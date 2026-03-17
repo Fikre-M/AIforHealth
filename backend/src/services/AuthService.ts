@@ -130,8 +130,11 @@ export class AuthService {
       $unset: { lockUntil: 1 },
     });
 
+    const userObj = user.toObject() as any;
+    delete userObj.password;
+
     return {
-      user: user.toObject() as IUser,
+      user: userObj as IUser,
       tokens,
     };
   }
