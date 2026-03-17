@@ -119,7 +119,7 @@ export function Sidebar() {
             {!isCollapsed && (
               <div className="flex-1 min-w-0">
                 <span className="block truncate">{label}</span>
-                <span className="block text-xs text-gray-400 truncate group-hover:text-gray-500">
+                <span className="block text-xs text-gray-500 truncate group-hover:text-gray-600">
                   {description}
                 </span>
               </div>

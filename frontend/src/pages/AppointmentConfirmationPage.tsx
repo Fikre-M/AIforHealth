@@ -312,19 +312,19 @@ END:VCALENDAR`;
                 <h3 className="text-lg font-semibold mb-4 text-gray-900">Appointment Details</h3>
                 <div className="space-y-3">
                   <div>
-                    <div className="text-sm text-gray-500">Date</div>
+                    <div className="text-sm text-gray-600">Date</div>
                     <div className="font-medium text-gray-900">{formatDate(appointment.appointmentDate)}</div>
                   </div>
                   <div>
-                    <div className="text-sm text-gray-500">Time</div>
+                    <div className="text-sm text-gray-600">Time</div>
                     <div className="font-medium text-gray-900">{formatTime(appointment.appointmentDate)}</div>
                   </div>
                   <div>
-                    <div className="text-sm text-gray-500">Duration</div>
+                    <div className="text-sm text-gray-600">Duration</div>
                     <div className="font-medium text-gray-900">{appointment.duration} minutes</div>
                   </div>
                   <div>
-                    <div className="text-sm text-gray-500">Type</div>
+                    <div className="text-sm text-gray-600">Type</div>
                     <div className="font-medium text-gray-900 capitalize">{appointment.type.replace('_', ' ')}</div>
                   </div>
                 </div>
@@ -334,17 +334,17 @@ END:VCALENDAR`;
                 <h3 className="text-lg font-semibold mb-4 text-gray-900">Provider Information</h3>
                 <div className="space-y-3">
                   <div>
-                    <div className="text-sm text-gray-500">Doctor</div>
+                    <div className="text-sm text-gray-600">Doctor</div>
                     <div className="font-medium text-gray-900">Dr. {appointment.doctor.name}</div>
                   </div>
                   {appointment.doctor.specialty && (
                     <div>
-                      <div className="text-sm text-gray-500">Specialty</div>
+                      <div className="text-sm text-gray-600">Specialty</div>
                       <div className="font-medium text-gray-900">{appointment.doctor.specialty}</div>
                     </div>
                   )}
                   <div>
-                    <div className="text-sm text-gray-500">Reason</div>
+                    <div className="text-sm text-gray-600">Reason</div>
                     <div className="font-medium text-gray-900">{appointment.reason}</div>
                   </div>
                 </div>

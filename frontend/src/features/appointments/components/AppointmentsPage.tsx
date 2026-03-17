@@ -261,7 +261,7 @@ export function AppointmentsPage() {
             )}
           </div>
           {hasSearched && (
-            <p className="text-sm text-gray-600 mt-2">
+            <p className="text-sm text-gray-700 mt-2">
               {filteredAppointments.length} result{filteredAppointments.length !== 1 ? 's' : ''} found
             </p>
           )}

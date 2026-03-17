@@ -129,7 +129,7 @@ export function NotificationsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
-          <p className="text-gray-600">Stay updated with your health reminders and appointments</p>
+          <p className="text-gray-700">Stay updated with your health reminders and appointments</p>
         </div>
         <div className="flex items-center space-x-3">
           <Button
@@ -208,7 +208,7 @@ export function NotificationsPage() {
             </Button>
           </div>
         </div>
-        <div className="text-sm text-gray-600">
+        <div className="text-sm text-gray-700">
           {filteredNotifications.length} notification{filteredNotifications.length !== 1 ? 's' : ''}
         </div>
       </div>
@@ -270,8 +270,8 @@ export function NotificationsPage() {
         ) : (
           <div className="text-center py-12">
             <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600 mb-2">No notifications found</p>
-            <p className="text-sm text-gray-500">
+            <p className="text-gray-700 mb-2">No notifications found</p>
+            <p className="text-sm text-gray-600">
               {filter === 'all' 
                 ? "You're all caught up! We'll notify you about appointments and health updates."
                 : `No ${filter.replace('-', ' ')} notifications at the moment.`

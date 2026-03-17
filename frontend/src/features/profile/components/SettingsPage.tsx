@@ -144,7 +144,7 @@ export const SettingsPage: React.FC = () => {
       <div className="bg-white rounded-lg shadow-md">
         <div className="p-6 border-b border-gray-200">
           <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-          <p className="text-gray-600 mt-1">Customize your experience and preferences</p>
+          <p className="text-gray-700 mt-1">Customize your experience and preferences</p>
         </div>
 
         {/* Tab Navigation */}
@@ -159,7 +159,7 @@ export const SettingsPage: React.FC = () => {
                   className={`flex items-center space-x-2 py-4 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${
                     activeTab === tab.id
                       ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      : 'border-transparent text-gray-700 hover:text-gray-900 hover:border-gray-300'
                   }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -186,7 +186,7 @@ export const SettingsPage: React.FC = () => {
                         <label className="text-sm font-medium text-gray-700 capitalize">
                           {key.replace(/([A-Z])/g, ' $1').toLowerCase()}
                         </label>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-gray-600">
                           {key === 'appointments' && 'Receive emails about appointment confirmations and changes'}
                           {key === 'reminders' && 'Get email reminders before your appointments'}
                           {key === 'healthTips' && 'Receive health tips and wellness advice'}
@@ -270,7 +270,7 @@ export const SettingsPage: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-lg font-medium text-gray-900">Appointment Reminders</h3>
-                  <p className="text-sm text-gray-500">Configure when and how you receive appointment reminders</p>
+                  <p className="text-sm text-gray-600">Configure when and how you receive appointment reminders</p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
@@ -401,7 +401,7 @@ export const SettingsPage: React.FC = () => {
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
                     <div className="flex-1">
                       <label className="text-sm font-medium text-gray-700">High Contrast Mode</label>
-                      <p className="text-xs text-gray-500">Increase contrast for better visibility</p>
+                      <p className="text-xs text-gray-600">Increase contrast for better visibility</p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
@@ -417,7 +417,7 @@ export const SettingsPage: React.FC = () => {
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
                     <div className="flex-1">
                       <label className="text-sm font-medium text-gray-700">Reduced Motion</label>
-                      <p className="text-xs text-gray-500">Minimize animations and transitions</p>
+                      <p className="text-xs text-gray-600">Minimize animations and transitions</p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
@@ -433,7 +433,7 @@ export const SettingsPage: React.FC = () => {
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
                     <div className="flex-1">
                       <label className="text-sm font-medium text-gray-700">Screen Reader Support</label>
-                      <p className="text-xs text-gray-500">Optimize for screen reading software</p>
+                      <p className="text-xs text-gray-600">Optimize for screen reading software</p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
@@ -449,7 +449,7 @@ export const SettingsPage: React.FC = () => {
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
                     <div className="flex-1">
                       <label className="text-sm font-medium text-gray-700">Keyboard Navigation</label>
-                      <p className="text-xs text-gray-500">Enhanced keyboard navigation support</p>
+                      <p className="text-xs text-gray-600">Enhanced keyboard navigation support</p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
@@ -537,7 +537,7 @@ export const SettingsPage: React.FC = () => {
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
                     <div className="flex-1">
                       <label className="text-sm font-medium text-gray-700">Share Data for Research</label>
-                      <p className="text-xs text-gray-500">Help improve healthcare by sharing anonymized data</p>
+                      <p className="text-xs text-gray-600">Help improve healthcare by sharing anonymized data</p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
@@ -553,7 +553,7 @@ export const SettingsPage: React.FC = () => {
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
                     <div className="flex-1">
                       <label className="text-sm font-medium text-gray-700">Allow Marketing Communications</label>
-                      <p className="text-xs text-gray-500">Receive promotional content and special offers</p>
+                      <p className="text-xs text-gray-600">Receive promotional content and special offers</p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input

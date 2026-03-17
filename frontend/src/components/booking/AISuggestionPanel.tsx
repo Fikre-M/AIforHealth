@@ -37,7 +37,7 @@ export function AISuggestionPanel({
         <CardContent>
           <div className="text-center py-6">
             <Sparkles className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-            <p className="text-gray-600 text-sm">
+            <p className="text-gray-700 text-sm">
               AI suggestions will appear as you fill out the form
             </p>
           </div>

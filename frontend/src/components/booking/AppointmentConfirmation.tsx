@@ -29,7 +29,7 @@ export function AppointmentConfirmation({
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
               Appointment Confirmed!
             </h2>
-            <p className="text-gray-600">
+            <p className="text-gray-700">
               Your appointment has been successfully booked
             </p>
           </div>
@@ -58,7 +58,7 @@ export function AppointmentConfirmation({
                 <div className="flex items-center space-x-3">
                   <User className="h-5 w-5 text-gray-400" />
                   <div>
-                    <p className="text-sm text-gray-600">Doctor</p>
+                    <p className="text-sm text-gray-700">Doctor</p>
                     <p className="font-medium text-gray-900">{confirmation.doctorName}</p>
                   </div>
                 </div>
@@ -66,7 +66,7 @@ export function AppointmentConfirmation({
                 <div className="flex items-center space-x-3">
                   <MapPin className="h-5 w-5 text-gray-400" />
                   <div>
-                    <p className="text-sm text-gray-600">Location</p>
+                    <p className="text-sm text-gray-700">Location</p>
                     <p className="font-medium text-gray-900">{confirmation.clinicName}</p>
                   </div>
                 </div>
@@ -74,7 +74,7 @@ export function AppointmentConfirmation({
                 <div className="flex items-center space-x-3">
                   <FileText className="h-5 w-5 text-gray-400" />
                   <div>
-                    <p className="text-sm text-gray-600">Type</p>
+                    <p className="text-sm text-gray-700">Type</p>
                     <p className="font-medium text-gray-900 capitalize">
                       {confirmation.appointmentType}
                     </p>
@@ -86,7 +86,7 @@ export function AppointmentConfirmation({
                 <div className="flex items-center space-x-3">
                   <Calendar className="h-5 w-5 text-gray-400" />
                   <div>
-                    <p className="text-sm text-gray-600">Date</p>
+                    <p className="text-sm text-gray-700">Date</p>
                     <p className="font-medium text-gray-900">
                       {format(appointmentDateTime, 'EEEE, MMMM d, yyyy')}
                     </p>
@@ -96,10 +96,10 @@ export function AppointmentConfirmation({
                 <div className="flex items-center space-x-3">
                   <Clock className="h-5 w-5 text-gray-400" />
                   <div>
-                    <p className="text-sm text-gray-600">Time</p>
+                    <p className="text-sm text-gray-700">Time</p>
                     <p className="font-medium text-gray-900">
                       {format(appointmentDateTime, 'h:mm a')} 
-                      <span className="text-sm text-gray-500 ml-1">
+                      <span className="text-sm text-gray-600 ml-1">
                         ({confirmation.estimatedDuration} min)
                       </span>
                     </p>
@@ -109,7 +109,7 @@ export function AppointmentConfirmation({
                 <div className="flex items-center space-x-3">
                   <DollarSign className="h-5 w-5 text-gray-400" />
                   <div>
-                    <p className="text-sm text-gray-600">Consultation Fee</p>
+                    <p className="text-sm text-gray-700">Consultation Fee</p>
                     <p className="font-medium text-gray-900">
                       ${confirmation.consultationFee}
                     </p>
@@ -165,7 +165,7 @@ export function AppointmentConfirmation({
 
           {/* Contact Information */}
           <div className="mt-6 pt-6 border-t border-gray-200">
-            <p className="text-xs text-gray-500 text-center">
+            <p className="text-xs text-gray-600 text-center">
               Need to reschedule or cancel? Contact the clinic directly or use your patient portal.
               <br />
               Appointment ID: {confirmation.appointmentId}

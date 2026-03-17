@@ -55,7 +55,7 @@ export function AIChat() {
           </div>
           <div>
             <h2 className="text-lg font-semibold text-gray-900">AI Health Assistant</h2>
-            <p className="text-sm text-gray-600">Get general health guidance</p>
+            <p className="text-sm text-gray-700">Get general health guidance</p>
           </div>
         </div>
 
