@@ -13,6 +13,8 @@ export type { IHealthMetric } from './HealthMetric';
 export { MetricType, MetricStatus, MetricTrend } from './HealthMetric';
 export { Clinic } from './Clinic';
 export type { IClinic } from './Clinic';
+export { UserSettings } from './UserSettings';
+export type { IUserSettings } from './UserSettings';
 
 // Future model exports will be added here:
 // export { default as Doctor } from './Doctor';

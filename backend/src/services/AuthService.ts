@@ -1,4 +1,5 @@
 import { User, IUser } from '@/models';
+import { UserSettings } from '@/models/UserSettings';
 import { UserRole } from '@/types';
 import { JwtUtil, TokenPair, TokenPayload } from '@/utils/jwt';
 import { UserService } from './UserService';
@@ -294,32 +295,21 @@ export class AuthService {
   /* ================= SETTINGS ================= */
 
   static async getSettings(userId: string): Promise<UserSettings> {
+    let settings = await UserSettings.findOne({ userId });
+
+    if (!settings) {
+      // Create default settings on first access
+      settings = await UserSettings.create({ userId });
+    }
+
     return {
-      id: `settings-${userId}`,
+      id: settings.id as string,
       userId,
-      notifications: {
-        email: true,
-        push: true,
-        sms: false,
-        appointmentReminders: true,
-        medicationReminders: true,
-        healthTips: true,
-      },
-      appointmentReminders: {
-        enabled: true,
-        timing: ['1day', '1hour'],
-      },
-      accessibility: {
-        fontSize: 'medium',
-        highContrast: false,
-        screenReader: false,
-      },
-      privacy: {
-        profileVisibility: 'private',
-        shareDataForResearch: false,
-        allowMarketing: false,
-      },
-      updatedAt: new Date().toISOString(),
+      notifications: settings.notifications,
+      appointmentReminders: settings.appointmentReminders,
+      accessibility: settings.accessibility,
+      privacy: settings.privacy,
+      updatedAt: (settings.updatedAt as Date).toISOString(),
     };
   }
 
@@ -327,10 +317,22 @@ export class AuthService {
     userId: string,
     settingsData: Partial<UserSettings>
   ): Promise<UserSettings> {
+    const { id: _id, userId: _uid, updatedAt: _ua, ...updateFields } = settingsData as any;
+
+    const settings = await UserSettings.findOneAndUpdate(
+      { userId },
+      { $set: updateFields },
+      { new: true, upsert: true, runValidators: true }
+    );
+
     return {
-      ...(await this.getSettings(userId)),
-      ...settingsData,
-      updatedAt: new Date().toISOString(),
+      id: settings!.id as string,
+      userId,
+      notifications: settings!.notifications,
+      appointmentReminders: settings!.appointmentReminders,
+      accessibility: settings!.accessibility,
+      privacy: settings!.privacy,
+      updatedAt: (settings!.updatedAt as Date).toISOString(),
     };
   }
 }
