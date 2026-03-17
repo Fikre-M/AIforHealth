@@ -44,7 +44,11 @@ export const authService = {
           throw new Error(message);
         }
       } else if (error.request) {
-        throw new Error("No response from server. Please try again.");
+        // Could be a cold start on Render free tier - server takes time to wake up
+        if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+          throw new Error("Server is starting up, please wait a moment and try again.");
+        }
+        throw new Error("No response from server. Please check your connection and try again.");
       } else {
         throw new Error(error.message || "Request failed. Please check your connection.");
       }

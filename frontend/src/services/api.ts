@@ -16,7 +16,7 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
   withCredentials: true, // Important for cookies/sessions
-  timeout: 5000, // 5 second timeout to trigger fallback data quickly
+  timeout: 60000, // 60 second timeout to handle Render free tier cold starts
 });
 
 // Add request interceptor to include auth token and log requests
