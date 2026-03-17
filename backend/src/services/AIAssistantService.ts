@@ -37,7 +37,6 @@ class AIAssistantService {
         systemInstruction: SYSTEM_PROMPT,
       });
 
-      // Build chat history (all except last message)
       const history = messages.slice(0, -1).map(m => ({
         role: m.role === 'assistant' ? 'model' : 'user',
         parts: [{ text: m.content }],
@@ -49,6 +48,7 @@ class AIAssistantService {
       return result.response.text();
     } catch (err: any) {
       console.error('Gemini API error:', err?.message || err);
+      console.error('GEMINI_API_KEY set:', !!env.GEMINI_API_KEY);
       return this.fallbackResponse(messages[messages.length - 1]?.content || '');
     }
   }
