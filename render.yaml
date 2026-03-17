@@ -30,5 +30,7 @@ services:
         value: https://fridayhealth-123.netlify.app
       - key: SEED_SECRET
         sync: false
+      - key: GEMINI_API_KEY
+        sync: false
       - key: FRONTEND_URL
         value: https://fridayhealth-123.netlify.app

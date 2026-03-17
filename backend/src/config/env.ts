@@ -57,6 +57,8 @@ const envSchema = z.object({
   OPENAI_API_KEY: z.string().optional(),
   OPENAI_MODEL: z.string().default('gpt-4'),
   OPENAI_MAX_TOKENS: z.string().transform(Number).default('1000'),
+  GEMINI_API_KEY: z.string().optional(),
+  GEMINI_MODEL: z.string().default('gemini-1.5-flash'),
 
   // File Storage
   AWS_ACCESS_KEY_ID: z.string().optional(),
