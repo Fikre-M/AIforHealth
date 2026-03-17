@@ -21,9 +21,9 @@ export class DatabaseSeeder {
   /**
    * Seed the database with initial data
    */
-  public async seed(): Promise<void> {
-    if (!isDevelopment) {
-      console.log('⚠️ Seeding is only available in development environment');
+  public async seed(force = false): Promise<void> {
+    if (!isDevelopment && !force) {
+      console.log('⚠️ Seeding is only available in development environment. Use force=true to seed in production.');
       return;
     }
 
@@ -302,7 +302,7 @@ export class DatabaseSeeder {
    * Clear all data from the database (development only)
    */
   public async clear(): Promise<void> {
-    if (!isDevelopment) {
+    if (!isDevelopment && process.env.ALLOW_DB_CLEAR !== 'true') {
       console.log('⚠️ Database clearing is only available in development environment');
       return;
     }

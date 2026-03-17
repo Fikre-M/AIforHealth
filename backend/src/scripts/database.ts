@@ -20,6 +20,10 @@ async function main() {
         await seeder.seed();
         break;
       
+      case 'seed:force':
+        await seeder.seed(true);
+        break;
+      
       case 'clear':
         await seeder.clear();
         break;

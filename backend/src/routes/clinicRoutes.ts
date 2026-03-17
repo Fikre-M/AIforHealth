@@ -86,11 +86,12 @@ const validateClinicQuery = [
 
 // Public routes (no authentication required for browsing clinics)
 router.get('/', validateClinicQuery, clinicController.getClinics);
+
+// Doctor availability must come BEFORE /:id to avoid route conflict
+router.get('/doctors/:doctorId/availability', clinicController.getDoctorAvailability);
+
 router.get('/:id', clinicController.getClinicById);
 router.get('/:id/doctors', clinicController.getDoctorsByClinic);
-
-// Public doctor availability endpoint (no auth required for booking flow)
-router.get('/doctors/:doctorId/availability', clinicController.getDoctorAvailability);
 
 // Protected routes (require authentication)
 router.use(authenticate);
