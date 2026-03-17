@@ -3,6 +3,7 @@ import { authenticate, authorize } from '../middleware/auth';
 import { UserRole } from '@/types';
 import { User } from '@/models';
 import { ResponseUtil, asyncHandler } from '@/utils';
+import { seeder } from '@/utils/seeder';
 
 const router = Router();
 
@@ -48,6 +49,12 @@ router.get('/analytics', asyncHandler(async (req, res) => {
   };
 
   ResponseUtil.success(res, { analytics }, 'Analytics retrieved successfully');
+}));
+
+// Seed database with initial data (admin only, safe - skips existing data)
+router.post('/seed', asyncHandler(async (req, res) => {
+  await seeder.seed(true);
+  ResponseUtil.success(res, null, 'Database seeded successfully');
 }));
 
 export default router;
