@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, AlertTriangle, Plus } from 'lucide-react';
 import { aiAssistantService } from '@/services/aiAssistantService';
+import { useAuth } from '@/hooks/useAuth';
 
 interface Message {
   id: string;
@@ -10,14 +11,14 @@ interface Message {
 }
 
 export function AIChat() {
+  const { user } = useAuth();
+  const firstName = user?.name?.split(' ')[0] ?? '';
+  const greeting = firstName
+    ? `Hello ${firstName}! I'm your AI health assistant. I can search for doctors, book appointments, check your schedule, or answer health questions. How can I help?`
+    : "Hello! I'm your AI health assistant. I can help answer general health questions and guide you to appropriate care. How can I help you today?";
+
   const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      content:
-        "Hello! I'm your AI health assistant. I can help answer general health questions and guide you to appropriate care. How can I help you today?",
-      sender: 'ai',
-      timestamp: new Date().toISOString(),
-    },
+    { id: '1', content: greeting, sender: 'ai', timestamp: new Date().toISOString() },
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -79,7 +80,7 @@ export function AIChat() {
     setMessages([
       {
         id: Date.now().toString(),
-        content: "Hello! I'm your AI health assistant. How can I help you today?",
+        content: greeting,
         sender: 'ai',
         timestamp: new Date().toISOString(),
       },

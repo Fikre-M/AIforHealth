@@ -4,6 +4,8 @@ import AIAssistant, { IAIConversation, AIConversationStatus } from '../models/AI
 import { env } from '@/config/env';
 import { DoctorService } from './DoctorService';
 import { AppointmentService } from './AppointmentService';
+import User from '../models/User';
+import Appointment from '../models/Appointment';
 
 /* =========================================================
    System Prompt
@@ -34,6 +36,65 @@ Important rules:
 - If asked about emergencies, always direct to emergency services (911 or local equivalent)
 - Always confirm with the user before booking an appointment
 - When showing appointment dates, format them in a human-readable way`;
+
+/* =========================================================
+   User Context Builder
+========================================================= */
+
+async function buildUserContext(userId: Types.ObjectId): Promise<string> {
+  try {
+    const [user, upcomingAppointments] = await Promise.all([
+      User.findById(userId).select('name gender dateOfBirth').lean(),
+      Appointment.find({
+        patient: userId,
+        appointmentDate: { $gte: new Date() },
+        status: { $in: ['scheduled', 'confirmed'] },
+      })
+        .sort({ appointmentDate: 1 })
+        .limit(3)
+        .populate('doctor', 'name specialization')
+        .lean(),
+    ]);
+
+    if (!user) return '';
+
+    const lines: string[] = [`\n--- Current User Context ---`];
+    lines.push(`Patient name: ${user.name}`);
+
+    if (user.gender) lines.push(`Gender: ${user.gender}`);
+
+    if (user.dateOfBirth) {
+      const age = Math.floor(
+        (Date.now() - new Date(user.dateOfBirth).getTime()) / (1000 * 60 * 60 * 24 * 365.25)
+      );
+      lines.push(`Age: ${age}`);
+    }
+
+    if (upcomingAppointments.length > 0) {
+      lines.push(`Upcoming appointments:`);
+      upcomingAppointments.forEach((apt) => {
+        const doctor = apt.doctor as any;
+        const date = new Date(apt.appointmentDate).toLocaleDateString('en-US', {
+          weekday: 'long',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        });
+        lines.push(
+          `  - ${date} with Dr. ${doctor?.name ?? 'Unknown'} (${doctor?.specialization ?? 'General'}), reason: ${apt.reason}`
+        );
+      });
+    } else {
+      lines.push(`No upcoming appointments.`);
+    }
+
+    lines.push(`--- End of User Context ---\n`);
+    return lines.join('\n');
+  } catch {
+    return '';
+  }
+}
 
 /* =========================================================
    Tool Definitions
@@ -205,7 +266,8 @@ class AIAssistantService {
    */
   private async callGemini(
     messages: { role: string; content: string }[],
-    userId: Types.ObjectId
+    userId: Types.ObjectId,
+    userContext = ''
   ): Promise<string> {
     const keyPreview = env.GEMINI_API_KEY ? env.GEMINI_API_KEY.slice(0, 6) + '...' : 'NOT SET';
     // eslint-disable-next-line no-console
@@ -217,7 +279,7 @@ class AIAssistantService {
       const client = this.getClient();
       const model = client.getGenerativeModel({
         model: env.GEMINI_MODEL || 'gemini-1.5-flash',
-        systemInstruction: SYSTEM_PROMPT,
+        systemInstruction: SYSTEM_PROMPT + userContext,
         tools: GEMINI_TOOLS,
       });
 
@@ -291,9 +353,13 @@ class AIAssistantService {
       status: AIConversationStatus.ACTIVE,
     });
 
-    const saved = await conversation.save();
+    const [saved, userContext] = await Promise.all([conversation.save(), buildUserContext(userId)]);
 
-    const aiResponse = await this.callGemini([{ role: 'user', content: initialMessage }], userId);
+    const aiResponse = await this.callGemini(
+      [{ role: 'user', content: initialMessage }],
+      userId,
+      userContext
+    );
 
     return AIAssistant.findOneAndUpdate(
       { _id: saved._id },
@@ -307,11 +373,14 @@ class AIAssistantService {
     userId: Types.ObjectId,
     userInput: string
   ): Promise<{ response: string; conversation: IAIConversation | null }> {
-    const updated = await AIAssistant.findOneAndUpdate(
-      { _id: conversationId, user: userId },
-      { $push: { messages: { role: 'user', content: userInput, timestamp: new Date() } } },
-      { new: true }
-    );
+    const [updated, userContext] = await Promise.all([
+      AIAssistant.findOneAndUpdate(
+        { _id: conversationId, user: userId },
+        { $push: { messages: { role: 'user', content: userInput, timestamp: new Date() } } },
+        { new: true }
+      ),
+      buildUserContext(userId),
+    ]);
 
     if (!updated) throw new Error('Conversation not found');
 
@@ -320,7 +389,7 @@ class AIAssistantService {
       content: m.content,
     }));
 
-    const aiResponse = await this.callGemini(history, userId);
+    const aiResponse = await this.callGemini(history, userId, userContext);
 
     await AIAssistant.findOneAndUpdate(
       { _id: conversationId },

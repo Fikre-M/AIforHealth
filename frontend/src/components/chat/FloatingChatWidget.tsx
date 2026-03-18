@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Bot, User, Plus, Minimize2 } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { aiAssistantService } from '@/services/aiAssistantService';
+import { useAuth } from '@/hooks/useAuth';
 
 interface Message {
   id: string;
@@ -14,14 +15,16 @@ const HIDDEN_ROUTES = ['/app/ai-chat'];
 
 export function FloatingChatWidget() {
   const location = useLocation();
+  const { user } = useAuth();
+  const firstName = user?.name?.split(' ')[0] ?? '';
+  const greeting = firstName
+    ? `Hi ${firstName}! I'm your AI health assistant. I can search for doctors, book appointments, or answer health questions. How can I help?`
+    : "Hi! I'm your AI health assistant. How can I help you today?";
+
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '0',
-      content: "Hi! I'm your AI health assistant. How can I help you today?",
-      sender: 'ai',
-    },
+    { id: '0', content: greeting, sender: 'ai' },
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -86,13 +89,7 @@ export function FloatingChatWidget() {
   const handleNewChat = () => {
     setConversationId(null);
     setError(null);
-    setMessages([
-      {
-        id: Date.now().toString(),
-        content: "Hi! I'm your AI health assistant. How can I help you today?",
-        sender: 'ai',
-      },
-    ]);
+    setMessages([{ id: Date.now().toString(), content: greeting, sender: 'ai' }]);
   };
 
   const handleOpen = () => {
