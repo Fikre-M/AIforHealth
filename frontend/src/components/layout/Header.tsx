@@ -1,38 +1,43 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Heart, Bell } from 'lucide-react';
+import { Heart, Bell, Sun, Moon } from 'lucide-react';
 import { NotificationBadge } from '@/components/notifications/NotificationBadge';
 import { NotificationDropdown } from '@/components/notifications/NotificationDropdown';
 import { ProfileDropdown } from '@/components/profile/ProfileDropdown';
 import { MobileNav } from './MobileNav';
 import { notificationService } from '@/services/notificationService';
 import { useAuth } from '@/hooks/useAuth';
+import { useDarkMode } from '@/hooks/useDarkMode';
 
 export function Header() {
   const { user } = useAuth();
+  const { isDark, toggle: toggleDark } = useDarkMode();
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (user) {
-      loadUnreadCount();
-      // Poll for new notifications every 30 seconds
-      const interval = setInterval(loadUnreadCount, 30000);
-      return () => clearInterval(interval);
-    }
-    // Return undefined for the else case
-    return undefined;
-  }, [user]);
-
-  const loadUnreadCount = async () => {
+  const loadUnreadCount = useCallback(async () => {
     try {
       const unreadNotifications = await notificationService.getUnreadNotifications();
       setUnreadCount(unreadNotifications.length);
     } catch (error) {
       console.error('Error loading unread count:', error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      void loadUnreadCount();
+      const interval = setInterval(() => {
+        void loadUnreadCount();
+      }, 30000);
+      return () => {
+        clearInterval(interval);
+      };
+    }
+    return undefined;
+  }, [user, loadUnreadCount]);
 
   const handleNotificationClick = () => {
     setShowNotifications(!showNotifications);
@@ -43,20 +48,23 @@ export function Header() {
   };
 
   return (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-40" role="banner">
+    <header
+      className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-40"
+      role="banner"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo and Brand */}
           <div className="flex items-center space-x-4">
-            <Link 
-              to={user ? "/app/dashboard" : "/"} 
+            <Link
+              to={user ? '/app/dashboard' : '/'}
               className="flex items-center space-x-2 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md p-1"
               aria-label="AIforHealth - Go to homepage"
             >
               <Heart className="w-8 h-8 text-red-500" aria-hidden="true" />
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
+              <h1 className="text-xl sm:text-2xl font-bold">
                 <span className="text-blue-600">AI</span>
-                <span className="text-gray-900">for</span>
+                <span className="text-gray-900 dark:text-white">for</span>
                 <span className="text-red-500">Health</span>
               </h1>
             </Link>
@@ -64,38 +72,42 @@ export function Header() {
 
           {/* Desktop Navigation Links */}
           {user && (
-            <nav className="hidden md:flex items-center space-x-6" role="navigation" aria-label="Main navigation">
-              <Link 
-                to="/app/dashboard" 
-                className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+            <nav
+              className="hidden md:flex items-center space-x-6"
+              role="navigation"
+              aria-label="Main navigation"
+            >
+              <Link
+                to="/app/dashboard"
+                className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 Dashboard
               </Link>
-              <Link 
-                to="/app/appointments" 
-                className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+              <Link
+                to="/app/appointments"
+                className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 Appointments
               </Link>
               {user.role === 'doctor' && (
-                <Link 
-                  to="/app/patients" 
-                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                <Link
+                  to="/app/patients"
+                  className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   Patients
                 </Link>
               )}
               {user.role === 'admin' && (
                 <>
-                  <Link 
-                    to="/app/users" 
-                    className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  <Link
+                    to="/app/users"
+                    className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     Users
                   </Link>
-                  <Link 
-                    to="/app/analytics" 
-                    className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  <Link
+                    to="/app/analytics"
+                    className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     Analytics
                   </Link>
@@ -103,12 +115,21 @@ export function Header() {
               )}
             </nav>
           )}
-          
+
           {/* Right Side Actions */}
           <div className="flex items-center space-x-3">
+            {/* Dark mode toggle */}
+            <button
+              onClick={toggleDark}
+              className="p-2 rounded-md text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+              aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
+
             {user ? (
               <>
-                {/* Emergency Button - Always Visible */}
+                {/* Emergency Button */}
                 <a
                   href="tel:911"
                   className="hidden sm:flex items-center px-3 py-1.5 bg-red-600 text-white text-xs font-medium rounded-md hover:bg-red-700 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500"
@@ -120,17 +141,16 @@ export function Header() {
 
                 {/* Desktop Notifications */}
                 <div className="hidden md:block relative">
-                  <NotificationBadge
-                    count={unreadCount}
-                    onClick={handleNotificationClick}
-                  />
+                  <NotificationBadge count={unreadCount} onClick={handleNotificationClick} />
                   <NotificationDropdown
                     isOpen={showNotifications}
-                    onClose={() => setShowNotifications(false)}
+                    onClose={() => {
+                      setShowNotifications(false);
+                    }}
                     onNavigate={handleNavigate}
                   />
                 </div>
-                
+
                 {/* Desktop Profile Dropdown */}
                 <div className="hidden md:block">
                   <ProfileDropdown />
@@ -140,16 +160,15 @@ export function Header() {
                 <MobileNav unreadCount={unreadCount} />
               </>
             ) : (
-              /* Auth Links for Non-Authenticated Users */
               <div className="flex items-center space-x-4">
-                <Link 
-                  to="/login" 
-                  className="bg-gray-800 text-white border border-gray-800 hover:bg-gray-900 px-4 py-2 rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+                <Link
+                  to="/login"
+                  className="bg-gray-800 dark:bg-gray-700 text-white border border-gray-800 dark:border-gray-600 hover:bg-gray-900 dark:hover:bg-gray-600 px-4 py-2 rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
                 >
                   Sign In
                 </Link>
-                <Link 
-                  to="/register" 
+                <Link
+                  to="/register"
                   className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
                 >
                   Get Started

@@ -11,15 +11,10 @@ export function Layout() {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex flex-col">
+      <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900">
         <SkipNav />
         <Header />
-        <main 
-          id="main-content"
-          className="flex-1"
-          role="main"
-          aria-label="Main content"
-        >
+        <main id="main-content" className="flex-1" role="main" aria-label="Main content">
           <Outlet />
         </main>
         <Footer />
@@ -28,14 +23,14 @@ export function Layout() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
       <SkipNav />
       <Header />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />
-        <main 
+        <main
           id="main-content"
-          className="flex-1 overflow-y-auto focus:outline-none" 
+          className="flex-1 overflow-y-auto focus:outline-none"
           role="main"
           aria-label="Main content"
           tabIndex={-1}

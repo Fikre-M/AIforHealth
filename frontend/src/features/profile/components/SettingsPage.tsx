@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Bell, 
-  Clock, 
-  Eye, 
-  Shield, 
-  Palette, 
-  Globe, 
-  Save, 
+import {
+  Bell,
+  Clock,
+  Eye,
+  Shield,
+  Palette,
+  Globe,
+  Save,
   AlertCircle,
   Mail,
   MessageSquare,
-  Smartphone
+  Smartphone,
 } from 'lucide-react';
 import { profileService } from '@/services/profileService';
 import { useAuth } from '@/hooks/useAuth';
@@ -23,22 +23,24 @@ export const SettingsPage: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [activeTab, setActiveTab] = useState<'notifications' | 'reminders' | 'accessibility' | 'privacy'>('notifications');
+  const [activeTab, setActiveTab] = useState<
+    'notifications' | 'reminders' | 'accessibility' | 'privacy'
+  >('notifications');
 
   useEffect(() => {
     if (user) {
-      loadSettings();
+      void loadSettings();
     }
   }, [user]);
 
   const loadSettings = async () => {
     if (!user) return;
-    
+
     try {
       setLoading(true);
       const settingsData = await profileService.getSettings();
       setSettings(settingsData);
-    } catch (err) {
+    } catch {
       setError('Failed to load settings');
     } finally {
       setLoading(false);
@@ -51,74 +53,80 @@ export const SettingsPage: React.FC = () => {
     try {
       setSaving(true);
       setError(null);
-      
+
       const updateData: SettingsUpdateData = {
         notifications: settings.notifications,
         appointmentReminders: settings.appointmentReminders,
         accessibility: settings.accessibility,
-        privacy: settings.privacy
+        privacy: settings.privacy,
       };
 
       const updatedSettings = await profileService.updateSettings(updateData);
       setSettings(updatedSettings);
       setSuccess(true);
-      
-      setTimeout(() => setSuccess(false), 3000);
-    } catch (err) {
+
+      setTimeout(() => {
+        setSuccess(false);
+      }, 3000);
+    } catch {
       setError('Failed to update settings');
     } finally {
       setSaving(false);
     }
   };
 
-  const updateNotificationSetting = (category: 'email' | 'push' | 'sms', key: string, value: boolean) => {
+  const updateNotificationSetting = (
+    category: 'email' | 'push' | 'sms',
+    key: string,
+    value: boolean
+  ) => {
     if (!settings) return;
-    
+
     setSettings({
       ...settings,
       notifications: {
         ...settings.notifications,
         [category]: {
           ...settings.notifications[category],
-          [key]: value
-        }
-      }
+          [key]: value,
+        },
+      },
     });
   };
 
   const updateReminderSetting = (key: string, value: any) => {
     if (!settings) return;
-    
+
     setSettings({
       ...settings,
       appointmentReminders: {
         ...settings.appointmentReminders,
-        [key]: value
-      }
+        [key]: value,
+      },
     });
   };
 
   const updateAccessibilitySetting = (key: string, value: any) => {
     if (!settings) return;
-    
+
     setSettings({
       ...settings,
       accessibility: {
         ...settings.accessibility,
-        [key]: value
-      }
+        [key]: value,
+      },
     });
   };
 
   const updatePrivacySetting = (key: string, value: any) => {
     if (!settings) return;
-    
+
     setSettings({
       ...settings,
       privacy: {
         ...settings.privacy,
-        [key]: value
-      }
+        [key]: value,
+      },
     });
   };
 
@@ -136,30 +144,34 @@ export const SettingsPage: React.FC = () => {
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'reminders', label: 'Reminders', icon: Clock },
     { id: 'accessibility', label: 'Accessibility', icon: Eye },
-    { id: 'privacy', label: 'Privacy', icon: Shield }
+    { id: 'privacy', label: 'Privacy', icon: Shield },
   ] as const;
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="bg-white rounded-lg shadow-md">
-        <div className="p-6 border-b border-gray-200">
-          <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-          <p className="text-gray-700 mt-1">Customize your experience and preferences</p>
+    <div className="space-y-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md">
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Settings</h1>
+          <p className="text-gray-700 dark:text-gray-300 mt-1">
+            Customize your experience and preferences
+          </p>
         </div>
 
         {/* Tab Navigation */}
-        <div className="border-b border-gray-200">
+        <div className="border-b border-gray-200 dark:border-gray-700">
           <nav className="flex overflow-x-auto px-6 scrollbar-hide">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => {
+                    setActiveTab(tab.id);
+                  }}
                   className={`flex items-center space-x-2 py-4 px-3 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${
                     activeTab === tab.id
                       ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-700 hover:text-gray-900 hover:border-gray-300'
+                      : 'border-transparent text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:border-gray-300'
                   }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -187,18 +199,23 @@ export const SettingsPage: React.FC = () => {
                           {key.replace(/([A-Z])/g, ' $1').toLowerCase()}
                         </label>
                         <p className="text-xs text-gray-600">
-                          {key === 'appointments' && 'Receive emails about appointment confirmations and changes'}
+                          {key === 'appointments' &&
+                            'Receive emails about appointment confirmations and changes'}
                           {key === 'reminders' && 'Get email reminders before your appointments'}
                           {key === 'healthTips' && 'Receive health tips and wellness advice'}
-                          {key === 'promotions' && 'Get notified about special offers and promotions'}
-                          {key === 'systemUpdates' && 'Important system updates and maintenance notices'}
+                          {key === 'promotions' &&
+                            'Get notified about special offers and promotions'}
+                          {key === 'systemUpdates' &&
+                            'Important system updates and maintenance notices'}
                         </p>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input
                           type="checkbox"
                           checked={value}
-                          onChange={(e) => updateNotificationSetting('email', key, e.target.checked)}
+                          onChange={(e) => {
+                            updateNotificationSetting('email', key, e.target.checked);
+                          }}
                           className="sr-only peer"
                         />
                         <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
@@ -225,7 +242,9 @@ export const SettingsPage: React.FC = () => {
                         <input
                           type="checkbox"
                           checked={value}
-                          onChange={(e) => updateNotificationSetting('push', key, e.target.checked)}
+                          onChange={(e) => {
+                            updateNotificationSetting('push', key, e.target.checked);
+                          }}
                           className="sr-only peer"
                         />
                         <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
@@ -252,7 +271,9 @@ export const SettingsPage: React.FC = () => {
                         <input
                           type="checkbox"
                           checked={value}
-                          onChange={(e) => updateNotificationSetting('sms', key, e.target.checked)}
+                          onChange={(e) => {
+                            updateNotificationSetting('sms', key, e.target.checked);
+                          }}
                           className="sr-only peer"
                         />
                         <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
@@ -270,13 +291,17 @@ export const SettingsPage: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-lg font-medium text-gray-900">Appointment Reminders</h3>
-                  <p className="text-sm text-gray-600">Configure when and how you receive appointment reminders</p>
+                  <p className="text-sm text-gray-600">
+                    Configure when and how you receive appointment reminders
+                  </p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
                     type="checkbox"
                     checked={settings.appointmentReminders.enabled}
-                    onChange={(e) => updateReminderSetting('enabled', e.target.checked)}
+                    onChange={(e) => {
+                      updateReminderSetting('enabled', e.target.checked);
+                    }}
                     className="sr-only peer"
                   />
                   <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
@@ -298,15 +323,19 @@ export const SettingsPage: React.FC = () => {
                             onChange={(e) => {
                               const times = e.target.checked
                                 ? [...settings.appointmentReminders.reminderTimes, minutes]
-                                : settings.appointmentReminders.reminderTimes.filter(t => t !== minutes);
+                                : settings.appointmentReminders.reminderTimes.filter(
+                                    (t) => t !== minutes
+                                  );
                               updateReminderSetting('reminderTimes', times);
                             }}
                             className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                           />
                           <span className="ml-2 text-sm text-gray-700">
-                            {minutes < 60 ? `${minutes} min` : 
-                             minutes < 1440 ? `${minutes / 60} hr` : 
-                             `${minutes / 1440} day${minutes > 1440 ? 's' : ''}`}
+                            {minutes < 60
+                              ? `${minutes} min`
+                              : minutes < 1440
+                                ? `${minutes / 60} hr`
+                                : `${minutes / 1440} day${minutes > 1440 ? 's' : ''}`}
                           </span>
                         </label>
                       ))}
@@ -326,7 +355,7 @@ export const SettingsPage: React.FC = () => {
                             onChange={(e) => {
                               const methods = e.target.checked
                                 ? [...settings.appointmentReminders.methods, method as any]
-                                : settings.appointmentReminders.methods.filter(m => m !== method);
+                                : settings.appointmentReminders.methods.filter((m) => m !== method);
                               updateReminderSetting('methods', methods);
                             }}
                             className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
@@ -343,7 +372,9 @@ export const SettingsPage: React.FC = () => {
                     </label>
                     <textarea
                       value={settings.appointmentReminders.customMessage || ''}
-                      onChange={(e) => updateReminderSetting('customMessage', e.target.value)}
+                      onChange={(e) => {
+                        updateReminderSetting('customMessage', e.target.value);
+                      }}
                       placeholder="Add a personal message to your reminders..."
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       rows={3}
@@ -362,7 +393,7 @@ export const SettingsPage: React.FC = () => {
                   <Palette className="w-5 h-5 mr-2" />
                   Display Settings
                 </h3>
-                
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -370,7 +401,9 @@ export const SettingsPage: React.FC = () => {
                     </label>
                     <select
                       value={settings.accessibility.fontSize}
-                      onChange={(e) => updateAccessibilitySetting('fontSize', e.target.value)}
+                      onChange={(e) => {
+                        updateAccessibilitySetting('fontSize', e.target.value);
+                      }}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="small">Small</option>
@@ -386,7 +419,9 @@ export const SettingsPage: React.FC = () => {
                     </label>
                     <select
                       value={settings.accessibility.colorBlindSupport}
-                      onChange={(e) => updateAccessibilitySetting('colorBlindSupport', e.target.value)}
+                      onChange={(e) => {
+                        updateAccessibilitySetting('colorBlindSupport', e.target.value);
+                      }}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="none">None</option>
@@ -400,14 +435,20 @@ export const SettingsPage: React.FC = () => {
                 <div className="space-y-4 mt-6">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
                     <div className="flex-1">
-                      <label className="text-sm font-medium text-gray-700">High Contrast Mode</label>
-                      <p className="text-xs text-gray-600">Increase contrast for better visibility</p>
+                      <label className="text-sm font-medium text-gray-700">
+                        High Contrast Mode
+                      </label>
+                      <p className="text-xs text-gray-600">
+                        Increase contrast for better visibility
+                      </p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
                         type="checkbox"
                         checked={settings.accessibility.highContrast}
-                        onChange={(e) => updateAccessibilitySetting('highContrast', e.target.checked)}
+                        onChange={(e) => {
+                          updateAccessibilitySetting('highContrast', e.target.checked);
+                        }}
                         className="sr-only peer"
                       />
                       <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
@@ -423,7 +464,9 @@ export const SettingsPage: React.FC = () => {
                       <input
                         type="checkbox"
                         checked={settings.accessibility.reducedMotion}
-                        onChange={(e) => updateAccessibilitySetting('reducedMotion', e.target.checked)}
+                        onChange={(e) => {
+                          updateAccessibilitySetting('reducedMotion', e.target.checked);
+                        }}
                         className="sr-only peer"
                       />
                       <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
@@ -432,14 +475,18 @@ export const SettingsPage: React.FC = () => {
 
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
                     <div className="flex-1">
-                      <label className="text-sm font-medium text-gray-700">Screen Reader Support</label>
+                      <label className="text-sm font-medium text-gray-700">
+                        Screen Reader Support
+                      </label>
                       <p className="text-xs text-gray-600">Optimize for screen reading software</p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
                         type="checkbox"
                         checked={settings.accessibility.screenReader}
-                        onChange={(e) => updateAccessibilitySetting('screenReader', e.target.checked)}
+                        onChange={(e) => {
+                          updateAccessibilitySetting('screenReader', e.target.checked);
+                        }}
                         className="sr-only peer"
                       />
                       <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
@@ -448,14 +495,18 @@ export const SettingsPage: React.FC = () => {
 
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
                     <div className="flex-1">
-                      <label className="text-sm font-medium text-gray-700">Keyboard Navigation</label>
+                      <label className="text-sm font-medium text-gray-700">
+                        Keyboard Navigation
+                      </label>
                       <p className="text-xs text-gray-600">Enhanced keyboard navigation support</p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
                         type="checkbox"
                         checked={settings.accessibility.keyboardNavigation}
-                        onChange={(e) => updateAccessibilitySetting('keyboardNavigation', e.target.checked)}
+                        onChange={(e) => {
+                          updateAccessibilitySetting('keyboardNavigation', e.target.checked);
+                        }}
                         className="sr-only peer"
                       />
                       <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
@@ -469,15 +520,15 @@ export const SettingsPage: React.FC = () => {
                   <Globe className="w-5 h-5 mr-2" />
                   Localization
                 </h3>
-                
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Language
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Language</label>
                     <select
                       value={settings.accessibility.language}
-                      onChange={(e) => updateAccessibilitySetting('language', e.target.value)}
+                      onChange={(e) => {
+                        updateAccessibilitySetting('language', e.target.value);
+                      }}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="en">English</option>
@@ -490,12 +541,12 @@ export const SettingsPage: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Timezone
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Timezone</label>
                     <select
                       value={settings.accessibility.timezone}
-                      onChange={(e) => updateAccessibilitySetting('timezone', e.target.value)}
+                      onChange={(e) => {
+                        updateAccessibilitySetting('timezone', e.target.value);
+                      }}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="America/New_York">Eastern Time</option>
@@ -517,7 +568,7 @@ export const SettingsPage: React.FC = () => {
             <div className="space-y-6">
               <div>
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Privacy Settings</h3>
-                
+
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -525,25 +576,35 @@ export const SettingsPage: React.FC = () => {
                     </label>
                     <select
                       value={settings.privacy.profileVisibility}
-                      onChange={(e) => updatePrivacySetting('profileVisibility', e.target.value)}
+                      onChange={(e) => {
+                        updatePrivacySetting('profileVisibility', e.target.value);
+                      }}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="private">Private - Only you can see your profile</option>
-                      <option value="contacts-only">Contacts Only - Only your healthcare providers</option>
+                      <option value="contacts-only">
+                        Contacts Only - Only your healthcare providers
+                      </option>
                       <option value="public">Public - Visible to other users</option>
                     </select>
                   </div>
 
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
                     <div className="flex-1">
-                      <label className="text-sm font-medium text-gray-700">Share Data for Research</label>
-                      <p className="text-xs text-gray-600">Help improve healthcare by sharing anonymized data</p>
+                      <label className="text-sm font-medium text-gray-700">
+                        Share Data for Research
+                      </label>
+                      <p className="text-xs text-gray-600">
+                        Help improve healthcare by sharing anonymized data
+                      </p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
                         type="checkbox"
                         checked={settings.privacy.shareDataForResearch}
-                        onChange={(e) => updatePrivacySetting('shareDataForResearch', e.target.checked)}
+                        onChange={(e) => {
+                          updatePrivacySetting('shareDataForResearch', e.target.checked);
+                        }}
                         className="sr-only peer"
                       />
                       <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
@@ -552,14 +613,20 @@ export const SettingsPage: React.FC = () => {
 
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
                     <div className="flex-1">
-                      <label className="text-sm font-medium text-gray-700">Allow Marketing Communications</label>
-                      <p className="text-xs text-gray-600">Receive promotional content and special offers</p>
+                      <label className="text-sm font-medium text-gray-700">
+                        Allow Marketing Communications
+                      </label>
+                      <p className="text-xs text-gray-600">
+                        Receive promotional content and special offers
+                      </p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
                         type="checkbox"
                         checked={settings.privacy.allowMarketing}
-                        onChange={(e) => updatePrivacySetting('allowMarketing', e.target.checked)}
+                        onChange={(e) => {
+                          updatePrivacySetting('allowMarketing', e.target.checked);
+                        }}
                         className="sr-only peer"
                       />
                       <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
@@ -588,7 +655,9 @@ export const SettingsPage: React.FC = () => {
           <div className="flex justify-end pt-6 border-t border-gray-200">
             <button
               type="button"
-              onClick={handleSave}
+              onClick={() => {
+                void handleSave();
+              }}
               disabled={saving}
               className="flex items-center space-x-2 bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >

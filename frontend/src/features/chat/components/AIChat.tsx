@@ -13,7 +13,8 @@ export function AIChat() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      content: "Hello! I'm your AI health assistant. I can help answer general health questions and guide you to appropriate care. How can I help you today?",
+      content:
+        "Hello! I'm your AI health assistant. I can help answer general health questions and guide you to appropriate care. How can I help you today?",
       sender: 'ai',
       timestamp: new Date().toISOString(),
     },
@@ -41,7 +42,7 @@ export function AIChat() {
       sender: 'user',
       timestamp: new Date().toISOString(),
     };
-    setMessages(prev => [...prev, userMessage]);
+    setMessages((prev) => [...prev, userMessage]);
     setIsLoading(true);
 
     try {
@@ -60,12 +61,12 @@ export function AIChat() {
         sender: 'ai',
         timestamp: new Date().toISOString(),
       };
-      setMessages(prev => [...prev, aiMessage]);
-    } catch (err: any) {
+      setMessages((prev) => [...prev, aiMessage]);
+    } catch (err: unknown) {
       console.error('Chat error:', err);
       setError('Failed to get a response. Please try again.');
       // Remove the user message on error so they can retry
-      setMessages(prev => prev.filter(m => m.id !== userMessage.id));
+      setMessages((prev) => prev.filter((m) => m.id !== userMessage.id));
       setInput(userText);
     } finally {
       setIsLoading(false);
@@ -86,8 +87,8 @@ export function AIChat() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="bg-white border border-gray-200 rounded-lg shadow-sm h-[600px] flex flex-col">
+    <div>
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm h-[calc(100vh-160px)] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
           <div className="flex items-center space-x-3">
@@ -114,7 +115,9 @@ export function AIChat() {
           <div className="flex items-start space-x-2">
             <AlertTriangle className="h-4 w-4 text-yellow-600 mt-0.5 flex-shrink-0" />
             <p className="text-xs text-yellow-800">
-              <strong>Medical Disclaimer:</strong> This AI provides general health information only — not medical advice, diagnosis, or treatment. Always consult a qualified healthcare provider.
+              <strong>Medical Disclaimer:</strong> This AI provides general health information only
+              — not medical advice, diagnosis, or treatment. Always consult a qualified healthcare
+              provider.
             </p>
           </div>
         </div>
@@ -126,18 +129,25 @@ export function AIChat() {
               key={message.id}
               className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
             >
-              <div className={`flex items-start gap-2 max-w-[80%] ${message.sender === 'user' ? 'flex-row-reverse' : ''}`}>
-                <div className={`p-1.5 rounded-full flex-shrink-0 ${message.sender === 'user' ? 'bg-blue-100' : 'bg-gray-100'}`}>
-                  {message.sender === 'user'
-                    ? <User className="h-4 w-4 text-blue-600" />
-                    : <Bot className="h-4 w-4 text-gray-600" />
-                  }
+              <div
+                className={`flex items-start gap-2 max-w-[80%] ${message.sender === 'user' ? 'flex-row-reverse' : ''}`}
+              >
+                <div
+                  className={`p-1.5 rounded-full flex-shrink-0 ${message.sender === 'user' ? 'bg-blue-100' : 'bg-gray-100'}`}
+                >
+                  {message.sender === 'user' ? (
+                    <User className="h-4 w-4 text-blue-600" />
+                  ) : (
+                    <Bot className="h-4 w-4 text-gray-600" />
+                  )}
                 </div>
-                <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
-                  message.sender === 'user'
-                    ? 'bg-blue-600 text-white rounded-tr-sm'
-                    : 'bg-gray-100 text-gray-900 rounded-tl-sm'
-                }`}>
+                <div
+                  className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
+                    message.sender === 'user'
+                      ? 'bg-blue-600 text-white rounded-tr-sm'
+                      : 'bg-gray-100 text-gray-900 rounded-tl-sm'
+                  }`}
+                >
                   {message.content}
                 </div>
               </div>
@@ -153,8 +163,14 @@ export function AIChat() {
                 <div className="bg-gray-100 px-4 py-3 rounded-2xl rounded-tl-sm">
                   <div className="flex space-x-1">
                     <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.15s' }} />
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.3s' }} />
+                    <div
+                      className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                      style={{ animationDelay: '0.15s' }}
+                    />
+                    <div
+                      className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                      style={{ animationDelay: '0.3s' }}
+                    />
                   </div>
                 </div>
               </div>
@@ -163,7 +179,9 @@ export function AIChat() {
 
           {error && (
             <div className="flex justify-center">
-              <p className="text-sm text-red-600 bg-red-50 border border-red-200 px-4 py-2 rounded-lg">{error}</p>
+              <p className="text-sm text-red-600 bg-red-50 border border-red-200 px-4 py-2 rounded-lg">
+                {error}
+              </p>
             </div>
           )}
 
@@ -176,14 +194,22 @@ export function AIChat() {
             <input
               type="text"
               value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
+              onChange={(e) => {
+                setInput(e.target.value);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  void handleSend();
+                }
+              }}
               placeholder="Ask about symptoms, health tips, or general questions..."
               className="flex-1 px-4 py-2 border border-gray-300 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50"
               disabled={isLoading}
             />
             <button
-              onClick={handleSend}
+              onClick={() => {
+                void handleSend();
+              }}
               disabled={isLoading || !input.trim()}
               className="p-2.5 bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
               aria-label="Send message"

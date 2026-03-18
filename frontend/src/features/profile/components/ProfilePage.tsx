@@ -26,35 +26,35 @@ export const ProfilePage: React.FC = () => {
       city: '',
       state: '',
       zipCode: '',
-      country: ''
+      country: '',
     },
     emergencyContact: {
       name: '',
       relationship: '',
-      phone: ''
+      phone: '',
     },
     medicalInfo: {
       bloodType: '',
       allergies: [],
       medications: [],
-      conditions: []
-    }
+      conditions: [],
+    },
   });
 
   useEffect(() => {
     if (user) {
-      loadProfile();
+      void loadProfile();
     }
   }, [user]);
 
   const loadProfile = async () => {
     if (!user) return;
-    
+
     try {
       setLoading(true);
       const profileData = await profileService.getProfile();
       setProfile(profileData);
-      
+
       // Update form data
       setFormData({
         name: profileData.name || '',
@@ -66,21 +66,21 @@ export const ProfilePage: React.FC = () => {
           city: '',
           state: '',
           zipCode: '',
-          country: ''
+          country: '',
         },
         emergencyContact: profileData.emergencyContact || {
           name: '',
           relationship: '',
-          phone: ''
+          phone: '',
         },
         medicalInfo: profileData.medicalInfo || {
           bloodType: '',
           allergies: [],
           medications: [],
-          conditions: []
-        }
+          conditions: [],
+        },
       });
-    } catch (err) {
+    } catch {
       setError('Failed to load profile');
     } finally {
       setLoading(false);
@@ -94,13 +94,15 @@ export const ProfilePage: React.FC = () => {
     try {
       setSaving(true);
       setError(null);
-      
+
       const updatedProfile = await profileService.updateProfile(formData);
       setProfile(updatedProfile);
       setSuccess(true);
-      
-      setTimeout(() => setSuccess(false), 3000);
-    } catch (err) {
+
+      setTimeout(() => {
+        setSuccess(false);
+      }, 3000);
+    } catch {
       setError('Failed to update profile');
     } finally {
       setSaving(false);
@@ -116,14 +118,14 @@ export const ProfilePage: React.FC = () => {
       if (profile) {
         setProfile({ ...profile, avatar: avatarUrl });
       }
-    } catch (err) {
+    } catch {
       setError('Failed to upload avatar');
     }
   };
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto p-6 space-y-6">
+      <div className="space-y-6">
         <div className="space-y-4">
           <LoadingSkeleton className="h-8 w-64" />
           <LoadingSkeleton className="h-4 w-96" />
@@ -155,7 +157,7 @@ export const ProfilePage: React.FC = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-4 sm:p-6 space-y-6 sm:space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {/* Header */}
       <div>
         <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
@@ -167,7 +169,12 @@ export const ProfilePage: React.FC = () => {
       </div>
 
       <Card>
-        <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
+        <form
+          onSubmit={(e) => {
+            void handleSubmit(e);
+          }}
+          className="space-y-6 sm:space-y-8"
+        >
           {/* Avatar Section */}
           <CardContent padding="lg">
             <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-6">
@@ -184,14 +191,20 @@ export const ProfilePage: React.FC = () => {
                   <input
                     type="file"
                     accept="image/*"
-                    onChange={handleAvatarUpload}
+                    onChange={(e) => {
+                      void handleAvatarUpload(e);
+                    }}
                     className="hidden"
                   />
                 </label>
               </div>
               <div className="text-center sm:text-left">
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">Profile Photo</h3>
-                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Upload a photo to personalize your profile</p>
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  Profile Photo
+                </h3>
+                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                  Upload a photo to personalize your profile
+                </p>
               </div>
             </div>
           </CardContent>
@@ -199,8 +212,10 @@ export const ProfilePage: React.FC = () => {
           {/* Basic Information */}
           <CardContent padding="lg" className="border-t border-gray-200 dark:border-gray-700">
             <div className="space-y-4 sm:space-y-6">
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">Basic Information</h3>
-              
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">
+                Basic Information
+              </h3>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -209,7 +224,9 @@ export const ProfilePage: React.FC = () => {
                   <Input
                     type="text"
                     value={formData.name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                    onChange={(e) => {
+                      setFormData((prev) => ({ ...prev, name: e.target.value }));
+                    }}
                     required
                     placeholder="Enter your full name"
                   />
@@ -222,7 +239,9 @@ export const ProfilePage: React.FC = () => {
                   <Input
                     type="tel"
                     value={formData.phone}
-                    onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                    onChange={(e) => {
+                      setFormData((prev) => ({ ...prev, phone: e.target.value }));
+                    }}
                     placeholder="Enter your phone number"
                   />
                 </div>
@@ -234,7 +253,9 @@ export const ProfilePage: React.FC = () => {
                   <Input
                     type="date"
                     value={formData.dateOfBirth}
-                    onChange={(e) => setFormData(prev => ({ ...prev, dateOfBirth: e.target.value }))}
+                    onChange={(e) => {
+                      setFormData((prev) => ({ ...prev, dateOfBirth: e.target.value }));
+                    }}
                   />
                 </div>
 
@@ -244,16 +265,18 @@ export const ProfilePage: React.FC = () => {
                   </label>
                   <Select
                     value={formData.gender || ''}
-                    onChange={(e) => setFormData(prev => ({ 
-                      ...prev, 
-                      ...(e.target.value && { gender: e.target.value as any })
-                    }))}
+                    onChange={(e) => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        ...(e.target.value && { gender: e.target.value as any }),
+                      }));
+                    }}
                     options={[
                       { value: '', label: 'Select gender' },
                       { value: 'male', label: 'Male' },
                       { value: 'female', label: 'Female' },
                       { value: 'other', label: 'Other' },
-                      { value: 'prefer-not-to-say', label: 'Prefer not to say' }
+                      { value: 'prefer-not-to-say', label: 'Prefer not to say' },
                     ]}
                   />
                 </div>

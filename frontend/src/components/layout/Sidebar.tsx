@@ -1,38 +1,93 @@
 import { NavLink } from 'react-router-dom';
-import { 
-  Home, 
-  Calendar, 
-  MessageCircle, 
-  Users, 
-  Settings, 
+import {
+  Home,
+  Calendar,
+  MessageCircle,
+  Users,
+  Settings,
   Activity,
   Stethoscope,
   User,
   Bell,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { clsx } from 'clsx';
 import { useState } from 'react';
 
 const patientNavItems = [
-  { to: '/app/dashboard', icon: Home, label: 'Dashboard', description: 'View your health overview' },
-  { to: '/app/appointments', icon: Calendar, label: 'Appointments', description: 'Manage your appointments' },
-  { to: '/app/ai-chat', icon: MessageCircle, label: 'AI Assistant', description: 'Chat with AI health assistant' },
-  { to: '/app/symptom-checker', icon: Activity, label: 'Symptom Checker', description: 'Check your symptoms' },
-  { to: '/app/notifications', icon: Bell, label: 'Notifications', description: 'View your notifications' },
+  {
+    to: '/app/dashboard',
+    icon: Home,
+    label: 'Dashboard',
+    description: 'View your health overview',
+  },
+  {
+    to: '/app/appointments',
+    icon: Calendar,
+    label: 'Appointments',
+    description: 'Manage your appointments',
+  },
+  {
+    to: '/app/ai-chat',
+    icon: MessageCircle,
+    label: 'AI Assistant',
+    description: 'Chat with AI health assistant',
+  },
+  {
+    to: '/app/symptom-checker',
+    icon: Activity,
+    label: 'Symptom Checker',
+    description: 'Check your symptoms',
+  },
+  {
+    to: '/app/notifications',
+    icon: Bell,
+    label: 'Notifications',
+    description: 'View your notifications',
+  },
   { to: '/app/profile', icon: User, label: 'Profile', description: 'Manage your profile' },
-  { to: '/app/settings', icon: Settings, label: 'Settings', description: 'App settings and preferences' },
+  {
+    to: '/app/settings',
+    icon: Settings,
+    label: 'Settings',
+    description: 'App settings and preferences',
+  },
 ];
 
 const doctorNavItems = [
-  { to: '/app/dashboard', icon: Home, label: 'Dashboard', description: 'View your practice overview' },
-  { to: '/app/appointments', icon: Calendar, label: 'Appointments', description: 'Manage patient appointments' },
+  {
+    to: '/app/dashboard',
+    icon: Home,
+    label: 'Dashboard',
+    description: 'View your practice overview',
+  },
+  {
+    to: '/app/appointments',
+    icon: Calendar,
+    label: 'Appointments',
+    description: 'Manage patient appointments',
+  },
   { to: '/app/patients', icon: Users, label: 'Patients', description: 'View patient list' },
-  { to: '/app/ai-chat', icon: MessageCircle, label: 'AI Assistant', description: 'AI medical assistant' },
-  { to: '/app/symptom-checker', icon: Activity, label: 'Symptom Checker', description: 'Diagnostic tool' },
-  { to: '/app/notifications', icon: Bell, label: 'Notifications', description: 'Practice notifications' },
+  {
+    to: '/app/ai-chat',
+    icon: MessageCircle,
+    label: 'AI Assistant',
+    description: 'AI medical assistant',
+  },
+  {
+    to: '/app/symptom-checker',
+    icon: Activity,
+    label: 'Symptom Checker',
+    description: 'Diagnostic tool',
+  },
+  {
+    to: '/app/notifications',
+    icon: Bell,
+    label: 'Notifications',
+    description: 'Practice notifications',
+  },
   { to: '/app/profile', icon: User, label: 'Profile', description: 'Professional profile' },
   { to: '/app/settings', icon: Settings, label: 'Settings', description: 'Practice settings' },
 ];
@@ -40,9 +95,19 @@ const doctorNavItems = [
 const adminNavItems = [
   { to: '/app/dashboard', icon: Home, label: 'Dashboard', description: 'System overview' },
   { to: '/app/users', icon: Users, label: 'Users', description: 'Manage users' },
-  { to: '/app/doctors', icon: Stethoscope, label: 'Doctors', description: 'Manage healthcare providers' },
+  {
+    to: '/app/doctors',
+    icon: Stethoscope,
+    label: 'Doctors',
+    description: 'Manage healthcare providers',
+  },
   { to: '/app/analytics', icon: Activity, label: 'Analytics', description: 'System analytics' },
-  { to: '/app/notifications', icon: Bell, label: 'Notifications', description: 'System notifications' },
+  {
+    to: '/app/notifications',
+    icon: Bell,
+    label: 'Notifications',
+    description: 'System notifications',
+  },
   { to: '/app/profile', icon: User, label: 'Profile', description: 'Admin profile' },
   { to: '/app/settings', icon: Settings, label: 'Settings', description: 'System settings' },
 ];
@@ -50,44 +115,45 @@ const adminNavItems = [
 export function Sidebar() {
   const { user } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(false);
-  
+
   const getNavItems = () => {
     switch (user?.role) {
-      case 'doctor': return doctorNavItems;
-      case 'admin': return adminNavItems;
-      default: return patientNavItems;
+      case 'doctor':
+        return doctorNavItems;
+      case 'admin':
+        return adminNavItems;
+      default:
+        return patientNavItems;
     }
   };
 
   return (
-    <aside 
+    <aside
       className={clsx(
-        'hidden md:flex flex-col bg-white border-r border-gray-200 transition-all duration-300 ease-in-out',
+        'hidden md:flex flex-col bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-all duration-300 ease-in-out',
         isCollapsed ? 'w-16' : 'w-64'
       )}
       role="navigation"
       aria-label="Main navigation"
     >
       {/* Sidebar Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200">
+      <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
         {!isCollapsed && (
           <div className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">AI</span>
             </div>
-            <span className="font-semibold text-gray-900">Navigation</span>
+            <span className="font-semibold text-gray-900 dark:text-white">Navigation</span>
           </div>
         )}
         <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          onClick={() => {
+            setIsCollapsed(!isCollapsed);
+          }}
+          className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
           aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
-          {isCollapsed ? (
-            <ChevronRight className="w-4 h-4" />
-          ) : (
-            <ChevronLeft className="w-4 h-4" />
-          )}
+          {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
         </button>
       </div>
 
@@ -102,24 +168,24 @@ export function Sidebar() {
                 'group flex items-center rounded-lg text-sm font-medium transition-all duration-200',
                 isCollapsed ? 'p-3 justify-center' : 'px-3 py-2 space-x-3',
                 isActive
-                  ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-r-2 border-blue-600'
+                  : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white'
               )
             }
             title={isCollapsed ? `${label} - ${description}` : undefined}
             role="listitem"
           >
-            <Icon 
+            <Icon
               className={clsx(
                 'flex-shrink-0 transition-colors',
                 isCollapsed ? 'w-5 h-5' : 'w-5 h-5'
-              )} 
+              )}
               aria-hidden="true"
             />
             {!isCollapsed && (
               <div className="flex-1 min-w-0">
                 <span className="block truncate">{label}</span>
-                <span className="block text-xs text-gray-500 truncate group-hover:text-gray-600">
+                <span className="block text-xs text-gray-500 dark:text-gray-400 truncate group-hover:text-gray-600 dark:group-hover:text-gray-300">
                   {description}
                 </span>
               </div>
@@ -129,7 +195,7 @@ export function Sidebar() {
       </nav>
 
       {/* Sidebar Footer */}
-      <div className="p-4 border-t border-gray-200">
+      <div className="p-4 border-t border-gray-200 dark:border-gray-700">
         {!isCollapsed ? (
           <div className="bg-red-50 rounded-lg p-3">
             <div className="flex items-center space-x-2 mb-2">
