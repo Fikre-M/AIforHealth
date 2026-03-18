@@ -199,8 +199,11 @@ export function AISymptomChecker() {
     }
   };
 
-  const handleBookAppointment = () => {
-    navigate('/app/appointments/book');
+  const handleBookAppointment = (specialty?: string) => {
+    const path = specialty
+      ? `/app/appointments/book?specialty=${encodeURIComponent(specialty)}`
+      : '/app/appointments/book';
+    navigate(path);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -280,7 +283,9 @@ export function AISymptomChecker() {
               key={message.id}
               message={message}
               onBookAppointment={
-                message.type === 'appointment-prompt' ? handleBookAppointment : undefined
+                message.type === 'appointment-prompt'
+                  ? () => handleBookAppointment(message.metadata?.suggestedSpecialty)
+                  : undefined
               }
             />
           ))}
@@ -342,7 +347,7 @@ export function AISymptomChecker() {
               Press Enter to send · General information only
             </p>
             <button
-              onClick={handleBookAppointment}
+              onClick={() => handleBookAppointment()}
               className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
             >
               <Calendar className="h-3 w-3" />

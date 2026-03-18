@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -27,6 +27,8 @@ type BookingStep = 'clinic' | 'doctor' | 'datetime' | 'details' | 'confirmation'
 
 export function AppointmentBooking() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const prefilledSpecialty = searchParams.get('specialty') ?? '';
   const [currentStep, setCurrentStep] = useState<BookingStep>('clinic');
   
   // UI states for different data
@@ -233,6 +235,13 @@ export function AppointmentBooking() {
 
           {currentStep === 'doctor' && (
             <>
+              {prefilledSpecialty && (
+                <div className="mb-4 px-4 py-2.5 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg flex items-center gap-2 text-sm text-blue-800 dark:text-blue-200">
+                  <span>Showing doctors for:</span>
+                  <span className="font-semibold capitalize">{prefilledSpecialty}</span>
+                  <span className="text-blue-500 dark:text-blue-400">· recommended by AI Symptom Checker</span>
+                </div>
+              )}
               {doctorsState.isLoading ? (
                 <div className="space-y-4">
                   {Array.from({ length: 3 }).map((_, i) => (
@@ -256,7 +265,10 @@ export function AppointmentBooking() {
                 />
               ) : (
                 <DoctorSelector
-                  doctors={doctorsState.data || []}
+                  doctors={(doctorsState.data || []).filter(d =>
+                    !prefilledSpecialty ||
+                    d.specialty.toLowerCase().includes(prefilledSpecialty.toLowerCase())
+                  )}
                   selectedDoctorId={formData.doctorId}
                   onSelectDoctor={(doctorId) => {
                     setFormData(prev => ({ ...prev, doctorId, date: '', time: '' }));
