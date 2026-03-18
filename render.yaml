@@ -27,10 +27,10 @@ services:
       - key: LOG_LEVEL
         value: info
       - key: CORS_ORIGIN
-        value: https://fridayhealth-123.netlify.app
+        value: https://ai4health.netlify.app
       - key: SEED_SECRET
         sync: false
       - key: GEMINI_API_KEY
         sync: false
       - key: FRONTEND_URL
-        value: https://fridayhealth-123.netlify.app
+        value: https://ai4health.netlify.app

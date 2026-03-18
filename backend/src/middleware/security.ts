@@ -21,7 +21,7 @@ export const enforceHTTPS = (req: Request, res: Response, next: NextFunction): v
  */
 export const configureSecurity = (app: Express): void => {
   // Get allowed origins from environment - support both CORS_ORIGIN and FRONTEND_URL
-  const corsOrigin = env.CORS_ORIGIN || env.FRONTEND_URL || 'https://fridayhealth-123.netlify.app';
+  const corsOrigin = env.CORS_ORIGIN ?? env.FRONTEND_URL ?? 'https://ai4health.netlify.app';
   const allowedOrigins =
     env.NODE_ENV === 'production'
       ? corsOrigin.split(',').map((origin) => origin.trim())
