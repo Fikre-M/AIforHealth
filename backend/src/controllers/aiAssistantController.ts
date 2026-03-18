@@ -264,7 +264,8 @@ export const getConversationHistory = asyncHandler(async (req: Request, res: Res
  * @desc    Check symptoms (placeholder implementation)
  * @access  Private
  */
-export const checkSymptoms = asyncHandler((req: Request, res: Response) => {
+export const checkSymptoms = asyncHandler(async (req: Request, res: Response) => {
+  await Promise.resolve(); // placeholder until real AI integration
   const { symptoms, duration, severity } = req.body as {
     symptoms: unknown;
     duration?: string;
