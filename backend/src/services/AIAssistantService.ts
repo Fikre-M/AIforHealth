@@ -17,6 +17,7 @@ Important rules:
 - You can answer general knowledge questions too, not just health topics`;
 
 // Log key presence at module load time
+// eslint-disable-next-line no-console
 console.log('[AIAssistantService] GEMINI_API_KEY present at startup:', !!env.GEMINI_API_KEY);
 
 class AIAssistantService {
@@ -35,7 +36,10 @@ class AIAssistantService {
   private async callGemini(messages: { role: string; content: string }[]): Promise<string> {
     const keyPresent = !!env.GEMINI_API_KEY;
     const keyPreview = env.GEMINI_API_KEY ? env.GEMINI_API_KEY.slice(0, 6) + '...' : 'NOT SET';
-    console.log(`[Gemini] Calling API. Key present: ${keyPresent}, preview: ${keyPreview}, model: ${env.GEMINI_MODEL || 'gemini-1.5-flash'}`);
+    // eslint-disable-next-line no-console
+    console.log(
+      `[Gemini] Calling API. Key present: ${String(keyPresent)}, preview: ${keyPreview}, model: ${env.GEMINI_MODEL ?? 'gemini-2.5-flash'}`
+    );
 
     try {
       const client = this.getClient();
@@ -45,9 +49,9 @@ class AIAssistantService {
       });
 
       // Filter out any empty messages and ensure alternating user/model roles
-      const validMessages = messages.filter(m => m.content?.trim());
+      const validMessages = messages.filter((m) => m.content?.trim());
 
-      const history = validMessages.slice(0, -1).map(m => ({
+      const history = validMessages.slice(0, -1).map((m) => ({
         role: m.role === 'assistant' ? 'model' : 'user',
         parts: [{ text: m.content }],
       }));
@@ -56,14 +60,20 @@ class AIAssistantService {
       const lastMessage = validMessages[validMessages.length - 1];
       const result = await chat.sendMessage(lastMessage.content);
       const text = result.response.text();
-      console.log(`[Gemini] Success, response length: ${text.length}`);
+      // eslint-disable-next-line no-console
+      console.log(`[Gemini] Success, response length: ${String(text.length)}`);
       return text;
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const e = err as { message?: string; status?: number; errorDetails?: unknown };
+      // eslint-disable-next-line no-console
       console.error('[Gemini] API call failed:');
-      console.error('  message:', err?.message);
-      console.error('  status:', err?.status);
-      console.error('  errorDetails:', JSON.stringify(err?.errorDetails || err?.response?.data || ''));
-      return this.fallbackResponse(messages[messages.length - 1]?.content || '');
+      // eslint-disable-next-line no-console
+      console.error('  message:', e?.message);
+      // eslint-disable-next-line no-console
+      console.error('  status:', e?.status);
+      // eslint-disable-next-line no-console
+      console.error('  errorDetails:', JSON.stringify(e?.errorDetails ?? ''));
+      throw err;
     }
   }
 
@@ -73,12 +83,15 @@ class AIAssistantService {
       return "I understand you're experiencing some symptoms. Please consult a healthcare professional for an accurate diagnosis. Can you describe your symptoms in more detail?";
     }
     if (lower.includes('appointment') || lower.includes('schedule')) {
-      return "I can help you with appointments. You can book one through the Appointments section of the app.";
+      return 'I can help you with appointments. You can book one through the Appointments section of the app.';
     }
     return "I'm your AI health assistant. I'm having trouble connecting right now - please try again shortly.";
   }
 
-  async createConversation(userId: Types.ObjectId, initialMessage: string): Promise<IAIConversation> {
+  async createConversation(
+    userId: Types.ObjectId,
+    initialMessage: string
+  ): Promise<IAIConversation> {
     const conversation = new AIAssistant({
       user: userId,
       title: initialMessage.slice(0, 50),
@@ -113,7 +126,7 @@ class AIAssistantService {
     if (!updated) throw new Error('Conversation not found');
 
     // Build message history for context
-    const history = updated.messages.map((m: any) => ({
+    const history = updated.messages.map((m: { role: string; content: string }) => ({
       role: m.role,
       content: m.content,
     }));
@@ -132,27 +145,47 @@ class AIAssistantService {
     };
   }
 
-  async getConversation(conversationId: string, userId: Types.ObjectId): Promise<IAIConversation | null> {
+  async getConversation(
+    conversationId: string,
+    userId: Types.ObjectId
+  ): Promise<IAIConversation | null> {
     return AIAssistant.findOne({ _id: conversationId, user: userId });
   }
 
   async listConversations(
     userId: Types.ObjectId,
-    { limit = 20, page = 1, status }: { limit?: number; page?: number; status?: AIConversationStatus } = {}
+    {
+      limit = 20,
+      page = 1,
+      status,
+    }: { limit?: number; page?: number; status?: AIConversationStatus } = {}
   ) {
-    const query: any = { user: userId };
-    if (status) query.status = status;
+    const query: Record<string, unknown> = { user: userId };
+    if (status) query['status'] = status;
 
     const [data, total] = await Promise.all([
-      AIAssistant.find(query).sort({ updatedAt: -1 }).skip((page - 1) * limit).limit(limit).select('-messages').lean(),
+      AIAssistant.find(query)
+        .sort({ updatedAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .select('-messages')
+        .lean(),
       AIAssistant.countDocuments(query),
     ]);
 
     return { data, pagination: { total, page, totalPages: Math.ceil(total / limit), limit } };
   }
 
-  async updateConversationStatus(conversationId: string, userId: Types.ObjectId, status: AIConversationStatus) {
-    return AIAssistant.findOneAndUpdate({ _id: conversationId, user: userId }, { status }, { new: true });
+  async updateConversationStatus(
+    conversationId: string,
+    userId: Types.ObjectId,
+    status: AIConversationStatus
+  ) {
+    return AIAssistant.findOneAndUpdate(
+      { _id: conversationId, user: userId },
+      { status },
+      { new: true }
+    );
   }
 
   async deleteConversation(conversationId: string, userId: Types.ObjectId): Promise<boolean> {
@@ -165,7 +198,14 @@ class AIAssistantService {
       { $match: { user: userId } },
       { $sort: { updatedAt: -1 } },
       { $limit: limit },
-      { $project: { _id: 1, title: 1, lastMessage: { $arrayElemAt: ['$messages', -1] }, updatedAt: 1 } },
+      {
+        $project: {
+          _id: 1,
+          title: 1,
+          lastMessage: { $arrayElemAt: ['$messages', -1] },
+          updatedAt: 1,
+        },
+      },
       { $project: { _id: 1, title: 1, lastMessage: '$lastMessage.content', updatedAt: 1 } },
     ]);
   }

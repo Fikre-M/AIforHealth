@@ -18,7 +18,10 @@ const envSchema = z.object({
   MONGODB_MIN_POOL_SIZE: z.string().transform(Number).default('5'),
   MONGODB_MAX_IDLE_TIME_MS: z.string().transform(Number).default('30000'),
   MONGODB_SERVER_SELECTION_TIMEOUT_MS: z.string().transform(Number).default('10000'),
-  MONGODB_RETRY_WRITES: z.string().transform(val => val === 'true').default('true'),
+  MONGODB_RETRY_WRITES: z
+    .string()
+    .transform((val) => val === 'true')
+    .default('true'),
   MONGODB_WRITE_CONCERN: z.string().default('majority'),
 
   // JWT Configuration
@@ -58,7 +61,7 @@ const envSchema = z.object({
   OPENAI_MODEL: z.string().default('gpt-4'),
   OPENAI_MAX_TOKENS: z.string().transform(Number).default('1000'),
   GEMINI_API_KEY: z.string().optional(),
-  GEMINI_MODEL: z.string().default('gemini-1.5-flash'),
+  GEMINI_MODEL: z.string().default('gemini-2.5-flash'),
 
   // File Storage
   AWS_ACCESS_KEY_ID: z.string().optional(),
@@ -80,11 +83,12 @@ const parseEnv = () => {
     return envSchema.parse(process.env);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const errorMessages = error.issues.map((err: any) => 
-        `${err.path.join('.')}: ${err.message}`
-      ).join('\n');
-      
+      const errorMessages = error.issues
+        .map((err: z.ZodIssue) => `${err.path.join('.')}: ${err.message}`)
+        .join('\n');
+      // eslint-disable-next-line no-console
       console.error('❌ Environment validation failed:');
+      // eslint-disable-next-line no-console
       console.error(errorMessages);
       process.exit(1);
     }
@@ -112,7 +116,8 @@ export const validateRequiredServices = () => {
     if (!env.SENTRY_DSN) warnings.push('SENTRY_DSN not set - error monitoring disabled');
     if (!env.SENDGRID_API_KEY) warnings.push('SENDGRID_API_KEY not set - email features disabled');
     if (!env.OPENAI_API_KEY) warnings.push('OPENAI_API_KEY not set - AI features disabled');
-    if (!env.STRIPE_SECRET_KEY) warnings.push('STRIPE_SECRET_KEY not set - payment features disabled');
+    if (!env.STRIPE_SECRET_KEY)
+      warnings.push('STRIPE_SECRET_KEY not set - payment features disabled');
     if (!env.AWS_ACCESS_KEY_ID || !env.AWS_SECRET_ACCESS_KEY) {
       warnings.push('AWS credentials not set - file upload disabled');
     }
@@ -122,19 +127,25 @@ export const validateRequiredServices = () => {
   }
 
   if (warnings.length > 0) {
+    // eslint-disable-next-line no-console
     console.warn('⚠️  Configuration warnings (non-blocking):');
-    warnings.forEach(warning => console.warn(`   ${warning}`));
+    // eslint-disable-next-line no-console
+    warnings.forEach((warning) => console.warn(`   ${warning}`));
   }
 
   if (errors.length > 0) {
+    // eslint-disable-next-line no-console
     console.error('❌ Configuration errors:');
-    errors.forEach(error => console.error(`   ${error}`));
+    // eslint-disable-next-line no-console
+    errors.forEach((error) => console.error(`   ${error}`));
     process.exit(1);
   }
 
   if (warnings.length === 0 && errors.length === 0) {
+    // eslint-disable-next-line no-console
     console.log('✅ Environment configuration validated successfully');
   } else if (errors.length === 0) {
+    // eslint-disable-next-line no-console
     console.log('✅ Environment configuration validated (with warnings)');
   }
 };
