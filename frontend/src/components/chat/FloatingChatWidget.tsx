@@ -13,13 +13,46 @@ interface Message {
 // Don't show the widget on the dedicated AI chat page — it's redundant there
 const HIDDEN_ROUTES = ['/app/ai-chat'];
 
+/** Returns a context-aware opening line based on the current route. */
+function getPageContext(pathname: string, firstName: string): string {
+  const name = firstName ? ` ${firstName}` : '';
+
+  if (pathname === '/app/dashboard') {
+    return `Hi${name}! I can see your dashboard. Want me to check your upcoming appointments, find a doctor, or answer a health question?`;
+  }
+  if (pathname.startsWith('/app/appointments/book')) {
+    return `Hi${name}! Looks like you're booking an appointment. I can help you find the right specialist or answer questions about the process.`;
+  }
+  if (pathname.startsWith('/app/appointments')) {
+    return `Hi${name}! I can see your appointments page. Need to reschedule, find a new doctor, or have a health question?`;
+  }
+  if (pathname === '/app/symptom-checker') {
+    return `Hi${name}! You're using the symptom checker. Once you get a recommendation, I can book an appointment with the right specialist for you.`;
+  }
+  if (pathname === '/app/notifications') {
+    return `Hi${name}! Checking your notifications? I can help you act on any of them — like rescheduling an appointment or finding a doctor.`;
+  }
+  if (pathname === '/app/profile' || pathname === '/app/settings') {
+    return `Hi${name}! Need help with your profile or settings? I can also answer health questions or book appointments.`;
+  }
+  if (pathname.startsWith('/app/patients')) {
+    return `Hi${name}! I can help you look up patient information or answer clinical questions.`;
+  }
+  if (pathname === '/app/analytics') {
+    return `Hi${name}! Reviewing your analytics? I can help interpret trends or answer questions about your practice.`;
+  }
+
+  // Default fallback
+  return firstName
+    ? `Hi ${firstName}! I'm your AI health assistant. I can search for doctors, book appointments, or answer health questions. How can I help?`
+    : "Hi! I'm your AI health assistant. How can I help you today?";
+}
+
 export function FloatingChatWidget() {
   const location = useLocation();
   const { user } = useAuth();
   const firstName = user?.name?.split(' ')[0] ?? '';
-  const greeting = firstName
-    ? `Hi ${firstName}! I'm your AI health assistant. I can search for doctors, book appointments, or answer health questions. How can I help?`
-    : "Hi! I'm your AI health assistant. How can I help you today?";
+  const greeting = getPageContext(location.pathname, firstName);
 
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -32,6 +65,15 @@ export function FloatingChatWidget() {
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // When the user navigates to a new page, update the greeting — but only
+  // if no real conversation has started yet (just the initial AI message).
+  useEffect(() => {
+    if (conversationId === null && messages.length <= 1) {
+      const newGreeting = getPageContext(location.pathname, firstName);
+      setMessages([{ id: Date.now().toString(), content: newGreeting, sender: 'ai' }]);
+    }
+  }, [location.pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (isOpen && !isMinimized) {
@@ -89,7 +131,8 @@ export function FloatingChatWidget() {
   const handleNewChat = () => {
     setConversationId(null);
     setError(null);
-    setMessages([{ id: Date.now().toString(), content: greeting, sender: 'ai' }]);
+    const newGreeting = getPageContext(location.pathname, firstName);
+    setMessages([{ id: Date.now().toString(), content: newGreeting, sender: 'ai' }]);
   };
 
   const handleOpen = () => {
