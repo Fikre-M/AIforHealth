@@ -87,6 +87,16 @@ class App {
       });
     });
 
+    // Root endpoint
+    this.app.get('/', (_req: Request, res: Response) => {
+      res.json({
+        name: 'AIforHealth API',
+        version: '1.0.0',
+        status: 'running',
+        docs: '/api-docs',
+      });
+    });
+
     // API routes with rate limiting
     // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
     this.app.use('/api/v1', rateLimiter, require('./routes').default);

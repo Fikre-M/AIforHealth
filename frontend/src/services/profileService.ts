@@ -5,7 +5,7 @@ import type {
   SettingsUpdateData,
   NotificationPreferences,
   AppointmentReminderSettings,
-  AccessibilitySettings
+  AccessibilitySettings,
 } from '@/types/profile';
 import api from './api';
 
@@ -16,26 +16,26 @@ const defaultNotificationPreferences: NotificationPreferences = {
     reminders: true,
     healthTips: true,
     promotions: false,
-    systemUpdates: true
+    systemUpdates: true,
   },
   push: {
     appointments: true,
     reminders: true,
     healthTips: false,
     promotions: false,
-    systemUpdates: true
+    systemUpdates: true,
   },
   sms: {
     appointments: true,
     reminders: true,
-    emergencyAlerts: true
-  }
+    emergencyAlerts: true,
+  },
 };
 
 const defaultAppointmentReminders: AppointmentReminderSettings = {
   enabled: true,
   reminderTimes: [1440, 60, 15], // 1 day, 1 hour, 15 minutes
-  methods: ['email', 'push']
+  methods: ['email', 'push'],
 };
 
 const defaultAccessibilitySettings: AccessibilitySettings = {
@@ -46,7 +46,7 @@ const defaultAccessibilitySettings: AccessibilitySettings = {
   keyboardNavigation: true,
   colorBlindSupport: 'none',
   language: 'en',
-  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
 };
 
 interface ApiResponse<T> {
@@ -73,10 +73,7 @@ export const profileService = {
    */
   async updateProfile(data: ProfileUpdateData): Promise<UserProfile> {
     try {
-      const response = await api.put<ApiResponse<{ user: UserProfile }>>(
-        '/auth/profile',
-        data
-      );
+      const response = await api.put<ApiResponse<{ user: UserProfile }>>('/auth/profile', data);
       return response.data.data.user;
     } catch (error) {
       console.error('Failed to update profile:', error);
@@ -97,8 +94,8 @@ export const profileService = {
         formData,
         {
           headers: {
-            'Content-Type': 'multipart/form-data'
-          }
+            'Content-Type': 'multipart/form-data',
+          },
         }
       );
 
@@ -115,7 +112,18 @@ export const profileService = {
   async getSettings(): Promise<UserSettings> {
     try {
       const response = await api.get<ApiResponse<{ settings: UserSettings }>>('/auth/settings');
-      return response.data.data.settings;
+      const s = response.data.data.settings;
+      // Ensure arrays are never undefined — API may omit them
+      return {
+        ...s,
+        appointmentReminders: {
+          ...defaultAppointmentReminders,
+          ...s.appointmentReminders,
+          reminderTimes:
+            s.appointmentReminders?.reminderTimes ?? defaultAppointmentReminders.reminderTimes,
+          methods: s.appointmentReminders?.methods ?? defaultAppointmentReminders.methods,
+        },
+      };
     } catch (error) {
       console.error('Failed to fetch user settings:', error);
       // Return default settings if API fails
@@ -128,9 +136,9 @@ export const profileService = {
         privacy: {
           profileVisibility: 'private',
           shareDataForResearch: false,
-          allowMarketing: false
+          allowMarketing: false,
         },
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       };
     }
   },
@@ -157,11 +165,11 @@ export const profileService = {
   async deleteAccount(password: string): Promise<void> {
     try {
       await api.delete('/auth/account', {
-        data: { password }
+        data: { password },
       });
     } catch (error) {
       console.error('Failed to delete account:', error);
       throw error;
     }
-  }
+  },
 };

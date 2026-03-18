@@ -298,7 +298,7 @@ export const SettingsPage: React.FC = () => {
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={settings.appointmentReminders.enabled}
+                    checked={settings.appointmentReminders?.enabled ?? false}
                     onChange={(e) => {
                       updateReminderSetting('enabled', e.target.checked);
                     }}
@@ -308,7 +308,7 @@ export const SettingsPage: React.FC = () => {
                 </label>
               </div>
 
-              {settings.appointmentReminders.enabled && (
+              {settings.appointmentReminders?.enabled && (
                 <>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -319,13 +319,14 @@ export const SettingsPage: React.FC = () => {
                         <label key={minutes} className="flex items-center">
                           <input
                             type="checkbox"
-                            checked={settings.appointmentReminders.reminderTimes.includes(minutes)}
+                            checked={(settings.appointmentReminders?.reminderTimes ?? []).includes(
+                              minutes
+                            )}
                             onChange={(e) => {
+                              const current = settings.appointmentReminders?.reminderTimes ?? [];
                               const times = e.target.checked
-                                ? [...settings.appointmentReminders.reminderTimes, minutes]
-                                : settings.appointmentReminders.reminderTimes.filter(
-                                    (t) => t !== minutes
-                                  );
+                                ? [...current, minutes]
+                                : current.filter((t) => t !== minutes);
                               updateReminderSetting('reminderTimes', times);
                             }}
                             className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
@@ -347,15 +348,18 @@ export const SettingsPage: React.FC = () => {
                       Reminder Methods
                     </label>
                     <div className="space-y-2">
-                      {['email', 'push', 'sms'].map((method) => (
+                      {(['email', 'push', 'sms'] as const).map((method) => (
                         <label key={method} className="flex items-center">
                           <input
                             type="checkbox"
-                            checked={settings.appointmentReminders.methods.includes(method as any)}
+                            checked={(settings.appointmentReminders?.methods ?? []).includes(
+                              method
+                            )}
                             onChange={(e) => {
+                              const current = settings.appointmentReminders?.methods ?? [];
                               const methods = e.target.checked
-                                ? [...settings.appointmentReminders.methods, method as any]
-                                : settings.appointmentReminders.methods.filter((m) => m !== method);
+                                ? [...current, method]
+                                : current.filter((m) => m !== method);
                               updateReminderSetting('methods', methods);
                             }}
                             className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
@@ -371,7 +375,7 @@ export const SettingsPage: React.FC = () => {
                       Custom Message (optional)
                     </label>
                     <textarea
-                      value={settings.appointmentReminders.customMessage || ''}
+                      value={settings.appointmentReminders?.customMessage ?? ''}
                       onChange={(e) => {
                         updateReminderSetting('customMessage', e.target.value);
                       }}
