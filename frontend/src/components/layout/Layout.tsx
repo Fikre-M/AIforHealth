@@ -5,6 +5,7 @@ import { Footer } from './Footer';
 import { Breadcrumb } from './Breadcrumb';
 import { SkipNav } from './SkipNav';
 import { useAuth } from '@/hooks/useAuth';
+import { FloatingChatWidget } from '@/components/chat/FloatingChatWidget';
 
 export function Layout() {
   const { user } = useAuth();
@@ -42,6 +43,7 @@ export function Layout() {
         </main>
       </div>
       <Footer />
+      <FloatingChatWidget />
     </div>
   );
 }
