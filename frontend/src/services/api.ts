@@ -3,12 +3,13 @@ import { config } from '@/config/env';
 
 const API_BASE_URL = config.apiBaseUrl;
 
-// Debug logging for production
-console.log('🔧 API Configuration:');
-console.log('- Environment:', import.meta.env.MODE);
-console.log('- Production:', import.meta.env.PROD);
-console.log('- VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL);
-console.log('- Final API_BASE_URL:', API_BASE_URL);
+// Debug logging for development only
+if (import.meta.env.DEV) {
+  console.log('🔧 API Configuration:', {
+    environment: import.meta.env.MODE,
+    apiBaseUrl: API_BASE_URL,
+  });
+}
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -19,16 +20,9 @@ const api = axios.create({
   timeout: 60000, // 60 second timeout to handle Render free tier cold starts
 });
 
-// Add request interceptor to include auth token and log requests
+// Add request interceptor to include auth token
 api.interceptors.request.use(
   (config) => {
-    console.log('🚀 API Request:', {
-      method: config.method?.toUpperCase(),
-      url: config.baseURL + (config.url || ''),
-      baseURL: config.baseURL,
-      fullURL: `${config.baseURL}${config.url || ''}`
-    });
-    
     const token = localStorage.getItem('accessToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -36,31 +30,16 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
-    console.error('❌ Request Error:', error);
     return Promise.reject(error);
   }
 );
 
-// Add response interceptor to handle token refresh and log responses
+// Add response interceptor to handle token refresh
 api.interceptors.response.use(
   (response) => {
-    console.log('✅ API Response:', {
-      status: response.status,
-      statusText: response.statusText,
-      url: response.config.baseURL + (response.config.url || ''),
-      data: response.data
-    });
     return response;
   },
   async (error) => {
-    console.error('❌ API Error:', {
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      url: error.config?.baseURL + (error.config?.url || ''),
-      message: error.message,
-      data: error.response?.data
-    });
-    
     const originalRequest = error.config;
 
     if (error.response?.status === 401 && !originalRequest._retry) {

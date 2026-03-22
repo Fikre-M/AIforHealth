@@ -1,25 +1,20 @@
-import type {
-  LoginCredentials,
-  RegisterData,
-  AuthResponse,
-  User,
-} from "@/types/auth";
-import apiAdapter from "./apiAdapter";
+import type { LoginCredentials, RegisterData, AuthResponse, User } from '@/types/auth';
+import apiAdapter from './apiAdapter';
 
 export const authService = {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
       const response = await apiAdapter.auth.login(credentials);
-      
+
       // Handle both mock and real API response formats
       const { user, tokens, token, refreshToken } = response;
       const accessToken = tokens?.accessToken || token;
       const refresh = tokens?.refreshToken || refreshToken;
 
       // Store tokens
-      localStorage.setItem("accessToken", accessToken);
-      localStorage.setItem("refreshToken", refresh);
-      localStorage.setItem("user", JSON.stringify(user));
+      localStorage.setItem('accessToken', accessToken);
+      localStorage.setItem('refreshToken', refresh);
+      localStorage.setItem('user', JSON.stringify(user));
 
       return {
         user,
@@ -27,13 +22,13 @@ export const authService = {
         refreshToken: refresh,
       };
     } catch (error: any) {
-      console.error("Login failed:", error);
-      
+      console.error('Login failed:', error);
+
       // Provide more specific error messages
       if (error.response) {
         const status = error.response.status;
         const message = error.response.data?.message || 'Login failed';
-        
+
         if (status === 401) {
           throw new Error('Invalid email or password');
         } else if (status === 429) {
@@ -46,11 +41,11 @@ export const authService = {
       } else if (error.request) {
         // Could be a cold start on Render free tier - server takes time to wake up
         if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
-          throw new Error("Server is starting up, please wait a moment and try again.");
+          throw new Error('Server is starting up, please wait a moment and try again.');
         }
-        throw new Error("No response from server. Please check your connection and try again.");
+        throw new Error('No response from server. Please check your connection and try again.');
       } else {
-        throw new Error(error.message || "Request failed. Please check your connection.");
+        throw new Error(error.message || 'Request failed. Please check your connection.');
       }
     }
   },
@@ -63,7 +58,7 @@ export const authService = {
       const { user, tokens, token, refreshToken } = response;
       const accessToken = tokens?.accessToken || token;
       const refresh = tokens?.refreshToken || refreshToken;
-      
+
       // Store tokens
       localStorage.setItem('accessToken', accessToken);
       localStorage.setItem('refreshToken', refresh);
@@ -79,7 +74,7 @@ export const authService = {
         const status = error.response.status;
         const message = error.response.data?.message || 'Registration failed';
         const errors = error.response.data?.errors;
-        
+
         if (status === 409 || message.includes('already exists')) {
           throw new Error('An account with this email already exists');
         } else if (status === 400) {
@@ -93,7 +88,7 @@ export const authService = {
           throw new Error(message);
         }
       }
-      
+
       throw new Error(error.message || 'Network error. Please check your connection.');
     }
   },
@@ -102,18 +97,18 @@ export const authService = {
     try {
       await apiAdapter.auth.logout();
     } catch (error) {
-      console.error("Logout failed:", error);
+      console.error('Logout failed:', error);
     } finally {
       // Clear tokens and user data
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-      localStorage.removeItem("user");
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
     }
   },
 
   async requestPasswordReset(email: string): Promise<void> {
     try {
-      await apiAdapter.post("/auth/request-password-reset", { email });
+      await apiAdapter.post('/auth/forgot-password', { email });
     } catch (error: any) {
       if (error.response?.status === 404) {
         // Don't reveal if email exists for security
@@ -125,7 +120,7 @@ export const authService = {
 
   async resetPassword(token: string, newPassword: string): Promise<void> {
     try {
-      await apiAdapter.post("/auth/reset-password", { token, password: newPassword });
+      await apiAdapter.post('/auth/reset-password', { token, password: newPassword });
     } catch (error: any) {
       if (error.response?.status === 400) {
         throw new Error('Invalid or expired reset token');
@@ -134,12 +129,9 @@ export const authService = {
     }
   },
 
-  async changePassword(
-    currentPassword: string,
-    newPassword: string
-  ): Promise<void> {
+  async changePassword(currentPassword: string, newPassword: string): Promise<void> {
     try {
-      await apiAdapter.put("/auth/change-password", { currentPassword, newPassword });
+      await apiAdapter.put('/auth/change-password', { currentPassword, newPassword });
     } catch (error: any) {
       if (error.response?.status === 400) {
         throw new Error('Current password is incorrect');
@@ -168,11 +160,11 @@ export const authService = {
     try {
       const response = await apiAdapter.auth.refreshToken(refreshToken);
       const tokens = response.tokens || response;
-      
+
       // Update stored tokens
       localStorage.setItem('accessToken', tokens.accessToken);
       localStorage.setItem('refreshToken', tokens.refreshToken);
-      
+
       return tokens;
     } catch (error) {
       // If refresh fails, redirect to login
