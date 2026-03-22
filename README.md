@@ -11,6 +11,10 @@
 
 ---
 
+## Problem Statement
+
+Healthcare is fragmented — patients can't get quick answers after hours, forget appointments, and have no single place to track their health, while doctors drown in administrative overhead instead of patient care.
+
 ## The Problem
 
 Healthcare is fragmented. Patients forget appointments, struggle to find the right specialist, can't
@@ -90,7 +94,42 @@ Key UX decisions made during development:
 
 ---
 
+## Features Implemented
+
+- AI health assistant (Gemini 2.5 Flash) with conversation history
+- Symptom checker with urgency detection and specialist recommendations
+- Landing page chatbot (3 free exchanges, no auth required)
+- Floating chat widget available on every authenticated page
+- Appointment booking — search doctors by specialty, view availability, book instantly
+- Appointment reminders (email/SMS/push) with configurable lead times
+- Doctor dashboard — patient queue, schedule, and status management
+- Patient dashboard — upcoming appointments, medications, health reminders
+- Notification center with read/unread state
+- JWT authentication with refresh token rotation
+- Role-based access control (patient / doctor)
+- Dark mode with system preference detection
+- Fully responsive layout (mobile, tablet, desktop)
+- Swagger / OpenAPI docs at `/api-docs`
+- Rate limiting, Helmet security headers, Zod input validation
+- Audit logging for sensitive operations
+- CI pipeline — ESLint, Prettier, TypeScript checks, Jest tests on every commit
+
+---
+
 ## Tech Stack
+
+| Layer    | Technology                                                                                                                                                                                    |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Frontend | [React 18](https://react.dev/), [TypeScript](https://www.typescriptlang.org/), [Vite](https://vitejs.dev/), [Tailwind CSS](https://tailwindcss.com/)                                          |
+| Backend  | [Node.js](https://nodejs.org/), [Express](https://expressjs.com/), [TypeScript](https://www.typescriptlang.org/)                                                                              |
+| Database | [MongoDB Atlas](https://www.mongodb.com/atlas) + [Mongoose](https://mongoosejs.com/)                                                                                                          |
+| AI       | [Google Gemini 2.5 Flash](https://ai.google.dev/)                                                                                                                                             |
+| Auth     | [JWT](https://jwt.io/) + Refresh Tokens, [bcrypt](https://github.com/kelektiv/node.bcrypt.js)                                                                                                 |
+| Security | [Helmet](https://helmetjs.github.io/), CORS, Rate Limiting, [Zod](https://zod.dev/)                                                                                                           |
+| Logging  | [Winston](https://github.com/winstonjs/winston)                                                                                                                                               |
+| Docs     | [Swagger / OpenAPI](https://swagger.io/)                                                                                                                                                      |
+| CI       | [GitHub Actions](https://github.com/features/actions), [Husky](https://typicode.github.io/husky/), [ESLint](https://eslint.org/), [Prettier](https://prettier.io/)                           |
+| Hosting  | [Render](https://render.com/) (backend), [Netlify](https://www.netlify.com/) (frontend)                                                                                                       |
 
 | Layer    | Technology                                  |
 | -------- | ------------------------------------------- |
@@ -132,6 +171,17 @@ AIforHealth/
 ├── render.yaml                # Render deployment config
 └── netlify.toml               # Netlify deployment config
 ```
+
+---
+
+## Demo Credentials
+
+Seed the database first (`npm run db:seed` from the `backend/` directory), then log in with:
+
+| Role    | Email                      | Password       |
+| ------- | -------------------------- | -------------- |
+| Patient | patient@aiforhealth.com    | Patient123!@#  |
+| Doctor  | doctor@aiforhealth.com     | Doctor123!@#   |
 
 ---
 
