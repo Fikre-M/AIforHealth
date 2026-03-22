@@ -1,11 +1,15 @@
 services:
   - type: web
     name: aiforhealth-backend
-    env: node
+    # env: node           # Node.js native build (default)
+    # To deploy via Docker instead, comment out the two lines above and uncomment below:
+    env: docker
+    dockerfilePath: ./backend/Dockerfile
     region: oregon
     plan: free
-    buildCommand: cd backend && npm install && npm run build
-    startCommand: cd backend && npm start
+    # buildCommand and startCommand are used for env: node only
+    # buildCommand: cd backend && npm install && npm run build
+    # startCommand: cd backend && npm start
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV
@@ -32,5 +36,7 @@ services:
         sync: false
       - key: GEMINI_API_KEY
         sync: false
+      - key: GEMINI_MODEL
+        value: gemini-2.5-flash
       - key: FRONTEND_URL
         value: https://ai4health.netlify.app

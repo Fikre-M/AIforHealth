@@ -76,14 +76,19 @@ class App {
   }
 
   private initializeRoutes(): void {
-    // Health check endpoint (no auth required)
+    // Health check endpoint (no auth required) — used by Render and load balancers
     this.app.get('/health', (_req: Request, res: Response) => {
-      res.json({
-        status: 'OK',
+      const dbHealthy = database.getConnectionStatus();
+      const status = dbHealthy ? 'OK' : 'DEGRADED';
+      const httpStatus = dbHealthy ? 200 : 503;
+
+      res.status(httpStatus).json({
+        status,
         timestamp: new Date().toISOString(),
         uptime: process.uptime(),
         environment: env['NODE_ENV'],
         version: '1.0.0',
+        database: dbHealthy ? 'connected' : 'disconnected',
       });
     });
 
