@@ -112,12 +112,12 @@ userSchema.methods.isLocked = function (): boolean {
 
 userSchema.methods.incrementLoginAttempts = async function (): Promise<void> {
   this.loginAttempts += 1;
-  
+
   // Lock account after 5 failed attempts for 2 hours
   if (this.loginAttempts >= 5) {
     this.lockUntil = new Date(Date.now() + 2 * 60 * 60 * 1000); // 2 hours
   }
-  
+
   await this.save();
 };
 

@@ -130,7 +130,7 @@ export class AuthService {
       $unset: { lockUntil: 1 },
     });
 
-    const userObj = user.toObject() as any;
+    const userObj = user.toObject();
     delete userObj.password;
 
     return {
@@ -160,7 +160,7 @@ export class AuthService {
     } catch (error) {
       // If refresh token is invalid/expired, generate new tokens without Redis check
       console.warn('Refresh token validation failed, generating new tokens:', error);
-      
+
       // For now, create a simple fallback user lookup
       const fallbackUser = await UserService.findUserByEmail('demo@aiforhealth.com');
       if (fallbackUser) {
@@ -171,7 +171,7 @@ export class AuthService {
         };
         return JwtUtil.generateTokenPair(newPayload);
       }
-      
+
       throw new Error('Invalid refresh token');
     }
   }
@@ -312,7 +312,7 @@ export class AuthService {
       appointmentReminders: settings.appointmentReminders,
       accessibility: settings.accessibility,
       privacy: settings.privacy,
-      updatedAt: (settings.updatedAt as Date).toISOString(),
+      updatedAt: settings.updatedAt.toISOString(),
     };
   }
 
@@ -329,13 +329,13 @@ export class AuthService {
     );
 
     return {
-      id: settings!.id as string,
+      id: settings.id as string,
       userId,
-      notifications: settings!.notifications,
-      appointmentReminders: settings!.appointmentReminders,
-      accessibility: settings!.accessibility,
-      privacy: settings!.privacy,
-      updatedAt: (settings!.updatedAt as Date).toISOString(),
+      notifications: settings.notifications,
+      appointmentReminders: settings.appointmentReminders,
+      accessibility: settings.accessibility,
+      privacy: settings.privacy,
+      updatedAt: settings.updatedAt.toISOString(),
     };
   }
 }

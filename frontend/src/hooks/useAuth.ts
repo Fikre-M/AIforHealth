@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
-import type { LoginCredentials, RegisterData, AuthState } from '@/types/auth';
+import type { LoginCredentials, RegisterData, AuthState, User } from '@/types/auth';
 import { authService } from '@/services/authService';
 
 interface AuthActions {
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
-  refreshTokenAction: () => Promise<void>; // Rename to avoid conflict
+  refreshTokenAction: () => Promise<void>;
+  updateUser: (updates: Partial<User>) => void;
 }
 
 type AuthHook = AuthState & AuthActions;
@@ -22,27 +23,27 @@ let authState: AuthState = {
 const listeners: Array<(state: AuthState) => void> = [];
 
 function notifyListeners() {
-  listeners.forEach(listener => listener(authState));
+  listeners.forEach((listener) => {
+    listener(authState);
+  });
 }
 
 function updateAuthState(newState: Partial<AuthState>) {
   authState = { ...authState, ...newState };
-  
-  // Persist to localStorage (use same keys as authService)
+
   if (authState.user && authState.token) {
     localStorage.setItem('user', JSON.stringify(authState.user));
     localStorage.setItem('accessToken', authState.token);
-    localStorage.setItem('refreshToken', authState.refreshToken || '');
+    localStorage.setItem('refreshToken', authState.refreshToken ?? '');
   } else {
     localStorage.removeItem('user');
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
   }
-  
+
   notifyListeners();
 }
 
-// Initialize from localStorage (use same keys as authService)
 function initializeAuth() {
   try {
     const storedUser = localStorage.getItem('user');
@@ -50,7 +51,7 @@ function initializeAuth() {
     const storedRefreshToken = localStorage.getItem('refreshToken');
 
     if (storedUser && storedToken) {
-      const user = JSON.parse(storedUser);
+      const user = JSON.parse(storedUser) as User;
       authState = {
         user,
         token: storedToken,
@@ -59,9 +60,7 @@ function initializeAuth() {
         isAuthenticated: true,
       };
 
-      // Verify token is still valid by trying to get profile
       authService.getProfile().catch(() => {
-        // Token invalid, clear auth state
         updateAuthState({
           user: null,
           token: null,
@@ -70,16 +69,13 @@ function initializeAuth() {
         });
       });
     }
-  } catch (error) {
-    console.error('Error initializing auth:', error);
-    // Clear invalid data
+  } catch {
     localStorage.removeItem('user');
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
   }
 }
 
-// Initialize on module load
 initializeAuth();
 
 export function useAuth(): AuthHook {
@@ -99,10 +95,9 @@ export function useAuth(): AuthHook {
     updateAuthState({ isLoading: true });
     try {
       const response = await authService.login(credentials);
-      // The authService already returns the correct structure
       updateAuthState({
         user: response.user,
-        token: response.token, // authService returns token (which is accessToken)
+        token: response.token,
         refreshToken: response.refreshToken,
         isLoading: false,
         isAuthenticated: true,
@@ -134,15 +129,9 @@ export function useAuth(): AuthHook {
     updateAuthState({ isLoading: true });
     try {
       await authService.logout();
-      updateAuthState({
-        user: null,
-        token: null,
-        refreshToken: null,
-        isLoading: false,
-        isAuthenticated: false,
-      });
-    } catch (error) {
-      // Even if logout fails, clear local state
+    } catch {
+      // ignore logout errors, always clear state
+    } finally {
       updateAuthState({
         user: null,
         token: null,
@@ -160,15 +149,20 @@ export function useAuth(): AuthHook {
 
     try {
       const response = await authService.refreshToken(authState.refreshToken);
+      const tokens = response as { accessToken: string; refreshToken: string };
       updateAuthState({
-        token: response.accessToken, // authService returns accessToken and refreshToken
-        refreshToken: response.refreshToken,
+        token: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
       });
     } catch (error) {
-      // Refresh failed, logout user
       await logout();
       throw error;
     }
+  };
+
+  const updateUser = (updates: Partial<User>) => {
+    if (!authState.user) return;
+    updateAuthState({ user: { ...authState.user, ...updates } });
   };
 
   return {
@@ -177,5 +171,6 @@ export function useAuth(): AuthHook {
     register,
     logout,
     refreshTokenAction: refreshToken,
+    updateUser,
   };
 }

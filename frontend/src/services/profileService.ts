@@ -9,7 +9,6 @@ import type {
 } from '@/types/profile';
 import api from './api';
 
-// Default settings (fallback in case API doesn't return any)
 const defaultNotificationPreferences: NotificationPreferences = {
   email: {
     appointments: true,
@@ -34,7 +33,7 @@ const defaultNotificationPreferences: NotificationPreferences = {
 
 const defaultAppointmentReminders: AppointmentReminderSettings = {
   enabled: true,
-  reminderTimes: [1440, 60, 15], // 1 day, 1 hour, 15 minutes
+  reminderTimes: [1440, 60, 15],
   methods: ['email', 'push'],
 };
 
@@ -55,78 +54,87 @@ interface ApiResponse<T> {
 }
 
 export const profileService = {
-  /**
-   * Get user profile
-   */
   async getProfile(): Promise<UserProfile> {
-    try {
-      const response = await api.get<ApiResponse<{ user: UserProfile }>>('/auth/profile');
-      return response.data.data.user;
-    } catch (error) {
-      console.error('Failed to fetch user profile:', error);
-      throw error;
-    }
+    const response = await api.get<ApiResponse<{ user: UserProfile }>>('/auth/profile');
+    return response.data.data.user;
   },
 
-  /**
-   * Update user profile
-   */
   async updateProfile(data: ProfileUpdateData): Promise<UserProfile> {
-    try {
-      const response = await api.put<ApiResponse<{ user: UserProfile }>>('/auth/profile', data);
-      return response.data.data.user;
-    } catch (error) {
-      console.error('Failed to update profile:', error);
-      throw error;
+    // Strip empty nested objects to avoid overwriting with blanks
+    const payload: Record<string, unknown> = {};
+    if (data.name !== undefined) payload.name = data.name;
+    if (data.phone !== undefined) payload.phone = data.phone;
+    if (data.dateOfBirth) payload.dateOfBirth = data.dateOfBirth;
+    if (data.gender) payload.gender = data.gender;
+
+    if (data.address && Object.values(data.address).some(Boolean)) {
+      payload.address = data.address;
     }
+    if (data.emergencyContact && Object.values(data.emergencyContact).some(Boolean)) {
+      payload.emergencyContact = data.emergencyContact;
+    }
+    if (data.medicalInfo) {
+      const mi = data.medicalInfo;
+      const hasData =
+        mi.bloodType ??
+        (mi.allergies && mi.allergies.length > 0) ??
+        (mi.medications && mi.medications.length > 0) ??
+        (mi.conditions && mi.conditions.length > 0);
+      if (hasData) payload.medicalInfo = mi;
+    }
+
+    // Pass through doctor fields if present
+    const extended = data as ProfileUpdateData & {
+      specialization?: string;
+      licenseNumber?: string;
+    };
+    if (extended.specialization !== undefined) payload.specialization = extended.specialization;
+    if (extended.licenseNumber !== undefined) payload.licenseNumber = extended.licenseNumber;
+
+    const response = await api.put<ApiResponse<{ user: UserProfile }>>('/auth/profile', payload);
+    return response.data.data.user;
   },
 
-  /**
-   * Upload profile avatar
-   */
   async uploadAvatar(file: File): Promise<string> {
-    try {
-      const formData = new FormData();
-      formData.append('avatar', file);
-
-      const response = await api.post<ApiResponse<{ avatarUrl: string }>>(
-        '/auth/profile/avatar',
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        }
-      );
-
-      return response.data.data.avatarUrl;
-    } catch (error) {
-      console.error('Failed to upload avatar:', error);
-      throw error;
-    }
+    return new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64 = reader.result as string;
+        api
+          .post<ApiResponse<{ avatarUrl: string }>>(
+            '/auth/profile/avatar',
+            { avatarBase64: base64 },
+            { headers: { 'Content-Type': 'application/json' } }
+          )
+          .then((res) => {
+            resolve(res.data.data.avatarUrl);
+          })
+          .catch((err: unknown) => {
+            reject(err instanceof Error ? err : new Error(String(err)));
+          });
+      };
+      reader.onerror = () => {
+        reject(new Error('Failed to read file'));
+      };
+      reader.readAsDataURL(file);
+    });
   },
 
-  /**
-   * Get user settings
-   */
   async getSettings(): Promise<UserSettings> {
     try {
       const response = await api.get<ApiResponse<{ settings: UserSettings }>>('/auth/settings');
       const s = response.data.data.settings;
-      // Ensure arrays are never undefined — API may omit them
       return {
         ...s,
         appointmentReminders: {
           ...defaultAppointmentReminders,
           ...s.appointmentReminders,
           reminderTimes:
-            s.appointmentReminders?.reminderTimes ?? defaultAppointmentReminders.reminderTimes,
-          methods: s.appointmentReminders?.methods ?? defaultAppointmentReminders.methods,
+            s.appointmentReminders.reminderTimes ?? defaultAppointmentReminders.reminderTimes,
+          methods: s.appointmentReminders.methods ?? defaultAppointmentReminders.methods,
         },
       };
-    } catch (error) {
-      console.error('Failed to fetch user settings:', error);
-      // Return default settings if API fails
+    } catch {
       return {
         id: 'default-settings',
         userId: '',
@@ -143,33 +151,12 @@ export const profileService = {
     }
   },
 
-  /**
-   * Update user settings
-   */
   async updateSettings(data: SettingsUpdateData): Promise<UserSettings> {
-    try {
-      const response = await api.put<ApiResponse<{ settings: UserSettings }>>(
-        '/auth/settings',
-        data
-      );
-      return response.data.data.settings;
-    } catch (error) {
-      console.error('Failed to update settings:', error);
-      throw error;
-    }
+    const response = await api.put<ApiResponse<{ settings: UserSettings }>>('/auth/settings', data);
+    return response.data.data.settings;
   },
 
-  /**
-   * Delete user account
-   */
   async deleteAccount(password: string): Promise<void> {
-    try {
-      await api.delete('/auth/account', {
-        data: { password },
-      });
-    } catch (error) {
-      console.error('Failed to delete account:', error);
-      throw error;
-    }
+    await api.delete('/auth/account', { data: { password } });
   },
 };
