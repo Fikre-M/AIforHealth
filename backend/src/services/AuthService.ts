@@ -287,12 +287,27 @@ export class AuthService {
 
   static async updateProfile(
     userId: string,
-    updateData: Partial<Pick<IUser, 'name' | 'phone' | 'avatar'>>
+    updateData: Partial<
+      Pick<
+        IUser,
+        | 'name'
+        | 'phone'
+        | 'avatar'
+        | 'dateOfBirth'
+        | 'gender'
+        | 'specialization'
+        | 'licenseNumber'
+        | 'address'
+        | 'emergencyContact'
+        | 'medicalInfo'
+      >
+    >
   ): Promise<IUser | null> {
-    return User.findByIdAndUpdate(userId, updateData, {
-      new: true,
-      runValidators: true,
-    });
+    return User.findByIdAndUpdate(
+      userId,
+      { $set: updateData },
+      { new: true, runValidators: false }
+    );
   }
 
   /* ================= SETTINGS ================= */

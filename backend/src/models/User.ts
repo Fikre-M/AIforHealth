@@ -1,10 +1,6 @@
-import mongoose, { Document, Schema, Model, Types } from 'mongoose';
+import mongoose, { Document, Schema, Model } from 'mongoose';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
-
-/* =========================================================
-   Enums
-========================================================= */
 
 export enum UserRole {
   PATIENT = 'patient',
@@ -12,9 +8,26 @@ export enum UserRole {
   ADMIN = 'admin',
 }
 
-/* =========================================================
-   Interface
-========================================================= */
+export interface IAddress {
+  street?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  country?: string;
+}
+
+export interface IEmergencyContact {
+  name?: string;
+  relationship?: string;
+  phone?: string;
+}
+
+export interface IMedicalInfo {
+  bloodType?: string;
+  allergies?: string[];
+  medications?: string[];
+  conditions?: string[];
+}
 
 export interface IUser extends Document {
   name: string;
@@ -35,6 +48,9 @@ export interface IUser extends Document {
   gender?: string;
   specialization?: string;
   licenseNumber?: string;
+  address?: IAddress;
+  emergencyContact?: IEmergencyContact;
+  medicalInfo?: IMedicalInfo;
 
   comparePassword(password: string): Promise<boolean>;
   isLocked(): boolean;
@@ -42,32 +58,16 @@ export interface IUser extends Document {
   generatePasswordResetToken(): string;
 }
 
-/* =========================================================
-   Static Interface
-========================================================= */
-
 interface UserModel extends Model<IUser> {
   findByEmailWithPassword(email: string): Promise<IUser | null>;
 }
-
-/* =========================================================
-   Schema
-========================================================= */
 
 const userSchema = new Schema<IUser, UserModel>(
   {
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
-    password: {
-      type: String,
-      required: true,
-      select: false,
-    },
-    role: {
-      type: String,
-      enum: Object.values(UserRole),
-      default: UserRole.PATIENT,
-    },
+    password: { type: String, required: true, select: false },
+    role: { type: String, enum: Object.values(UserRole), default: UserRole.PATIENT },
     phone: { type: String },
     avatar: { type: String },
     isActive: { type: Boolean, default: true },
@@ -82,25 +82,34 @@ const userSchema = new Schema<IUser, UserModel>(
     gender: { type: String },
     specialization: { type: String },
     licenseNumber: { type: String },
+    address: {
+      street: { type: String },
+      city: { type: String },
+      state: { type: String },
+      zipCode: { type: String },
+      country: { type: String },
+    },
+    emergencyContact: {
+      name: { type: String },
+      relationship: { type: String },
+      phone: { type: String },
+    },
+    medicalInfo: {
+      bloodType: { type: String },
+      allergies: { type: [String], default: [] },
+      medications: { type: [String], default: [] },
+      conditions: { type: [String], default: [] },
+    },
   },
   { timestamps: true }
 );
 
-/* =========================================================
-   Password Hashing
-========================================================= */
-
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
-
   const salt = await bcrypt.genSalt(12);
   this.password = await bcrypt.hash(this.password, salt);
   next();
 });
-
-/* =========================================================
-   Methods
-========================================================= */
 
 userSchema.methods.comparePassword = async function (candidatePassword: string): Promise<boolean> {
   return bcrypt.compare(candidatePassword, this.password);
@@ -112,34 +121,22 @@ userSchema.methods.isLocked = function (): boolean {
 
 userSchema.methods.incrementLoginAttempts = async function (): Promise<void> {
   this.loginAttempts += 1;
-
-  // Lock account after 5 failed attempts for 2 hours
   if (this.loginAttempts >= 5) {
-    this.lockUntil = new Date(Date.now() + 2 * 60 * 60 * 1000); // 2 hours
+    this.lockUntil = new Date(Date.now() + 2 * 60 * 60 * 1000);
   }
-
   await this.save();
 };
 
 userSchema.methods.generatePasswordResetToken = function (): string {
   const resetToken = crypto.randomBytes(32).toString('hex');
   this.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
-  this.passwordResetExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+  this.passwordResetExpires = new Date(Date.now() + 10 * 60 * 1000);
   return resetToken;
 };
-
-/* =========================================================
-   Statics
-========================================================= */
 
 userSchema.statics.findByEmailWithPassword = function (email: string) {
   return this.findOne({ email }).select('+password');
 };
 
-/* =========================================================
-   Model Export
-========================================================= */
-
 export const User = mongoose.model<IUser, UserModel>('User', userSchema);
-
 export default User;
