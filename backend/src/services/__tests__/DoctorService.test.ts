@@ -1,8 +1,11 @@
 import { DoctorService } from '../DoctorService';
 import { UserRole } from '@/types';
 import { User } from '@/models/User';
-import { Appointment } from '@/models/Appointment';
-import { AppointmentStatus } from '@/types';
+import Appointment, { AppointmentStatus } from '@/models/Appointment';
+
+// confirmationNumber has a unique index — generate one per appointment
+let _cnCounter = 0;
+const cn = () => `TEST-${Date.now()}-${++_cnCounter}`;
 
 describe('DoctorService', () => {
   let doctorId: string;
@@ -58,6 +61,7 @@ describe('DoctorService', () => {
         type: 'consultation',
         reason: 'Checkup',
         status: AppointmentStatus.SCHEDULED,
+        confirmationNumber: cn(),
       });
 
       const appointments = await DoctorService.getDailyAppointments(doctorId);
@@ -69,6 +73,7 @@ describe('DoctorService', () => {
 
     it('should only return today appointments', async () => {
       const today = new Date();
+      today.setHours(11, 0, 0, 0);
       const tomorrow = new Date(today);
       tomorrow.setDate(tomorrow.getDate() + 1);
 
@@ -81,6 +86,7 @@ describe('DoctorService', () => {
           type: 'consultation',
           reason: 'Today',
           status: AppointmentStatus.SCHEDULED,
+          confirmationNumber: cn(),
         },
         {
           patient: patientId,
@@ -90,6 +96,7 @@ describe('DoctorService', () => {
           type: 'consultation',
           reason: 'Tomorrow',
           status: AppointmentStatus.SCHEDULED,
+          confirmationNumber: cn(),
         },
       ]);
 
@@ -110,6 +117,7 @@ describe('DoctorService', () => {
         type: 'consultation',
         reason: 'Checkup',
         status: AppointmentStatus.COMPLETED,
+        confirmationNumber: cn(),
       });
 
       const result = await DoctorService.getPatientsList(doctorId);
@@ -128,13 +136,12 @@ describe('DoctorService', () => {
         type: 'consultation',
         reason: 'Other doctor appointment',
         status: AppointmentStatus.COMPLETED,
+        confirmationNumber: cn(),
       });
 
       const result = await DoctorService.getPatientsList(doctorId);
 
-      const hasOtherPatient = result.patients.some(
-        p => p._id.toString() === otherPatientId
-      );
+      const hasOtherPatient = result.patients.some((p) => p._id.toString() === otherPatientId);
       expect(hasOtherPatient).toBe(false);
     });
 
@@ -147,12 +154,10 @@ describe('DoctorService', () => {
         type: 'consultation',
         reason: 'Checkup',
         status: AppointmentStatus.COMPLETED,
+        confirmationNumber: cn(),
       });
 
-      const result = await DoctorService.getPatientsList(doctorId, {
-        page: 1,
-        limit: 10,
-      });
+      const result = await DoctorService.getPatientsList(doctorId, { page: 1, limit: 10 });
 
       expect(result.pagination).toBeDefined();
       expect(result.pagination.page).toBe(1);
@@ -170,6 +175,7 @@ describe('DoctorService', () => {
         type: 'consultation',
         reason: 'Checkup',
         status: AppointmentStatus.COMPLETED,
+        confirmationNumber: cn(),
       });
 
       const patient = await DoctorService.getPatientDetails(doctorId, patientId);
@@ -187,24 +193,23 @@ describe('DoctorService', () => {
         type: 'consultation',
         reason: 'Other doctor',
         status: AppointmentStatus.COMPLETED,
+        confirmationNumber: cn(),
       });
 
-      await expect(
-        DoctorService.getPatientDetails(doctorId, otherPatientId)
-      ).rejects.toThrow(/Access denied/i);
+      await expect(DoctorService.getPatientDetails(doctorId, otherPatientId)).rejects.toThrow(
+        /Access denied/i
+      );
     });
   });
 
   describe('createPatient', () => {
     it('should create patient', async () => {
-      const patientData = {
+      const patient = await DoctorService.createPatient(doctorId, {
         name: 'New Patient',
         email: 'newpatient@example.com',
         password: 'Password123!',
         phone: '123-456-7890',
-      };
-
-      const patient = await DoctorService.createPatient(doctorId, patientData);
+      });
 
       expect(patient).toBeDefined();
       expect(patient.email).toBe('newpatient@example.com');
@@ -223,6 +228,7 @@ describe('DoctorService', () => {
           type: 'consultation',
           reason: 'Checkup',
           status: AppointmentStatus.COMPLETED,
+          confirmationNumber: cn(),
         },
         {
           patient: patientId,
@@ -232,6 +238,7 @@ describe('DoctorService', () => {
           type: 'consultation',
           reason: 'Follow-up',
           status: AppointmentStatus.SCHEDULED,
+          confirmationNumber: cn(),
         },
       ]);
 
@@ -254,6 +261,7 @@ describe('DoctorService', () => {
           type: 'consultation',
           reason: 'Checkup',
           status: AppointmentStatus.COMPLETED,
+          confirmationNumber: cn(),
         },
         {
           patient: patientId,
@@ -263,23 +271,27 @@ describe('DoctorService', () => {
           type: 'consultation',
           reason: 'Cancelled',
           status: AppointmentStatus.CANCELLED,
+          confirmationNumber: cn(),
         },
       ]);
 
       const performance = await DoctorService.getDoctorPerformance(doctorId);
 
       expect(performance).toBeDefined();
-      expect(performance.totalAppointments).toBe(2);
-      expect(performance.completedAppointments).toBe(1);
-      expect(performance.completionRate).toBe(50);
+      const perf = performance as {
+        totalAppointments: number;
+        completedAppointments: number;
+        completionRate: number;
+      };
+      expect(perf.totalAppointments).toBe(2);
+      expect(perf.completedAppointments).toBe(1);
+      expect(perf.completionRate).toBe(50);
     });
   });
 
   describe('searchDoctors', () => {
     it('should search doctors by specialization', async () => {
-      const result = await DoctorService.searchDoctors({
-        specialization: 'Cardiology',
-      });
+      const result = await DoctorService.searchDoctors({ specialization: 'Cardiology' });
 
       expect(result.doctors).toBeDefined();
       expect(result.doctors.length).toBeGreaterThan(0);
@@ -287,12 +299,10 @@ describe('DoctorService', () => {
     });
 
     it('should search doctors by name', async () => {
-      const result = await DoctorService.searchDoctors({
-        search: 'Smith',
-      });
+      const result = await DoctorService.searchDoctors({ search: 'Smith' });
 
       expect(result.doctors).toBeDefined();
-      expect(result.doctors.some(d => d.name.includes('Smith'))).toBe(true);
+      expect(result.doctors.some((d) => d.name.includes('Smith'))).toBe(true);
     });
   });
 });

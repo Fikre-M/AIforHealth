@@ -1,90 +1,191 @@
 import { AppointmentService } from '../AppointmentService';
-import { Appointment } from '@/models/Appointment';
-import { NotificationService } from '../NotificationService';
-import { AppError } from '@/middleware/errorHandler';
+import { User } from '@/models/User';
+import { UserRole } from '@/types';
+import { generateObjectId } from '@/test/helpers';
+import notificationService from '@/services/NotificationService';
 
-import type { Model } from 'mongoose';
+import type { INotification } from '@/models/Notification';
 
-jest.mock('@/models/Appointment');
-jest.mock('../NotificationService');
+// Spy on the singleton instance methods so AppointmentService picks up the mocks
+jest
+  .spyOn(notificationService, 'createAppointmentConfirmation')
+  .mockResolvedValue({} as INotification);
+jest
+  .spyOn(notificationService, 'createAppointmentCancellation')
+  .mockResolvedValue({} as INotification);
 
-const MockedAppointment = Appointment as jest.Mocked<typeof Appointment>;
-const MockedNotificationService = NotificationService as jest.Mocked<typeof NotificationService>;
+// Uses the global in-memory MongoDB from src/test/setup.ts
 
 describe('AppointmentService', () => {
-  let mockAppointment: {
-    _id: string;
-    patientId: string;
-    doctorId: string;
-    appointmentDate: Date;
-    duration: number;
-    status: string;
-    type: string;
-    reason: string;
-    notes: string;
-    save: jest.Mock;
-    toObject: jest.Mock;
-  };
+  let patientId: string;
+  let doctorId: string;
+  let futureDate: Date;
 
-  let mockDate: Date;
+  beforeEach(async () => {
+    const patient = await User.create({
+      name: 'Test Patient',
+      email: 'patient@example.com',
+      password: 'Password123!',
+      role: UserRole.PATIENT,
+    });
+    patientId = patient._id.toString();
 
-  beforeEach(() => {
-    jest.clearAllMocks();
+    const doctor = await User.create({
+      name: 'Dr. Test',
+      email: 'doctor@example.com',
+      password: 'Password123!',
+      role: UserRole.DOCTOR,
+    });
+    doctorId = doctor._id.toString();
 
-    mockDate = new Date('2024-01-01T10:00:00.000Z');
-    jest.spyOn(global, 'Date').mockImplementation(() => mockDate as unknown as string);
-
-    mockAppointment = {
-      _id: 'appointment123',
-      patientId: 'patient123',
-      doctorId: 'doctor123',
-      appointmentDate: new Date('2024-01-15T14:00:00.000Z'),
-      duration: 30,
-      status: 'scheduled',
-      type: 'consultation',
-      reason: 'Regular checkup',
-      notes: '',
-      save: jest.fn().mockResolvedValue(true),
-      toObject: jest.fn().mockReturnValue({
-        _id: 'appointment123',
-        patientId: 'patient123',
-        doctorId: 'doctor123',
-        appointmentDate: new Date('2024-01-15T14:00:00.000Z'),
-        status: 'scheduled',
-      }),
-    };
-  });
-
-  afterEach(() => {
-    jest.restoreAllMocks();
+    futureDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 1 week from now
   });
 
   describe('createAppointment', () => {
-    it('should successfully create an appointment', async () => {
-      MockedAppointment.findOne.mockResolvedValue(null as never);
-      MockedAppointment.create.mockResolvedValue(mockAppointment as never);
-
-      const result = await AppointmentService.createAppointment({
-        patientId: 'patient123',
-        doctorId: 'doctor123',
-        appointmentDate: new Date('2024-01-15T14:00:00.000Z'),
+    it('should create an appointment successfully', async () => {
+      const appointment = await AppointmentService.createAppointment({
+        patientId,
+        doctorId,
+        appointmentDate: futureDate,
         duration: 30,
         type: 'consultation',
         reason: 'Regular checkup',
       });
 
-      expect(result._id).toBe('appointment123');
-      expect(MockedNotificationService.sendAppointmentConfirmation).toHaveBeenCalled();
+      expect(appointment).toBeDefined();
+      expect(appointment.patient.toString()).toBe(patientId);
+      expect(appointment.doctor.toString()).toBe(doctorId);
+      expect(appointment.status).toBe('scheduled');
+    });
+
+    it('should generate a confirmation number', async () => {
+      const appointment = await AppointmentService.createAppointment({
+        patientId,
+        doctorId,
+        appointmentDate: futureDate,
+        duration: 30,
+        type: 'consultation',
+        reason: 'Checkup',
+      });
+
+      expect(appointment.confirmationNumber).toBeDefined();
+      expect(appointment.confirmationNumber).toMatch(/^APT-/);
+    });
+
+    it('should throw 409 if time slot is already booked', async () => {
+      await AppointmentService.createAppointment({
+        patientId,
+        doctorId,
+        appointmentDate: futureDate,
+        duration: 30,
+        type: 'consultation',
+        reason: 'First booking',
+      });
+
+      await expect(
+        AppointmentService.createAppointment({
+          patientId,
+          doctorId,
+          appointmentDate: futureDate,
+          duration: 30,
+          type: 'consultation',
+          reason: 'Conflicting booking',
+        })
+      ).rejects.toThrow(/already booked/i);
     });
   });
 
   describe('cancelAppointment', () => {
-    it('should throw error if appointment not found', async () => {
-      MockedAppointment.findByIdAndUpdate.mockResolvedValue(null as never);
+    it('should cancel an existing appointment', async () => {
+      const created = await AppointmentService.createAppointment({
+        patientId,
+        doctorId,
+        appointmentDate: futureDate,
+        duration: 30,
+        type: 'consultation',
+        reason: 'To be cancelled',
+      });
 
-      await expect(AppointmentService.cancelAppointment('invalid', 'reason')).rejects.toThrow(
-        AppError
+      const cancelled = await AppointmentService.cancelAppointment(
+        created._id.toString(),
+        'Patient request'
       );
+
+      expect(cancelled).toBeDefined();
+      expect(cancelled.status).toBe('cancelled');
+    });
+
+    it('should return null for a non-existent appointment', async () => {
+      const result = await AppointmentService.cancelAppointment(generateObjectId(), 'reason');
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('getAppointmentById', () => {
+    it('should return appointment by id', async () => {
+      const created = await AppointmentService.createAppointment({
+        patientId,
+        doctorId,
+        appointmentDate: futureDate,
+        duration: 30,
+        type: 'consultation',
+        reason: 'Lookup test',
+      });
+
+      const found = await AppointmentService.getAppointmentById(created._id.toString());
+      expect(found).toBeDefined();
+      expect(found._id.toString()).toBe(created._id.toString());
+    });
+
+    it('should throw for invalid id format', async () => {
+      await expect(AppointmentService.getAppointmentById('not-an-id')).rejects.toThrow();
+    });
+  });
+
+  describe('checkAvailability', () => {
+    it('should return true when slot is free', async () => {
+      const available = await AppointmentService.checkAvailability(doctorId, futureDate);
+      expect(available).toBe(true);
+    });
+
+    it('should return false when slot is taken', async () => {
+      await AppointmentService.createAppointment({
+        patientId,
+        doctorId,
+        appointmentDate: futureDate,
+        duration: 30,
+        type: 'consultation',
+        reason: 'Blocking slot',
+      });
+
+      const available = await AppointmentService.checkAvailability(doctorId, futureDate);
+      expect(available).toBe(false);
+    });
+  });
+
+  describe('getAppointmentStatistics', () => {
+    it('should return zero stats when no appointments exist', async () => {
+      const stats = await AppointmentService.getAppointmentStatistics({});
+      expect(stats.total).toBe(0);
+      expect(stats.completionRate).toBe(0);
+    });
+
+    it('should calculate completion rate correctly', async () => {
+      const apt = await AppointmentService.createAppointment({
+        patientId,
+        doctorId,
+        appointmentDate: futureDate,
+        duration: 30,
+        type: 'consultation',
+        reason: 'Stats test',
+      });
+
+      await AppointmentService.completeAppointment(apt._id.toString(), { notes: 'All good' });
+
+      const stats = await AppointmentService.getAppointmentStatistics({ doctorId });
+
+      expect(stats.completed).toBe(1);
+      expect(stats.completionRate).toBe(100);
     });
   });
 });

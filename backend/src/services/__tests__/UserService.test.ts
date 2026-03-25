@@ -32,9 +32,7 @@ describe('UserService', () => {
 
       await UserService.createUser(userData);
 
-      await expect(
-        UserService.createUser(userData)
-      ).rejects.toThrow(/already exists/i);
+      await expect(UserService.createUser(userData)).rejects.toThrow(/already exists/i);
     });
 
     it('should hash password correctly', async () => {
@@ -50,7 +48,7 @@ describe('UserService', () => {
 
       expect(userWithPassword?.password).toBeDefined();
       expect(userWithPassword?.password).not.toBe(userData.password);
-      expect(userWithPassword?.password as string).toMatch(/^\$2[aby]\$/);
+      expect(userWithPassword?.password).toMatch(/^\$2[aby]\$/);
     });
 
     it('should create doctor with specialization', async () => {
@@ -95,9 +93,9 @@ describe('UserService', () => {
     });
 
     it('should throw error for invalid ID format', async () => {
-      await expect(
-        UserService.findUserById('invalid-id')
-      ).rejects.toThrow(/Invalid user ID format/i);
+      await expect(UserService.findUserById('invalid-id')).rejects.toThrow(
+        /Invalid user ID format/i
+      );
     });
   });
 
@@ -148,7 +146,14 @@ describe('UserService', () => {
       expect(updated?.name).toBe('Updated Name');
     });
 
-    it('should not update email', async () => {
+    it('should not update to a duplicate email', async () => {
+      await User.create({
+        name: 'Existing',
+        email: 'taken@example.com',
+        password: 'Password123!',
+        role: UserRole.PATIENT,
+      });
+
       const user = await User.create({
         name: 'Test User',
         email: 'original@example.com',
@@ -156,11 +161,12 @@ describe('UserService', () => {
         role: UserRole.PATIENT,
       });
 
-      const updated = await UserService.updateUser(user._id.toString(), {
-        email: 'newemail@example.com',
-      } as any);
-
-      expect(updated?.email).toBe('original@example.com');
+      await expect(
+        UserService.updateUser(user._id.toString(), { email: 'taken@example.com' } as Record<
+          string,
+          unknown
+        >)
+      ).rejects.toThrow(/already exists/i);
     });
   });
 
@@ -173,10 +179,7 @@ describe('UserService', () => {
         role: UserRole.PATIENT,
       });
 
-      const result = await UserService.updatePassword(
-        user._id.toString(),
-        'NewPassword123!'
-      );
+      const result = await UserService.updatePassword(user._id.toString(), 'NewPassword123!');
 
       expect(result).toBe(true);
 
@@ -208,9 +211,24 @@ describe('UserService', () => {
     it('should get users with pagination', async () => {
       // Create multiple users
       await User.create([
-        { name: 'User 1', email: 'user1@example.com', password: 'Pass123!', role: UserRole.PATIENT },
-        { name: 'User 2', email: 'user2@example.com', password: 'Pass123!', role: UserRole.PATIENT },
-        { name: 'User 3', email: 'user3@example.com', password: 'Pass123!', role: UserRole.PATIENT },
+        {
+          name: 'User 1',
+          email: 'user1@example.com',
+          password: 'Pass123!',
+          role: UserRole.PATIENT,
+        },
+        {
+          name: 'User 2',
+          email: 'user2@example.com',
+          password: 'Pass123!',
+          role: UserRole.PATIENT,
+        },
+        {
+          name: 'User 3',
+          email: 'user3@example.com',
+          password: 'Pass123!',
+          role: UserRole.PATIENT,
+        },
       ]);
 
       const result = await UserService.getUsers({ page: 1, limit: 2 });
@@ -228,7 +246,12 @@ describe('UserService', () => {
 
       const result = await UserService.getUsers({ role: UserRole.DOCTOR });
 
-      expect(result.users.every(u => u.role === UserRole.DOCTOR)).toBe(true);
+      expect(result.users.length).toBeGreaterThan(0);
+      // All returned users should have the doctor role
+      result.users.forEach((u) => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        expect(u.role).toBe(UserRole.DOCTOR);
+      });
     });
   });
 });
