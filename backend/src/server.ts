@@ -1,4 +1,5 @@
-import App from "./app";
+import App from './app';
+import { startKeepAlive, stopKeepAlive } from './utils/keepAlive';
 
 const app = new App();
 
@@ -7,8 +8,9 @@ const startServer = async () => {
   try {
     await app.connectDatabase();
     app.start();
+    startKeepAlive();
   } catch (error) {
-    console.error("Failed to start server:", error);
+    console.error('Failed to start server:', error);
     await app.disconnectDatabase();
     process.exit(1);
   }
@@ -16,13 +18,19 @@ const startServer = async () => {
 
 // Handle graceful shutdown
 const shutdown = async () => {
-  console.log("Shutting down server...");
+  // eslint-disable-next-line no-console
+  console.log('Shutting down server...');
+  stopKeepAlive();
   await app.disconnectDatabase();
   process.exit(0);
 };
 
-process.on("SIGTERM", shutdown);
-process.on("SIGINT", shutdown);
+process.on('SIGTERM', () => {
+  void shutdown();
+});
+process.on('SIGINT', () => {
+  void shutdown();
+});
 
 // Start the server
-startServer();
+void startServer();
