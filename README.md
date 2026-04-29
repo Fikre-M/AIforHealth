@@ -13,7 +13,9 @@
 
 ## Problem Statement
 
-Healthcare is fragmented — patients can't get quick answers after hours, forget appointments, and have no single place to track their health, while doctors drown in administrative overhead instead of patient care.
+Healthcare is fragmented — patients can't get quick answers after hours, forget appointments, and
+have no single place to track their health, while doctors drown in administrative overhead instead
+of patient care.
 
 ## The Problem
 
@@ -118,18 +120,18 @@ Key UX decisions made during development:
 
 ## Tech Stack
 
-| Layer    | Technology                                                                                                                                                                                    |
-| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Frontend | [React 18](https://react.dev/), [TypeScript](https://www.typescriptlang.org/), [Vite](https://vitejs.dev/), [Tailwind CSS](https://tailwindcss.com/)                                          |
-| Backend  | [Node.js](https://nodejs.org/), [Express](https://expressjs.com/), [TypeScript](https://www.typescriptlang.org/)                                                                              |
-| Database | [MongoDB Atlas](https://www.mongodb.com/atlas) + [Mongoose](https://mongoosejs.com/)                                                                                                          |
-| AI       | [Google Gemini 2.5 Flash](https://ai.google.dev/)                                                                                                                                             |
-| Auth     | [JWT](https://jwt.io/) + Refresh Tokens, [bcrypt](https://github.com/kelektiv/node.bcrypt.js)                                                                                                 |
-| Security | [Helmet](https://helmetjs.github.io/), CORS, Rate Limiting, [Zod](https://zod.dev/)                                                                                                           |
-| Logging  | [Winston](https://github.com/winstonjs/winston)                                                                                                                                               |
-| Docs     | [Swagger / OpenAPI](https://swagger.io/)                                                                                                                                                      |
-| CI       | [GitHub Actions](https://github.com/features/actions), [Husky](https://typicode.github.io/husky/), [ESLint](https://eslint.org/), [Prettier](https://prettier.io/)                           |
-| Hosting  | [Render](https://render.com/) (backend), [Netlify](https://www.netlify.com/) (frontend)                                                                                                       |
+| Layer    | Technology                                                                                                                                                         |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Frontend | [React 18](https://react.dev/), [TypeScript](https://www.typescriptlang.org/), [Vite](https://vitejs.dev/), [Tailwind CSS](https://tailwindcss.com/)               |
+| Backend  | [Node.js](https://nodejs.org/), [Express](https://expressjs.com/), [TypeScript](https://www.typescriptlang.org/)                                                   |
+| Database | [MongoDB Atlas](https://www.mongodb.com/atlas) + [Mongoose](https://mongoosejs.com/)                                                                               |
+| AI       | [Google Gemini 2.5 Flash](https://ai.google.dev/)                                                                                                                  |
+| Auth     | [JWT](https://jwt.io/) + Refresh Tokens, [bcrypt](https://github.com/kelektiv/node.bcrypt.js)                                                                      |
+| Security | [Helmet](https://helmetjs.github.io/), CORS, Rate Limiting, [Zod](https://zod.dev/)                                                                                |
+| Logging  | [Winston](https://github.com/winstonjs/winston)                                                                                                                    |
+| Docs     | [Swagger / OpenAPI](https://swagger.io/)                                                                                                                           |
+| CI       | [GitHub Actions](https://github.com/features/actions), [Husky](https://typicode.github.io/husky/), [ESLint](https://eslint.org/), [Prettier](https://prettier.io/) |
+| Hosting  | [Render](https://render.com/) (backend), [Netlify](https://www.netlify.com/) (frontend)                                                                            |
 
 | Layer    | Technology                                  |
 | -------- | ------------------------------------------- |
@@ -178,10 +180,10 @@ AIforHealth/
 
 Seed the database first (`npm run db:seed` from the `backend/` directory), then log in with:
 
-| Role    | Email                      | Password       |
-| ------- | -------------------------- | -------------- |
-| Patient | patient@aiforhealth.com    | Patient123!@#  |
-| Doctor  | doctor@aiforhealth.com     | Doctor123!@#   |
+| Role    | Email                   | Password      |
+| ------- | ----------------------- | ------------- |
+| Patient | patient@aiforhealth.com | Patient123!@# |
+| Doctor  | doctor@aiforhealth.com  | Doctor123!@#  |
 
 ---
 
@@ -309,10 +311,15 @@ GEMINI_API_KEY=
 GEMINI_MODEL=gemini-2.5-flash
 CORS_ORIGIN=https://your-frontend-domain.netlify.app
 FRONTEND_URL=https://your-frontend-domain.netlify.app
+RENDER_EXTERNAL_URL=https://your-backend.onrender.com
 
 # Frontend (Netlify)
 VITE_API_BASE_URL=https://your-backend.onrender.com/api/v1
 ```
+
+> `RENDER_EXTERNAL_URL` enables the built-in keep-alive — the server pings its own `/health`
+> endpoint every 10 minutes to prevent Render free tier from spinning down and MongoDB Atlas M0 from
+> pausing due to inactivity.
 
 ---
 
