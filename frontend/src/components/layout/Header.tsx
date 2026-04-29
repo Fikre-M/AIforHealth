@@ -70,52 +70,6 @@ export function Header() {
             </Link>
           </div>
 
-          {/* Desktop Navigation Links */}
-          {user && (
-            <nav
-              className="hidden md:flex items-center space-x-6"
-              role="navigation"
-              aria-label="Main navigation"
-            >
-              <Link
-                to="/app/dashboard"
-                className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                Dashboard
-              </Link>
-              <Link
-                to="/app/appointments"
-                className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                Appointments
-              </Link>
-              {user.role === 'doctor' && (
-                <Link
-                  to="/app/patients"
-                  className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  Patients
-                </Link>
-              )}
-              {user.role === 'admin' && (
-                <>
-                  <Link
-                    to="/app/users"
-                    className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    Users
-                  </Link>
-                  <Link
-                    to="/app/analytics"
-                    className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    Analytics
-                  </Link>
-                </>
-              )}
-            </nav>
-          )}
-
           {/* Right Side Actions */}
           <div className="flex items-center space-x-3">
             {/* Dark mode toggle */}
