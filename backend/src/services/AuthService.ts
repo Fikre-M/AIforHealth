@@ -134,7 +134,7 @@ export class AuthService {
     delete userObj['password'];
 
     return {
-      user: userObj as IUser,
+      user: userObj as unknown as IUser,
       tokens,
     };
   }
@@ -272,16 +272,7 @@ export class AuthService {
     updateData: Partial<
       Pick<
         IUser,
-        | 'name'
-        | 'phone'
-        | 'avatar'
-        | 'dateOfBirth'
-        | 'gender'
-        | 'specialization'
-        | 'licenseNumber'
-        | 'address'
-        | 'emergencyContact'
-        | 'medicalInfo'
+        'name' | 'phone' | 'avatar' | 'dateOfBirth' | 'gender' | 'specialization' | 'licenseNumber'
       >
     >
   ): Promise<IUser | null> {
