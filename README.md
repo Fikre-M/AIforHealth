@@ -2,6 +2,13 @@
 
 > An AI-powered healthcare platform that makes managing your health as easy as sending a message.
 
+**🔗 Live Demo:** [ai4health.netlify.app](https://ai4health.netlify.app) · **API:**
+[aiforhealth-2.onrender.com](https://aiforhealth-2.onrender.com/health) · **Docs:**
+[/api-docs](https://aiforhealth-2.onrender.com/api-docs)
+
+> **Demo credentials** — Patient: `patient@aiforhealth.com` / `Patient123!@#` · Doctor:
+> `doctor@aiforhealth.com` / `Doctor123!@#`
+
 [![React](https://img.shields.io/badge/React-18-blue.svg)](https://reactjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue.svg)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
@@ -132,19 +139,6 @@ Key UX decisions made during development:
 | Docs     | [Swagger / OpenAPI](https://swagger.io/)                                                                                                                           |
 | CI       | [GitHub Actions](https://github.com/features/actions), [Husky](https://typicode.github.io/husky/), [ESLint](https://eslint.org/), [Prettier](https://prettier.io/) |
 | Hosting  | [Render](https://render.com/) (backend), [Netlify](https://www.netlify.com/) (frontend)                                                                            |
-
-| Layer    | Technology                                  |
-| -------- | ------------------------------------------- |
-| Frontend | React 18, TypeScript, Vite, Tailwind CSS    |
-| Backend  | Node.js, Express, TypeScript                |
-| Database | MongoDB Atlas (Mongoose)                    |
-| AI       | Google Gemini 2.5 Flash                     |
-| Auth     | JWT + Refresh Tokens, bcrypt                |
-| Security | Helmet, CORS, Rate Limiting, Zod validation |
-| Logging  | Winston                                     |
-| Docs     | Swagger / OpenAPI                           |
-| CI       | GitHub Actions, Husky, ESLint, Prettier     |
-| Hosting  | Render (backend), Netlify (frontend)        |
 
 ---
 
