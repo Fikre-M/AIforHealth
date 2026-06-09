@@ -51,3 +51,27 @@ Thumbs.db
 # Temporary files
 tmp/
 temp/
+
+# Local debug/test scripts (not part of the app)
+assess-deployment-readiness.js
+check-appointments.js
+check-database-connection.js
+check-db.js
+check-passwords.js
+check-users.js
+create-database-marker.js
+create-test-user.js
+debug-connection.js
+install-confirmation-deps.bat
+install-confirmation-deps.sh
+test-api.js
+test-appointment-scheduling.js
+test-appointment.js
+test-auth-api.js
+test-auth-booking.js
+test-auth.js
+test-frontend-flow.js
+test-registration.js
+
+# Sensitive files
+secret.txt
